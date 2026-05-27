@@ -623,10 +623,15 @@
     display: block;
     min-height: 100dvh;
     padding: 0;
-    background: #d0ddd6;
+    background:
+      radial-gradient(ellipse 90% 55% at 70% 0%, rgba(45, 155, 114, 0.18), transparent 55%),
+      linear-gradient(180deg, #dfeae4 0%, #d0ddd6 55%, #cbd9d2 100%);
   }
 
   .auth-app {
+    --auth-radius: 16px;
+    --auth-radius-lg: var(--desktop-radius, 20px);
+
     width: 100%;
     max-width: none;
     min-height: 100dvh;
@@ -634,15 +639,118 @@
     border-radius: 0;
     box-shadow: none;
     overflow-x: hidden;
+
+    /* Desktop layout: container centralizado e duas colunas equilibradas */
+    display: grid;
+    grid-template-columns: minmax(520px, 640px) minmax(460px, 560px);
+    grid-template-rows: auto auto 1fr auto;
+    grid-template-areas:
+      "header header"
+      "steps steps"
+      "hero sheet"
+      "hero footer";
+    align-items: start;
+    justify-content: center;
+    column-gap: clamp(2rem, 3vw, 3.25rem);
+    padding: 0 var(--desktop-gutter, 2.5rem) 2.5rem;
+  }
+
+  .auth-header {
+    grid-area: header;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .auth-steps {
+    grid-area: steps;
+    justify-content: flex-start;
+    max-width: none;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .auth-hero {
+    grid-area: hero;
+    text-align: left;
+    padding: 2.25rem 0 1.5rem;
+    max-width: none;
+    align-self: center;
+  }
+
+  .auth-hero__badge {
+    margin-bottom: 0.9rem;
+  }
+
+  .auth-hero__title {
+    font-size: clamp(2.05rem, 2.6vw, 2.55rem);
+    line-height: 1.12;
+  }
+
+  .auth-hero__desc {
+    margin-left: 0;
+    max-width: 32rem;
+    font-size: 1rem;
+  }
+
+  .auth-sheet {
+    grid-area: sheet;
+    padding: 2.25rem 0 1rem;
+    min-height: 0;
+    align-self: center;
   }
 
   .auth-sheet__card {
+    max-width: none;
+    margin: 0;
     border-radius: var(--desktop-radius, 20px);
+    box-shadow:
+      0 18px 44px rgba(15, 61, 46, 0.14),
+      0 0 0 1px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+  }
+
+  .auth-form-title {
+    font-size: 1.25rem;
+  }
+
+  .auth-form-sub {
+    font-size: 0.92rem;
+  }
+
+  .auth-footer {
+    grid-area: footer;
+    position: relative;
+    padding: 0;
+    background: transparent;
+  }
+
+  .auth-footer__inner {
+    max-width: none;
+    margin: 0;
+    padding-left: 0;
+    padding-right: 0;
+    padding-bottom: 0;
   }
 
   .auth-header__back,
   .auth-btn {
     border-radius: 12px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .auth-app {
+    grid-template-columns: minmax(620px, 1.2fr) minmax(460px, 0.8fr);
+  }
+}
+
+@media (min-width: 1440px) {
+  .auth-sheet__card {
+    max-width: 560px;
+  }
+
+  .auth-footer__inner {
+    max-width: 560px;
   }
 }
 
