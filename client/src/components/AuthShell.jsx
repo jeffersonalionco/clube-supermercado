@@ -42,27 +42,29 @@ export default function AuthShell({
         <div className="auth-header__spacer auth-header__spacer--end" />
       </header>
 
-      {step != null && (
-        <div className="auth-steps" aria-label={`Etapa ${step} de ${totalSteps}`}>
-          {Array.from({ length: totalSteps }, (_, i) => (
-            <span
-              key={i}
-              className={`auth-steps__dot ${i + 1 <= step ? "auth-steps__dot--active" : ""} ${i + 1 === step ? "auth-steps__dot--current" : ""}`}
-            />
-          ))}
-        </div>
-      )}
+      <div className="auth-panel">
+        {step != null && (
+          <div className="auth-steps" aria-label={`Etapa ${step} de ${totalSteps}`}>
+            {Array.from({ length: totalSteps }, (_, i) => (
+              <span
+                key={i}
+                className={`auth-steps__dot ${i + 1 <= step ? "auth-steps__dot--active" : ""} ${i + 1 === step ? "auth-steps__dot--current" : ""}`}
+              />
+            ))}
+          </div>
+        )}
 
-      <section className="auth-hero">
-        <Logo variant="hero" className="auth-hero__logo" />
-        <span className="auth-hero__badge">{badge}</span>
-        <h1 className="auth-hero__title">{title}</h1>
-        {description && <p className="auth-hero__desc">{description}</p>}
-      </section>
+        <section className="auth-hero">
+          <Logo variant="hero" className="auth-hero__logo" />
+          <span className="auth-hero__badge">{badge}</span>
+          <h1 className="auth-hero__title">{title}</h1>
+          {description && <p className="auth-hero__desc">{description}</p>}
+        </section>
 
-      <main className="auth-sheet">
-        <div className="auth-sheet__card">{children}</div>
-      </main>
+        <main className="auth-sheet">
+          <div className="auth-sheet__card">{children}</div>
+        </main>
+      </div>
 
       {footer && <footer className="auth-footer">{footer}</footer>}
     </div>
