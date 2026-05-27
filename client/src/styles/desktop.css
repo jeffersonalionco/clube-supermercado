@@ -1,0 +1,20 @@
+/**
+ * Desktop (≥1024px) — largura total da tela + cantos arredondados consistentes.
+ * Mobile permanece inalterado (estilos base + max-width: 1023px).
+ */
+
+@media (min-width: 1024px) {
+  :root {
+    --desktop-gutter: clamp(1.75rem, 3.5vw, 3.5rem);
+    --desktop-radius: 20px;
+    --desktop-radius-sm: 14px;
+  }
+
+  body {
+    background: #d0ddd6;
+  }
+
+  #root {
+    width: 100%;
+  }
+}

@@ -1,0 +1,215 @@
+/* Subpáginas — perfil, contato */
+
+.subpage-app {
+  min-height: 100dvh;
+  width: 100%;
+  background: var(--home-bg, #eef4f0);
+  color: var(--home-text, #14281f);
+  font-family: "DM Sans", system-ui, sans-serif;
+}
+
+.subpage-loading,
+.subpage-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: 2rem;
+  text-align: center;
+  gap: 1rem;
+}
+
+.subpage-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  width: 100%;
+  padding: max(0.5rem, env(safe-area-inset-top)) 0 0.65rem;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(26, 107, 79, 0.1);
+}
+
+.subpage-header__inner {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 1rem;
+  box-sizing: border-box;
+}
+
+.subpage-header__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.45rem 0.55rem;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--home-primary, #1a6b4f);
+  cursor: pointer;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.subpage-header__back:hover {
+  background: rgba(26, 107, 79, 0.08);
+}
+
+.subpage-header__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  justify-content: center;
+  min-width: 0;
+}
+
+.subpage-header__logo .app-logo {
+  max-height: 34px;
+  width: auto;
+}
+
+.subpage-header__tag {
+  margin: 0;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--home-muted, #5c6f66);
+}
+
+.subpage-header__title {
+  margin: 0.1rem 0 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--home-primary-dark, #0f3d2e);
+  letter-spacing: -0.02em;
+}
+
+.subpage-main {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 1rem 1rem 2.5rem;
+  box-sizing: border-box;
+}
+
+.subpage-card {
+  background: #fff;
+  border-radius: var(--home-radius, 16px);
+  border: 1px solid var(--home-border, #dce8e2);
+  box-shadow: 0 2px 16px rgba(15, 61, 46, 0.06);
+  padding: 1.2rem 1.25rem 1.35rem;
+}
+
+.subpage-card__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.subpage-card__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #e8f5ef, #d4ebe0);
+  color: var(--home-primary, #1a6b4f);
+  flex-shrink: 0;
+}
+
+.subpage-card__icon--contact {
+  background: linear-gradient(135deg, #e8f0fa, #d4e4f5);
+  color: #2a5f8f;
+}
+
+.subpage-card__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--home-primary-dark, #0f3d2e);
+}
+
+.subpage-card__sub {
+  margin: 0.2rem 0 0;
+  font-size: 0.82rem;
+  color: var(--home-muted, #5c6f66);
+}
+
+.subpage-card__action {
+  width: 100%;
+  margin-bottom: 1rem;
+  border-radius: 12px;
+}
+
+.subpage-card__body {
+  padding-top: 0.15rem;
+}
+
+@media (min-width: 1024px) {
+  .subpage-app {
+    background:
+      radial-gradient(
+        ellipse 80% 45% at 100% 0%,
+        rgba(45, 155, 114, 0.1),
+        transparent 55%
+      ),
+      var(--home-bg, #eef4f0);
+  }
+
+  .subpage-header__inner {
+    padding: 0.5rem var(--desktop-gutter, 2.5rem) 0.65rem;
+    max-width: none;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+  }
+
+  .subpage-header__brand {
+    justify-content: flex-start;
+    flex: 1;
+  }
+
+  .subpage-header__title {
+    font-size: 1.35rem;
+  }
+
+  .subpage-header__logo .app-logo {
+    max-height: 42px;
+  }
+
+  .subpage-main {
+    max-width: none;
+    width: 100%;
+    padding: 1.75rem var(--desktop-gutter, 2.5rem) 3rem;
+  }
+
+  .subpage-card {
+    width: 100%;
+    max-width: none;
+    padding: 1.75rem 2rem 2rem;
+    border-radius: var(--desktop-radius, 20px);
+    box-shadow: 0 4px 28px rgba(15, 61, 46, 0.08);
+  }
+
+  .subpage-card__icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 14px;
+  }
+
+  .subpage-card__action {
+    width: auto;
+    min-width: 16rem;
+    border-radius: 12px;
+  }
+}
