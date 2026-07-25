@@ -5,41 +5,256 @@ export const LEGAL_SLUGS = ["regulamento", "privacidade"];
 const CONTEUDO_INICIAL = {
   regulamento: {
     titulo: "Regulamento do Clube Superama+",
-    conteudo: `## 1. Do programa
+    conteudo: `## Identificação
 
-O Clube Superama+ é o programa de relacionamento do Superama Supermercado, destinado a clientes cadastrados na plataforma digital do clube. A participação é gratuita e voluntária.
+O **Clube Superama+** é um programa de relacionamento do **Superama Supermercado**, marca do **Kimp Comércio de Alimentos Ltda.**, pessoa jurídica de direito privado, inscrita no CNPJ sob o nº **00.289.167/0001-14** (matriz), doravante denominado **Superama**.
 
-## 2. Como participar
+Este regulamento possui **duas partes**, com vigência distinta:
 
-Para participar, o cliente deve realizar cadastro na plataforma informando CPF, dados pessoais e de contato válidos. O acesso à área do cliente é feito com CPF (ou CNPJ, quando aplicável) e senha pessoal.
+- **Parte I** — Descontos exclusivos (em vigor)
+- **Parte II** — Programa de pontos e prêmios (antecipação — ainda não em vigor)
 
-## 3. Acúmulo de pontos
+---
 
-- A cada **R$ 50,00** (cinquenta reais) em compras elegíveis, o participante acumula **1 (um) ponto**.
-- O cálculo considera o **valor acumulado** das compras (saldo pendente), e não cada cupom isoladamente.
-- **Somente compras realizadas a partir da data de cadastro na plataforma do clube** são contabilizadas para pontos.
-- Compras anteriores ao cadastro no clube **não** geram pontos retroativos.
-- O saldo de pontos é atualizado conforme as vendas são sincronizadas com o sistema da loja.
+## PARTE I — DESCONTOS EXCLUSIVOS
 
-## 4. Resgate de prêmios
+A Parte I regula o benefício atualmente disponível aos clientes cadastrados no Clube Superama+: **descontos exclusivos em produtos selecionados**.
 
-- Os prêmios (brindes) disponíveis são exibidos no catálogo da plataforma, com indicação da quantidade de pontos necessária e disponibilidade de estoque.
-- O resgate é realizado **presencialmente na loja**, mediante apresentação do CPF e confirmação pelo atendente.
-- Cada resgate debita os pontos correspondentes ao prêmio e reduz o estoque em 1 (uma) unidade.
-- Prêmios sujeitos a disponibilidade; a loja pode alterar o catálogo, valores em pontos e estoque a qualquer momento.
-- Pontos **não são conversíveis em dinheiro** e **não são transferíveis** entre participantes.
+---
 
-## 5. Validade e cancelamento
+## I.1. Objetivo
 
-- A loja reserva-se o direito de ajustar regras de acúmulo, prêmios e benefícios, com comunicação na plataforma quando aplicável.
-- Em caso de suspeita de fraude ou uso indevido, o cadastro ou o saldo de pontos poderá ser suspenso ou cancelado.
-- Cupons cancelados ou estornados na loja podem deixar de contar para pontos, conforme registros do sistema.
+O Clube Superama+ é um programa **gratuito** de relacionamento criado pelo Superama com o objetivo de oferecer **descontos exclusivos**, ofertas especiais e benefícios comerciais aos clientes cadastrados.
 
-## 6. Disposições gerais
+A participação no Clube Superama+ **não caracteriza** concurso, sorteio, distribuição gratuita de prêmios ou qualquer modalidade sujeita à autorização prevista na legislação aplicável.
 
-- Dúvidas sobre pontos, compras ou resgates devem ser tratadas no atendimento da loja.
-- Ao aderir ao clube, o participante declara ter lido e aceito este regulamento e a Política de Privacidade.
-- O Superama poderá alterar este regulamento; a versão vigente estará sempre disponível na plataforma.`,
+## I.2. Participação
+
+**I.2.1.** A participação é gratuita.
+
+**I.2.2.** Poderão participar pessoas físicas maiores de 18 anos, inscritas no CPF.
+
+**I.2.3.** O cadastro poderá ser realizado:
+
+- pelo site oficial do Clube Superama+;
+- por aplicativo oficial, quando disponível;
+- diretamente na loja, quando disponibilizado.
+
+**I.2.4.** O cliente declara que todas as informações fornecidas são verdadeiras.
+
+**I.2.5.** O cliente compromete-se a manter seus dados sempre atualizados.
+
+## I.3. Como funciona
+
+**I.3.1.** O Clube Superama+ concede descontos exclusivos em produtos previamente selecionados pelo Superama.
+
+**I.3.2.** Para receber os descontos é **obrigatório informar o CPF cadastrado** antes da finalização da compra.
+
+**I.3.3.** Após a emissão do cupom fiscal **não será possível** aplicar descontos retroativamente.
+
+**I.3.4.** Os descontos serão concedidos automaticamente quando o produto fizer parte de uma oferta vigente do Clube Superama+.
+
+## I.4. Dos descontos
+
+**I.4.1.** Os descontos poderão variar conforme:
+
+- produtos participantes;
+- período promocional;
+- estoque disponível;
+- unidade participante.
+
+**I.4.2.** Nem todos os produtos da loja participarão das campanhas.
+
+**I.4.3.** Os preços promocionais poderão sofrer alterações sem aviso prévio.
+
+**I.4.4.** O Superama poderá criar ofertas exclusivas para determinados grupos de clientes, conforme critérios internos.
+
+**I.4.5.** Os descontos são pessoais e vinculados ao CPF cadastrado.
+
+## I.5. Ofertas exclusivas
+
+O Clube Superama+ poderá oferecer:
+
+- descontos exclusivos;
+- campanhas promocionais;
+- ofertas especiais;
+- vantagens para clientes cadastrados.
+
+A participação em determinada oferta dependerá das regras específicas divulgadas durante cada campanha.
+
+## I.6. Limitações
+
+Os descontos não serão aplicados em situações como:
+
+- compras realizadas sem identificação do CPF;
+- vendas para CNPJ;
+- produtos cuja legislação impeça descontos;
+- serviços terceirizados;
+- produtos expressamente excluídos das campanhas.
+
+## I.7. Benefícios
+
+Os benefícios do Clube Superama+ previstos nesta Parte I:
+
+- são pessoais;
+- são intransferíveis;
+- não possuem valor monetário;
+- não podem ser convertidos em dinheiro;
+- não podem ser vendidos ou negociados.
+
+## I.8. Cadastro e dados
+
+O cliente autoriza o Superama a utilizar seus dados para:
+
+- identificação nas compras;
+- envio de ofertas;
+- comunicação institucional;
+- campanhas promocionais.
+
+O tratamento dos dados observará a Lei Geral de Proteção de Dados (**LGPD**) e a Política de Privacidade vigente na plataforma.
+
+O cliente poderá solicitar a exclusão de seu cadastro a qualquer momento.
+
+## I.9. Fraudes
+
+O Superama poderá suspender ou cancelar o cadastro de clientes que:
+
+- utilizarem CPF de terceiros;
+- praticarem fraude;
+- tentarem obter vantagens indevidas;
+- utilizarem o programa de forma incompatível com este regulamento.
+
+## I.10. Alterações do regulamento
+
+O Superama poderá alterar este regulamento, criar novas campanhas, modificar benefícios ou encerrar o Clube Superama+ a qualquer momento.
+
+Sempre que possível, as alterações serão divulgadas através dos canais oficiais.
+
+## I.11. Prazo de vigência da Parte I
+
+A Parte I (descontos exclusivos) possui prazo de vigência indeterminado e encontra-se **em vigor**.
+
+O programa poderá ser suspenso ou encerrado mediante comunicação aos clientes.
+
+## I.12. Disposições gerais da Parte I
+
+**I.12.1.** A participação no Clube Superama+ implica na aceitação integral deste regulamento.
+
+**I.12.2.** Os descontos poderão possuir quantidade limitada, período determinado ou restrição de estoque.
+
+**I.12.3.** O Superama não garante a disponibilidade permanente de qualquer oferta.
+
+**I.12.4.** O cliente deverá acompanhar as ofertas pelos canais oficiais do Superama.
+
+## I.13. Atendimento
+
+Dúvidas poderão ser esclarecidas pelos canais oficiais de atendimento do Superama.
+
+## I.14. Foro
+
+Fica eleito o foro da comarca da sede do **Kimp Comércio de Alimentos Ltda.** (CNPJ **00.289.167/0001-14**) para dirimir eventuais questões decorrentes deste regulamento, ressalvados os direitos previstos no Código de Defesa do Consumidor.
+
+---
+
+## PARTE II — PROGRAMA DE PONTOS E PRÊMIOS (ANTECIPAÇÃO)
+
+**Atenção:** a Parte II **ainda não está em vigor**.
+
+As regras abaixo descrevem, de forma antecipada, como funcionará o **programa de pontos e resgate de prêmios** do Clube Superama+ quando o Superama comunicar oficialmente o início da vigência.
+
+Enquanto a Parte II não estiver ativa:
+
+- **não há** acúmulo de pontos;
+- **não há** resgate de prêmios por pontos;
+- **não se cria direito adquirido** com base nestas regras antecipadas;
+- permanece plenamente válida a **Parte I** (descontos exclusivos).
+
+A ativação da Parte II será comunicada pelos canais oficiais do Superama e/ou pela plataforma do clube.
+
+---
+
+## II.1. Do programa de pontos
+
+Quando vigente, o programa de pontos integra o Clube Superama+ e destina-se a clientes cadastrados na plataforma digital do clube. A participação permanece gratuita e voluntária.
+
+## II.2. Como participar do programa de pontos
+
+**II.2.1.** Para participar, o cliente deve estar cadastrado na plataforma do Clube Superama+, com CPF, dados pessoais e de contato válidos.
+
+**II.2.2.** O acesso à área do cliente é feito com CPF e senha pessoal.
+
+**II.2.3.** Aplicam-se, no que couber, as regras de participação, cadastro, fraude e dados da Parte I.
+
+## II.3. Acúmulo de pontos
+
+**II.3.1.** A cada **R$ 50,00** (cinquenta reais) em compras elegíveis, o participante acumula **1 (um) ponto**.
+
+**II.3.2.** O cálculo considera o **valor acumulado** das compras (saldo pendente), e não cada cupom isoladamente. Várias compras menores podem se somar até completar R$ 50,00.
+
+**II.3.3.** **Somente compras realizadas a partir da data de cadastro na plataforma do clube** — e, quando aplicável, a partir da data de ativação oficial do programa de pontos — são contabilizadas para pontos.
+
+**II.3.4.** Compras anteriores ao cadastro no clube **não** geram pontos retroativos.
+
+**II.3.5.** O saldo de pontos é atualizado conforme as vendas são sincronizadas com o sistema da loja.
+
+## II.4. Compras elegíveis e exclusões
+
+**II.4.1.** Em regra, entram no cálculo compras pagas em meios elegíveis (como dinheiro, cartão ou PIX), com o CPF do participante informado no caixa.
+
+**II.4.2.** Cupons em **convênio** podem aparecer no histórico de compras, mas **não pontuam**.
+
+**II.4.3.** Cupons **cancelados** ou **estornados** na loja podem deixar de contar para pontos e, quando já tiverem gerado pontuação, poderão resultar em estorno ou ajuste do saldo, conforme os registros do sistema.
+
+**II.4.4.** O Superama poderá definir outras exclusões de elegibilidade, com divulgação na plataforma quando aplicável.
+
+## II.5. Validade e expiração dos pontos
+
+**II.5.1.** Cada ponto terá validade de **12 (doze) meses**, contados a partir da data da compra que o gerou, salvo comunicação em contrário no momento da ativação do programa.
+
+**II.5.2.** No resgate, o sistema consumirá preferencialmente os pontos que vencerem primeiro (ordem FIFO).
+
+**II.5.3.** Pontos expirados saem do saldo automaticamente e não poderão ser resgatados.
+
+## II.6. Resgate de prêmios
+
+**II.6.1.** Os prêmios (brindes) disponíveis serão exibidos no catálogo da plataforma, com indicação da quantidade de pontos necessária e da disponibilidade de estoque.
+
+**II.6.2.** O resgate será realizado **presencialmente na loja**, mediante apresentação do CPF e confirmação pelo atendimento autorizado.
+
+**II.6.3.** Cada resgate debitará os pontos correspondentes ao prêmio e reduzirá o estoque em 1 (uma) unidade, quando aplicável.
+
+**II.6.4.** Prêmios sujeitos a disponibilidade; a loja poderá alterar o catálogo, a pontuação necessária e o estoque a qualquer momento.
+
+**II.6.5.** Pontos **não são conversíveis em dinheiro** e **não são transferíveis** entre participantes.
+
+## II.7. Consulta e sincronização
+
+**II.7.1.** O participante poderá consultar saldo, histórico e prêmios na plataforma do clube, após a ativação do programa.
+
+**II.7.2.** Pode haver atraso entre a compra na loja e a atualização do saldo na plataforma, em razão da sincronização entre sistemas.
+
+**II.7.3.** Diante de inconsistências, o participante deverá acionar os canais oficiais de atendimento do Superama.
+
+## II.8. Suspensão, ajuste e cancelamento
+
+**II.8.1.** Em caso de suspeita de fraude ou uso indevido, o cadastro ou o saldo de pontos poderá ser suspenso ou cancelado.
+
+**II.8.2.** O Superama reserva-se o direito de ajustar regras de acúmulo, validade, prêmios e benefícios, com comunicação na plataforma quando aplicável.
+
+**II.8.3.** A suspensão ou o encerramento do programa de pontos não afeta, por si só, a vigência da Parte I (descontos), salvo comunicação em contrário.
+
+## II.9. Disposições finais da Parte II
+
+**II.9.1.** A Parte II somente produz efeitos após a comunicação oficial de início de vigência pelo Superama.
+
+**II.9.2.** Até lá, a Parte II tem natureza **informativa e antecipatória**, sem gerar obrigação de pontuar, resgatar ou manter qualquer benefício de pontos.
+
+**II.9.3.** Dúvidas sobre a futura ativação do programa de pontos deverão ser tratadas no atendimento da loja ou pelos canais oficiais do Superama.
+
+---
+
+**Kimp Comércio de Alimentos Ltda.** — Superama Supermercado / Clube Superama+  
+CNPJ: **00.289.167/0001-14**`,
   },
   privacidade: {
     titulo: "Política de Privacidade",
@@ -264,6 +479,8 @@ function mapRowPublico(row) {
 }
 
 const MARCADOR_PRIVACIDADE_VERSAO = "00.289.167/0001-14";
+const MARCADOR_REGULAMENTO_DESCONTOS =
+  "PARTE II — PROGRAMA DE PONTOS E PRÊMIOS (ANTECIPAÇÃO)";
 
 export async function seedConteudoLegal() {
   const db = getPool();
@@ -285,6 +502,7 @@ export async function seedConteudoLegal() {
   }
 
   await sincronizarPrivacidadePadrao(db);
+  await sincronizarRegulamentoDescontos(db);
 }
 
 async function sincronizarPrivacidadePadrao(db) {
@@ -308,6 +526,29 @@ async function sincronizarPrivacidadePadrao(db) {
     [seed.titulo, seed.conteudo]
   );
   console.log("Política de Privacidade atualizada para o template vigente.");
+}
+
+async function sincronizarRegulamentoDescontos(db) {
+  const seed = CONTEUDO_INICIAL.regulamento;
+  const { rows } = await db.query(
+    `SELECT conteudo FROM conteudo_legal WHERE slug = 'regulamento'`
+  );
+  if (!rows.length) return;
+
+  if (String(rows[0].conteudo || "").includes(MARCADOR_REGULAMENTO_DESCONTOS)) {
+    return;
+  }
+
+  await db.query(
+    `UPDATE conteudo_legal
+     SET titulo = $1,
+         conteudo = $2,
+         admin_usuario = 'sistema',
+         atualizado_em = NOW()
+     WHERE slug = 'regulamento'`,
+    [seed.titulo, seed.conteudo]
+  );
+  console.log("Regulamento atualizado para descontos do Clube Superama+.");
 }
 
 export async function listarConteudoLegal() {
