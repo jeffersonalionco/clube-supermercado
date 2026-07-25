@@ -1,7 +1,6 @@
 import jwt from "jsonwebtoken";
+import { getSessionSecret } from "../config/security.js";
 import { buscarUsuarioPorId } from "../services/usuarioService.js";
-
-const SECRET = process.env.SESSION_SECRET || "altere-isso-em-producao";
 
 export async function requireAuth(req, res, next) {
   const header = req.headers.authorization;
@@ -13,7 +12,7 @@ export async function requireAuth(req, res, next) {
   const token = header.slice(7);
 
   try {
-    const payload = jwt.verify(token, SECRET);
+    const payload = jwt.verify(token, getSessionSecret());
     const usuario = await buscarUsuarioPorId(payload.sub);
 
     if (!usuario || usuario.cpf !== payload.cpf) {

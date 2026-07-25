@@ -303,6 +303,80 @@ export async function buscarVendasClienteApi(cpfCnpj, dataini, datafim) {
 }
 
 /**
+ * Lista produtos da unidade (paginação por cursor = código do último item).
+ * GET /v3.2/produtounidade/listaprodutos/{cursor}/unidade/{unidade}/detalhado[/ativos]
+ */
+export async function listarProdutosUnidadePagina(
+  cursor,
+  unidade,
+  { apenasAtivos = false } = {}
+) {
+  const codUnidade = String(unidade ?? "").trim();
+  if (!codUnidade) {
+    return { ok: false, error: "Unidade é obrigatória" };
+  }
+
+  const cursorStr = String(cursor ?? 0).trim() || "0";
+  const sufixoAtivos = apenasAtivos ? "/ativos" : "";
+  const path = `/v3.2/produtounidade/listaprodutos/${encodeURIComponent(cursorStr)}/unidade/${encodeURIComponent(codUnidade)}/detalhado${sufixoAtivos}`;
+  const response = await apiRequest(path, { method: "GET" });
+  const { data, parseError } = await lerRespostaApi(response);
+
+  if (parseError) {
+    return { ok: false, error: parseError };
+  }
+
+  if (!response.ok) {
+    const message =
+      data?.response?.messages?.[0]?.message ||
+      data?.message ||
+      `Falha ao listar produtos (${response.status})`;
+    return { ok: false, error: message, raw: data };
+  }
+
+  const produtos = data?.response?.produtos;
+  return {
+    ok: true,
+    produtos: Array.isArray(produtos) ? produtos : [],
+  };
+}
+
+/**
+ * Produto na unidade por código (preços atualizados; preferir à lista paginada).
+ * GET /v3.2/produtounidade/{codigo}/unidade/{unidade}/detalhado
+ */
+export async function buscarProdutoUnidadePorCodigo(codigoProduto, unidade) {
+  const codigo = String(codigoProduto ?? "").trim();
+  const codUnidade = String(unidade ?? "").trim();
+  if (!codigo || !codUnidade) {
+    return { ok: false, error: "Código do produto e unidade são obrigatórios" };
+  }
+
+  const path = `/v3.2/produtounidade/${encodeURIComponent(codigo)}/unidade/${encodeURIComponent(codUnidade)}/detalhado`;
+  const response = await apiRequest(path, { method: "GET" });
+  const { data, parseError } = await lerRespostaApi(response);
+
+  if (parseError) {
+    return { ok: false, error: parseError };
+  }
+
+  if (!response.ok) {
+    const message =
+      data?.response?.messages?.[0]?.message ||
+      data?.message ||
+      `Falha ao consultar produto na unidade (${response.status})`;
+    return { ok: false, error: message, raw: data };
+  }
+
+  const produto = data?.response?.produto ?? data?.response?.produtos?.[0];
+  if (!produto) {
+    return { ok: false, error: "Produto não encontrado na unidade", raw: data };
+  }
+
+  return { ok: true, produto };
+}
+
+/**
  * Dados do produto por código.
  * GET /v1.0/produto/{codigo}
  */

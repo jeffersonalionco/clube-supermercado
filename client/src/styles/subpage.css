@@ -4,7 +4,7 @@
   min-height: 100dvh;
   width: 100%;
   background: var(--home-bg, #eef4f0);
-  color: var(--home-text, #14281f);
+  color: var(--home-text, #142033);
   font-family: "DM Sans", system-ui, sans-serif;
 }
 
@@ -28,7 +28,7 @@
   padding: max(0.5rem, env(safe-area-inset-top)) 0 0.65rem;
   background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(14px);
-  border-bottom: 1px solid rgba(26, 107, 79, 0.1);
+  border-bottom: 1px solid rgba(27, 79, 160, 0.1);
 }
 
 .subpage-header__inner {
@@ -52,14 +52,14 @@
   font: inherit;
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--home-primary, #1a6b4f);
+  color: var(--home-primary, #1b4fa0);
   cursor: pointer;
   border-radius: 10px;
   flex-shrink: 0;
 }
 
 .subpage-header__back:hover {
-  background: rgba(26, 107, 79, 0.08);
+  background: rgba(27, 79, 160, 0.08);
 }
 
 .subpage-header__brand {
@@ -81,14 +81,14 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--home-muted, #5c6f66);
+  color: var(--home-muted, #5c6b7a);
 }
 
 .subpage-header__title {
   margin: 0.1rem 0 0;
   font-size: 1rem;
   font-weight: 700;
-  color: var(--home-primary-dark, #0f3d2e);
+  color: var(--home-primary-dark, #0d2b66);
   letter-spacing: -0.02em;
 }
 
@@ -103,8 +103,8 @@
 .subpage-card {
   background: #fff;
   border-radius: var(--home-radius, 16px);
-  border: 1px solid var(--home-border, #dce8e2);
-  box-shadow: 0 2px 16px rgba(15, 61, 46, 0.06);
+  border: 1px solid var(--home-border, #dce4ee);
+  box-shadow: 0 2px 16px rgba(13, 43, 102, 0.06);
   padding: 1.2rem 1.25rem 1.35rem;
 }
 
@@ -122,8 +122,8 @@
   width: 2.75rem;
   height: 2.75rem;
   border-radius: 12px;
-  background: linear-gradient(135deg, #e8f5ef, #d4ebe0);
-  color: var(--home-primary, #1a6b4f);
+  background: linear-gradient(135deg, #e8f5ef, #d4e0f5);
+  color: var(--home-primary, #1b4fa0);
   flex-shrink: 0;
 }
 
@@ -136,13 +136,13 @@
   margin: 0;
   font-size: 1.05rem;
   font-weight: 700;
-  color: var(--home-primary-dark, #0f3d2e);
+  color: var(--home-primary-dark, #0d2b66);
 }
 
 .subpage-card__sub {
   margin: 0.2rem 0 0;
   font-size: 0.82rem;
-  color: var(--home-muted, #5c6f66);
+  color: var(--home-muted, #5c6b7a);
 }
 
 .subpage-card__action {
@@ -160,7 +160,7 @@
     background:
       radial-gradient(
         ellipse 80% 45% at 100% 0%,
-        rgba(45, 155, 114, 0.1),
+        rgba(59, 111, 191, 0.1),
         transparent 55%
       ),
       var(--home-bg, #eef4f0);
@@ -198,7 +198,7 @@
     max-width: none;
     padding: 1.75rem 2rem 2rem;
     border-radius: var(--desktop-radius, 20px);
-    box-shadow: 0 4px 28px rgba(15, 61, 46, 0.08);
+    box-shadow: 0 4px 28px rgba(13, 43, 102, 0.08);
   }
 
   .subpage-card__icon {

@@ -21,8 +21,8 @@ body {
   font-family: "DM Sans", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: #dce8e2;
-  color: #14281f;
+  background: #dce4ee;
+  color: #142033;
   overscroll-behavior-y: none;
 }
 
@@ -41,5 +41,5 @@ button:focus-visible {
 }
 
 button:focus-visible {
-  box-shadow: 0 0 0 3px rgba(45, 155, 114, 0.45);
+  box-shadow: 0 0 0 3px rgba(59, 111, 191, 0.45);
 }

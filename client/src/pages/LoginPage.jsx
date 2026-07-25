@@ -2,11 +2,15 @@ import { useState } from "react";
 import AuthShell from "../components/AuthShell.jsx";
 import Field from "../components/Field.jsx";
 import CadastroClubePage from "./CadastroClubePage.jsx";
-import { cpfValido, formatarCpfCnpj } from "../utils/cpf.js";
+import LegalPage from "./LegalPage.jsx";
+import { cpfSomenteValido, formatarCpf } from "../utils/cpf.js";
 import { apiUrl, parseApiResponse } from "../utils/api.js";
 import { mensagemParaUsuario } from "../utils/mensagensUsuario.js";
 import { saveSession } from "../utils/session.js";
+import AceiteLegal from "../components/AceiteLegal.jsx";
+import { useProgramaPublico } from "../hooks/useProgramaPublico.js";
 import "../styles/auth-mobile.css";
+import "../styles/legal.css";
 
 function Btn({ loading, children, variant = "primary", type = "button", ...props }) {
   return (
@@ -23,7 +27,9 @@ function Btn({ loading, children, variant = "primary", type = "button", ...props
 }
 
 export default function LoginPage({ onLogin }) {
+  const pontosAtivo = useProgramaPublico();
   const [tela, setTela] = useState("login");
+  const [legalSlug, setLegalSlug] = useState(null);
   const [etapa, setEtapa] = useState("cpf");
   const [cpf, setCpf] = useState("");
   const [senha, setSenha] = useState("");
@@ -31,14 +37,17 @@ export default function LoginPage({ onLogin }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [aceiteLegal, setAceiteLegal] = useState(false);
+  const [erroAceite, setErroAceite] = useState(false);
+  const [precisaAceite, setPrecisaAceite] = useState(false);
 
   async function handleVerificarCpf(event) {
     event.preventDefault();
     setError("");
     setSuccess("");
 
-    if (!cpfValido(cpf)) {
-      setError("Informe um CPF ou CNPJ válido");
+    if (!cpfSomenteValido(cpf)) {
+      setError("Informe um CPF válido com 11 dígitos");
       return;
     }
 
@@ -60,6 +69,7 @@ export default function LoginPage({ onLogin }) {
         return;
       }
 
+      setPrecisaAceite(!data.cadastradoNaPlataforma);
       setEtapa("senha");
     } catch (err) {
       setError(mensagemParaUsuario(err.message));
@@ -72,13 +82,25 @@ export default function LoginPage({ onLogin }) {
     event.preventDefault();
     setError("");
     setSuccess("");
+    setErroAceite(false);
+
+    if (precisaAceite && !aceiteLegal) {
+      setErroAceite(true);
+      setError("Aceite o Regulamento e a Política de Privacidade para continuar");
+      return;
+    }
+
     setLoading(true);
 
     try {
       const response = await fetch(apiUrl("/api/auth/login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cpf, senha }),
+        body: JSON.stringify({
+          cpf,
+          senha,
+          aceiteLegal: precisaAceite ? aceiteLegal : undefined,
+        }),
       });
 
       const { data } = await parseApiResponse(response);
@@ -93,8 +115,16 @@ export default function LoginPage({ onLogin }) {
       }
 
       if (data.token && onLogin) {
-        saveSession({ token: data.token, usuario: data.usuario });
-        onLogin({ token: data.token, usuario: data.usuario });
+        saveSession({
+          token: data.token,
+          usuario: data.usuario,
+          programa: data.programa,
+        });
+        onLogin({
+          token: data.token,
+          usuario: data.usuario,
+          programa: data.programa,
+        });
         return;
       }
 
@@ -118,30 +148,47 @@ export default function LoginPage({ onLogin }) {
   function voltarParaCpf() {
     setEtapa("cpf");
     setSenha("");
+    setAceiteLegal(false);
+    setErroAceite(false);
+    setPrecisaAceite(false);
     setError("");
     setSuccess("");
   }
 
+  const step = etapa === "cpf" ? 1 : 2;
+
+  const overlayLegal = legalSlug ? (
+    <div className="legal-overlay">
+      <LegalPage slug={legalSlug} onVoltar={() => setLegalSlug(null)} />
+    </div>
+  ) : null;
+
   if (tela === "cadastro-clube") {
     return (
-      <CadastroClubePage
-        cpf={cpf.replace(/\D/g, "")}
-        onVoltar={voltarAoLogin}
-      />
+      <>
+        <CadastroClubePage
+          cpf={cpf.replace(/\D/g, "")}
+          onVoltar={voltarAoLogin}
+          onAbrirRegulamento={() => setLegalSlug("regulamento")}
+          onAbrirPrivacidade={() => setLegalSlug("privacidade")}
+        />
+        {overlayLegal}
+      </>
     );
   }
 
-  const step = etapa === "cpf" ? 1 : 2;
-
   return (
+    <>
     <AuthShell
       variant="login"
       badge="Área do cliente"
-      title={etapa === "cpf" ? "Bem-vindo de volta" : "Sua senha"}
+      title={etapa === "cpf" ? "Bem-vindo ao Clube Superama+" : "Sua senha"}
       description={
         etapa === "cpf"
-          ? "Digite seu CPF ou CNPJ para acessar a plataforma."
-          : "Informe a senha vinculada ao seu documento."
+          ? pontosAtivo
+            ? "Acumule pontos a cada compra e troque por prêmios exclusivos na loja."
+            : "Aproveite descontos em produtos selecionados e benefícios exclusivos do Clube Superama+."
+          : "Informe a senha vinculada ao seu CPF."
       }
       onBack={etapa === "senha" ? voltarParaCpf : undefined}
       backLabel="CPF"
@@ -169,7 +216,7 @@ export default function LoginPage({ onLogin }) {
       {etapa === "cpf" ? (
         <form id="form-cpf" onSubmit={handleVerificarCpf} noValidate>
           <h2 className="auth-form-title">Identificação</h2>
-          <p className="auth-form-sub">Informe seu documento para continuar.</p>
+          <p className="auth-form-sub">Informe seu CPF para continuar.</p>
 
           {error && (
             <div className="auth-alert auth-alert--error" role="alert">
@@ -178,7 +225,7 @@ export default function LoginPage({ onLogin }) {
             </div>
           )}
 
-          <Field label="CPF ou CNPJ" id="cpf">
+          <Field label="CPF" id="cpf">
             <input
               id="cpf"
               type="text"
@@ -186,8 +233,9 @@ export default function LoginPage({ onLogin }) {
               autoComplete="username"
               enterKeyHint="go"
               placeholder="000.000.000-00"
+              maxLength={14}
               value={cpf}
-              onChange={(e) => setCpf(formatarCpfCnpj(e.target.value))}
+              onChange={(e) => setCpf(formatarCpf(e.target.value))}
               disabled={loading}
               required
             />
@@ -197,7 +245,7 @@ export default function LoginPage({ onLogin }) {
         <form id="form-senha" onSubmit={handleLogin} noValidate>
           <h2 className="auth-form-title">Senha de acesso</h2>
           <p className="auth-form-sub">
-            Documento: <strong>{cpf}</strong>
+            CPF: <strong>{cpf}</strong>
           </p>
 
           {error && (
@@ -217,7 +265,11 @@ export default function LoginPage({ onLogin }) {
           <Field
             label="Senha"
             id="senha"
-            hint="No primeiro acesso, você define a senha que usará daqui em diante."
+            hint={
+              precisaAceite
+                ? "No primeiro acesso, crie uma senha com pelo menos 8 caracteres."
+                : "Informe a senha vinculada ao seu CPF."
+            }
           >
             <div className="auth-password-wrap">
               <input
@@ -230,7 +282,7 @@ export default function LoginPage({ onLogin }) {
                 onChange={(e) => setSenha(e.target.value)}
                 disabled={loading}
                 required
-                minLength={4}
+                minLength={precisaAceite ? 8 : 4}
                 autoFocus
               />
               <button
@@ -262,8 +314,34 @@ export default function LoginPage({ onLogin }) {
               </button>
             </div>
           </Field>
+
+          {precisaAceite && (
+            <AceiteLegal
+              checked={aceiteLegal}
+              onChange={(v) => {
+                setAceiteLegal(v);
+                if (v) setErroAceite(false);
+              }}
+              onAbrirRegulamento={() => setLegalSlug("regulamento")}
+              onAbrirPrivacidade={() => setLegalSlug("privacidade")}
+              erro={erroAceite}
+            />
+          )}
         </form>
       )}
+
+      {etapa === "cpf" && (
+        <nav className="auth-legal-links" aria-label="Documentos legais">
+          <button type="button" onClick={() => setLegalSlug("regulamento")}>
+            Regulamento
+          </button>
+          <button type="button" onClick={() => setLegalSlug("privacidade")}>
+            Privacidade
+          </button>
+        </nav>
+      )}
     </AuthShell>
+    {overlayLegal}
+    </>
   );
 }

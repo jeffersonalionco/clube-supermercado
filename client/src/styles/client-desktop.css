@@ -1,0 +1,232 @@
+/**
+ * Layout desktop unificado — área do cliente (≥1024px).
+ * Alinha navegação, cabeçalhos e conteúdo na mesma grade.
+ */
+
+@media (min-width: 1024px) {
+  :root {
+    --client-desktop-max: 1180px;
+    --client-desktop-nav-height: 4rem;
+  }
+
+  .client-shell--tabs {
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background:
+      radial-gradient(
+        ellipse 70% 40% at 100% 0%,
+        rgba(59, 111, 191, 0.14),
+        transparent 55%
+      ),
+      radial-gradient(
+        ellipse 55% 35% at 0% 100%,
+        rgba(13, 43, 102, 0.07),
+        transparent 50%
+      ),
+      #d4e0da;
+  }
+
+  .client-desktop-body {
+    width: 100%;
+    flex: 1;
+  }
+
+  /* Páginas com fundo próprio — transparente para usar o shell */
+  .client-shell--tabs .home-app,
+  .client-shell--tabs .compras-app,
+  .client-shell--tabs .ph-app,
+  .client-shell--tabs .premios-app {
+    background: transparent;
+  }
+
+  /* Cabeçalhos sticky abaixo da nav principal */
+  .client-shell--tabs .home-header--dashboard {
+    display: none;
+  }
+
+  .client-shell--tabs .home-header,
+  .client-shell--tabs .client-tab-header,
+  .client-shell--tabs .compras-header,
+  .client-shell--tabs .premios-header,
+  .client-shell--tabs .ph-header {
+    top: var(--client-desktop-nav-height);
+  }
+
+  .client-shell--tabs .client-tab-header {
+    position: sticky;
+    z-index: 45;
+    background: rgba(244, 248, 245, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(27, 79, 160, 0.08);
+    padding: 0.55rem var(--desktop-gutter);
+  }
+
+  .client-shell--tabs .client-tab-header__inner {
+    max-width: var(--client-desktop-max);
+    margin: 0 auto;
+    padding: 0;
+  }
+
+  .client-shell--tabs .client-tab-header__logo {
+    display: none;
+  }
+
+  .client-shell--tabs .client-tab-header__title {
+    font-size: 1.15rem;
+  }
+
+  /* ——— Home (dashboard em home-dashboard.css) ——— */
+  .client-shell--tabs .home-app {
+    background: transparent;
+  }
+
+  /* ——— Compras ——— */
+  .client-shell--tabs .compras-shell {
+    max-width: var(--client-desktop-max);
+    margin: 0 auto;
+    width: auto;
+    padding: 1.25rem var(--desktop-gutter) 3rem;
+    box-sizing: border-box;
+  }
+
+  .client-shell--tabs .compras-sidebar {
+    top: calc(var(--client-desktop-nav-height) + 3.5rem);
+  }
+
+  .client-shell--tabs .compras-filtros,
+  .client-shell--tabs .compras-resumo {
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .client-shell--tabs .compras-filtros .regras-pontos {
+    margin-top: 1rem;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    background: transparent;
+  }
+
+  /* ——— Pontos ——— */
+  .client-shell--tabs .ph-hero {
+    max-width: var(--client-desktop-max);
+    margin: 0 auto;
+    width: auto;
+    padding: 1.25rem var(--desktop-gutter) 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .client-shell--tabs .ph-hero__card {
+    margin: 0;
+    height: 100%;
+    box-sizing: border-box;
+  }
+
+  .client-shell--tabs .ph-stats {
+    margin: 0;
+    align-self: stretch;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.65rem;
+  }
+
+  .client-shell--tabs .ph-stat {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 4.5rem;
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: var(--desktop-radius-sm);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .client-shell--tabs .ph-main {
+    max-width: var(--client-desktop-max);
+    margin: 0 auto;
+    width: auto;
+    padding: 1.25rem var(--desktop-gutter) 3rem;
+  }
+
+  .client-shell--tabs .ph-main .regras-pontos {
+    margin-bottom: 1rem;
+  }
+
+  .client-shell--tabs .ph-timeline {
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-border);
+    border-radius: var(--desktop-radius);
+    padding: 1rem 1.15rem;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .client-shell--tabs .ph-item {
+    border-radius: var(--desktop-radius-sm);
+  }
+
+  /* ——— Prêmios ——— */
+  .client-shell--tabs .premios-hero {
+    max-width: var(--client-desktop-max);
+    margin: 0 auto;
+    width: auto;
+    padding: 1.25rem var(--desktop-gutter) 0.5rem;
+  }
+
+  .client-shell--tabs .premios-hero__content {
+    max-width: none;
+    padding: 1.75rem 2rem;
+    border-radius: var(--desktop-radius);
+    box-shadow: 0 12px 36px rgba(13, 43, 102, 0.18);
+  }
+
+  .client-shell--tabs .premios-shell {
+    max-width: var(--client-desktop-max);
+    margin: 0 auto;
+    width: auto;
+    padding: 0 var(--desktop-gutter) 3rem;
+    box-sizing: border-box;
+  }
+
+  .client-shell--tabs .premios-filtros {
+    margin-bottom: 1.25rem;
+  }
+
+  .client-shell--tabs .premios-grid {
+    gap: 1.25rem;
+  }
+
+  .client-shell--tabs .premio-card {
+    border-radius: var(--desktop-radius-sm);
+    transition: transform 0.2s var(--ease-out), box-shadow 0.2s ease;
+  }
+
+  .client-shell--tabs .premio-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .client-shell--tabs .premios-nota {
+    text-align: center;
+    margin-top: 1.5rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .client-shell--tabs .ph-stats {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .client-shell--tabs .premios-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1199px) {
+  .client-shell--tabs .premios-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

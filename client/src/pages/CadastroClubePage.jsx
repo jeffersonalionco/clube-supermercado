@@ -2,14 +2,17 @@ import { useState } from "react";
 import AuthShell from "../components/AuthShell.jsx";
 import Field from "../components/Field.jsx";
 import { apiUrl, parseApiResponse } from "../utils/api.js";
-import { formatarCpfCnpj } from "../utils/cpf.js";
+import { formatarCpf } from "../utils/cpf.js";
 import {
   dataNascimentoValida,
   formatarDataNascimento,
   formatarTelefone,
 } from "../utils/format.js";
 import { mensagemParaUsuario } from "../utils/mensagensUsuario.js";
+import AceiteLegal from "../components/AceiteLegal.jsx";
+import { useProgramaPublico } from "../hooks/useProgramaPublico.js";
 import "../styles/auth-mobile.css";
+import "../styles/legal.css";
 
 function Btn({ loading, children, variant = "primary", type = "button", ...props }) {
   return (
@@ -25,13 +28,21 @@ function Btn({ loading, children, variant = "primary", type = "button", ...props
   );
 }
 
-export default function CadastroClubePage({ cpf, onVoltar }) {
+export default function CadastroClubePage({
+  cpf,
+  onVoltar,
+  onAbrirRegulamento,
+  onAbrirPrivacidade,
+}) {
+  const pontosAtivo = useProgramaPublico();
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [telefone, setTelefone] = useState("");
   const [dataNascimento, setDataNascimento] = useState("");
   const [sexo, setSexo] = useState("");
   const [estadoCivil, setEstadoCivil] = useState("");
+  const [aceiteLegal, setAceiteLegal] = useState(false);
+  const [erroAceite, setErroAceite] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [enviado, setEnviado] = useState(false);
@@ -61,6 +72,12 @@ export default function CadastroClubePage({ cpf, onVoltar }) {
       return;
     }
 
+    if (!aceiteLegal) {
+      setErroAceite(true);
+      setError("Aceite o Regulamento e a Política de Privacidade para continuar");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -70,6 +87,7 @@ export default function CadastroClubePage({ cpf, onVoltar }) {
         dataNascimento,
         nome: nome.trim(),
         email: email.trim(),
+        aceiteLegal: true,
       };
 
       if (sexo) payload.sexo = sexo;
@@ -131,7 +149,11 @@ export default function CadastroClubePage({ cpf, onVoltar }) {
       variant="clube"
       badge="Novo membro"
       title="Cadastre-se no clube"
-      description="Preencha seus dados para fazer parte do Clube Superama."
+      description={
+        pontosAtivo
+          ? "Preencha seus dados para fazer parte do Clube Superama."
+          : "Cadastre-se e aproveite descontos em produtos selecionados na loja."
+      }
       onBack={onVoltar}
       backLabel="Login"
       footer={
@@ -157,7 +179,7 @@ export default function CadastroClubePage({ cpf, onVoltar }) {
         )}
 
         <Field label="CPF *" id="cpf-clube">
-          <input id="cpf-clube" type="text" value={formatarCpfCnpj(cpf)} readOnly />
+          <input id="cpf-clube" type="text" value={formatarCpf(cpf)} readOnly />
         </Field>
 
         <Field label="Data de nascimento *" id="nascimento">
@@ -244,6 +266,17 @@ export default function CadastroClubePage({ cpf, onVoltar }) {
             <option value="OUTROS">Outros</option>
           </select>
         </Field>
+
+        <AceiteLegal
+          checked={aceiteLegal}
+          onChange={(v) => {
+            setAceiteLegal(v);
+            if (v) setErroAceite(false);
+          }}
+          onAbrirRegulamento={onAbrirRegulamento}
+          onAbrirPrivacidade={onAbrirPrivacidade}
+          erro={erroAceite}
+        />
       </form>
     </AuthShell>
   );

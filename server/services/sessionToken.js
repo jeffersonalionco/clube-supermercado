@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
+import { getSessionSecret } from "../config/security.js";
 
-const SECRET = process.env.SESSION_SECRET || "altere-isso-em-producao";
 const EXPIRES_IN = process.env.SESSION_EXPIRES_IN || "7d";
 
 export function criarTokenSessao(usuario) {
@@ -9,11 +9,11 @@ export function criarTokenSessao(usuario) {
       sub: usuario.id,
       cpf: usuario.cpf,
     },
-    SECRET,
+    getSessionSecret(),
     { expiresIn: EXPIRES_IN }
   );
 }
 
 export function verificarTokenSessao(token) {
-  return jwt.verify(token, SECRET);
+  return jwt.verify(token, getSessionSecret());
 }

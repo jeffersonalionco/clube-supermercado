@@ -1,0 +1,93 @@
+.metaji-credit {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  text-align: center;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--home-muted, #64748b);
+}
+
+.metaji-credit a {
+  color: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(100, 116, 139, 0.35);
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.metaji-credit a:hover {
+  color: var(--home-primary, #1b4fa0);
+  border-bottom-color: currentColor;
+}
+
+.metaji-credit--auth {
+  padding: 0.5rem 1rem max(0.85rem, env(safe-area-inset-bottom));
+  color: var(--auth-muted, #64748b);
+}
+
+.metaji-credit--auth a:hover {
+  color: var(--auth-primary, #1b4fa0);
+}
+
+.metaji-credit--client {
+  flex-shrink: 0;
+}
+
+/* —— Abas do clube (compras, pontos, prêmios) —— */
+.client-shell--tabs.client-shell--with-metaji .metaji-credit--shell {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1023px) {
+  .client-shell--tabs.client-shell--with-metaji .metaji-credit--shell {
+    padding: 1rem 1rem 0.65rem;
+    padding-bottom: calc(
+      var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px) + 0.75rem
+    );
+    border-top: 1px solid rgba(27, 79, 160, 0.08);
+    background: var(--brand-bg, #f0f4f9);
+  }
+}
+
+@media (min-width: 1024px) {
+  .client-shell--tabs.client-shell--with-metaji .metaji-credit--shell {
+    max-width: var(--client-desktop-max, 1180px);
+    margin: 0 auto;
+    padding: 1.25rem var(--desktop-gutter, 2.5rem) 1.75rem;
+    border-top: 1px solid rgba(27, 79, 160, 0.08);
+  }
+}
+
+.metaji-credit--home {
+  width: 100%;
+  padding: 0.75rem 0 0;
+  border-top: 1px solid rgba(27, 79, 160, 0.08);
+  margin-top: 0.5rem;
+}
+
+.metaji-credit--admin-login {
+  padding: 0.75rem 1rem max(1rem, env(safe-area-inset-bottom));
+  text-align: center;
+  color: var(--admin-muted);
+}
+
+.metaji-credit--admin-login a:hover {
+  color: var(--admin-primary);
+}
+
+.metaji-credit--admin-panel {
+  padding: 1rem 1.25rem 1.25rem;
+  border-top: 1px solid var(--admin-border);
+  background: #fafcfd;
+  color: var(--admin-muted);
+}
+
+.metaji-credit--admin-panel a:hover {
+  color: var(--admin-primary);
+}
+
+.metaji-credit--legal {
+  padding: 1.25rem 1rem 1.5rem;
+  color: #64748b;
+}

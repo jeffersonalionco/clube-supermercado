@@ -7,7 +7,7 @@ export default function Logo({ variant = "default", className = "" }) {
         src={logoImg}
         alt="Clube Superama+"
         className="app-logo"
-        width={variant === "hero" ? 240 : variant === "header" ? 140 : 180}
+        width={variant === "hero" ? 280 : variant === "header" ? 150 : 200}
         height="auto"
         decoding="async"
       />

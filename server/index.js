@@ -1,14 +1,28 @@
 import "./env.js";
 import cors from "cors";
 import express from "express";
+import helmet from "helmet";
 import os from "os";
+import path from "path";
+import { fileURLToPath } from "url";
+import { avisarConfigInsegura, corsOptions } from "./config/security.js";
 import { initDatabase } from "./db.js";
+import { testarConexaoWrpdv } from "./db/wrpdv.js";
 import authRoutes from "./routes/auth.js";
 import clienteRoutes from "./routes/cliente.js";
+import adminRoutes from "./routes/admin.js";
+import adminBrindesRoutes from "./routes/adminBrindes.js";
+import adminLegalRoutes from "./routes/adminLegal.js";
+import legalRoutes from "./routes/legal.js";
+import { mensagemParaCliente } from "./utils/mensagemCliente.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 const PORT = Number(process.env.PORT || 3001);
 const HOST = process.env.HOST || "0.0.0.0";
+
+app.set("trust proxy", Number(process.env.TRUST_PROXY_HOPS || 1));
 
 function localNetworkUrls(port) {
   const urls = [];
@@ -22,11 +36,30 @@ function localNetworkUrls(port) {
   return urls;
 }
 
-app.use(cors({ origin: true }));
-app.use(express.json());
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
+app.use(cors(corsOptions()));
+app.use(express.json({ limit: "128kb" }));
+
+app.use("/api", (_req, res, next) => {
+  res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
+  res.set("Pragma", "no-cache");
+  res.set("Expires", "0");
+  next();
+});
+
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use("/api/auth", authRoutes);
+app.use("/api/legal", legalRoutes);
 app.use("/api/cliente", clienteRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/admin/brindes", adminBrindesRoutes);
+app.use("/api/admin/legal", adminLegalRoutes);
 
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true });
@@ -42,12 +75,16 @@ app.use((err, req, res, next) => {
   }
   console.error("[server]", err);
   if (req.path.startsWith("/api")) {
-    return res.status(500).json({ error: err.message || "Erro interno" });
+    return res.status(500).json({
+      error: mensagemParaCliente(err.message) || "Erro interno",
+    });
   }
   next(err);
 });
 
 async function start() {
+  avisarConfigInsegura();
+
   try {
     await initDatabase();
   } catch (error) {
@@ -56,6 +93,15 @@ async function start() {
       "Verifique se o PostgreSQL está rodando e as credenciais em server/.env"
     );
     process.exit(1);
+  }
+
+  try {
+    await testarConexaoWrpdv();
+    const wrpdvHost = process.env.WRPDV_HOST || "10.1.1.250";
+    const wrpdvDb = process.env.WRPDV_DATABASE || "wrpdv";
+    console.log(`WR PDV conectado (${wrpdvHost}/${wrpdvDb}).`);
+  } catch (error) {
+    console.warn("WR PDV indisponível — compras e pontos podem falhar:", error.message);
   }
 
   app.listen(PORT, HOST, () => {

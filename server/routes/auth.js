@@ -8,35 +8,71 @@ import { montarPayloadCadastro } from "../services/cadastroCliente.js";
 import { mensagemParaCliente } from "../utils/mensagemCliente.js";
 import { criarTokenSessao } from "../services/sessionToken.js";
 import { requireAuth } from "../middleware/requireAuth.js";
+import { authLimiter, verificarCpfLimiter } from "../middleware/rateLimit.js";
+import { validarSenhaCadastro, validarSenhaLogin } from "../utils/senha.js";
 import {
   buscarUsuarioPorCpf,
   criarUsuario,
   usuarioPublico,
   validarSenha,
 } from "../services/usuarioService.js";
+import {
+  EVENTOS_CLIENTE,
+  registrarEventoCliente,
+} from "../services/clienteAuditoriaService.js";
+import {
+  apresentarProgramaCliente,
+  obterConfigPrograma,
+} from "../services/programaConfigService.js";
 
 const router = Router();
 
+/** Status público do programa (login/cadastro). */
+router.get("/programa", async (_req, res) => {
+  try {
+    const config = await obterConfigPrograma();
+    return res.json(apresentarProgramaCliente(config));
+  } catch (error) {
+    console.error("[auth/programa]", error.message);
+    return res.status(500).json({
+      error: mensagemParaCliente(error.message),
+    });
+  }
+});
+
+router.use(authLimiter);
+
 function respostaLogin(res, status, usuario, extra = {}) {
   const token = criarTokenSessao(usuario);
-  return res.status(status).json({
-    success: true,
-    token,
-    usuario: usuarioPublico(usuario),
-    ...extra,
-  });
+  return obterConfigPrograma().then((config) =>
+    res.status(status).json({
+      success: true,
+      token,
+      usuario: usuarioPublico(usuario),
+      programa: apresentarProgramaCliente(config),
+      ...extra,
+    })
+  );
 }
 
 router.post("/login", async (req, res) => {
-  const { cpf, senha } = req.body || {};
+  const { cpf, senha, aceiteLegal } = req.body || {};
   const cpfNorm = normalizarCpfCnpj(cpf);
 
-  if (!cpfNorm || (cpfNorm.length !== 11 && cpfNorm.length !== 14)) {
-    return res.status(400).json({ error: "Informe um CPF ou CNPJ válido" });
+  if (!cpfNorm || cpfNorm.length !== 11) {
+    return res.status(400).json({ error: "Informe um CPF válido" });
   }
 
-  if (!senha || String(senha).length < 4) {
-    return res.status(400).json({ error: "Informe uma senha com pelo menos 4 caracteres" });
+  const senhaLogin = validarSenhaLogin(senha);
+  if (!senhaLogin.ok) {
+    await registrarEventoCliente({
+      cpf: cpfNorm,
+      evento: EVENTOS_CLIENTE.LOGIN_FALHA_VALIDACAO,
+      sucesso: false,
+      req,
+      detalhes: { motivo: senhaLogin.error },
+    });
+    return res.status(400).json({ error: senhaLogin.error });
   }
 
   try {
@@ -45,8 +81,23 @@ router.post("/login", async (req, res) => {
     if (existente) {
       const senhaOk = await validarSenha(senha, existente.senha_hash);
       if (!senhaOk) {
+        await registrarEventoCliente({
+          usuarioId: existente.id,
+          cpf: cpfNorm,
+          evento: EVENTOS_CLIENTE.LOGIN_FALHA_SENHA,
+          sucesso: false,
+          req,
+        });
         return res.status(401).json({ error: "CPF ou senha incorretos" });
       }
+
+      await registrarEventoCliente({
+        usuarioId: existente.id,
+        cpf: cpfNorm,
+        evento: EVENTOS_CLIENTE.LOGIN_SUCESSO,
+        sucesso: true,
+        req,
+      });
 
       return respostaLogin(res, 200, existente, {
         message: "Login realizado com sucesso",
@@ -56,9 +107,21 @@ router.post("/login", async (req, res) => {
     const consulta = await buscarClientePorCpfCnpj(cpfNorm);
     if (!consulta.ok) {
       return res.status(404).json({
-        error: consulta.error || "CPF/CNPJ não encontrado no cadastro",
+        error: consulta.error || "CPF não encontrado no cadastro",
         cadastrarNoClube: true,
       });
+    }
+
+    if (!aceiteLegal) {
+      return res.status(400).json({
+        error: "É necessário aceitar o Regulamento e a Política de Privacidade",
+        requerAceiteLegal: true,
+      });
+    }
+
+    const senhaCadastro = validarSenhaCadastro(senha);
+    if (!senhaCadastro.ok) {
+      return res.status(400).json({ error: senhaCadastro.error });
     }
 
     const novo = await criarUsuario({
@@ -66,6 +129,29 @@ router.post("/login", async (req, res) => {
       senha,
       clienteApi: consulta.cliente,
       dadosApi: consulta.raw,
+      registrarAceiteLegal: true,
+    });
+
+    await registrarEventoCliente({
+      usuarioId: novo.id,
+      cpf: cpfNorm,
+      evento: EVENTOS_CLIENTE.CADASTRO_PLATAFORMA,
+      sucesso: true,
+      req,
+      detalhes: {
+        primeiroAcesso: true,
+        aceiteLegal: true,
+        clienteCodigo: novo.cliente_codigo,
+      },
+    });
+
+    await registrarEventoCliente({
+      usuarioId: novo.id,
+      cpf: cpfNorm,
+      evento: EVENTOS_CLIENTE.LOGIN_SUCESSO,
+      sucesso: true,
+      req,
+      detalhes: { primeiroAcesso: true },
     });
 
     return respostaLogin(res, 201, novo, {
@@ -80,11 +166,11 @@ router.post("/login", async (req, res) => {
   }
 });
 
-router.get("/verificar-cpf/:cpf", async (req, res) => {
+router.get("/verificar-cpf/:cpf", verificarCpfLimiter, async (req, res) => {
   const cpfNorm = normalizarCpfCnpj(req.params.cpf);
 
-  if (!cpfNorm || (cpfNorm.length !== 11 && cpfNorm.length !== 14)) {
-    return res.status(400).json({ error: "Informe um CPF ou CNPJ válido" });
+  if (!cpfNorm || cpfNorm.length !== 11) {
+    return res.status(400).json({ error: "Informe um CPF válido" });
   }
 
   try {
@@ -92,10 +178,8 @@ router.get("/verificar-cpf/:cpf", async (req, res) => {
     const consulta = await buscarClientePorCpfCnpj(cpfNorm);
 
     return res.json({
-      cpf: cpfNorm,
       existeNoSistema: consulta.ok,
       cadastradoNaPlataforma: Boolean(local),
-      cliente: consulta.ok ? consulta.cliente : null,
     });
   } catch (error) {
     console.error("[auth/verificar-cpf]", error.message);
@@ -115,6 +199,13 @@ router.post("/cadastro-clube", async (req, res) => {
     return res.status(400).json({ error: "CPF inválido" });
   }
 
+  if (!body.aceiteLegal) {
+    return res.status(400).json({
+      error: "É necessário aceitar o Regulamento e a Política de Privacidade",
+      requerAceiteLegal: true,
+    });
+  }
+
   try {
     const existenteApi = await buscarClientePorCpfCnpj(cpfNorm);
     if (existenteApi.ok) {
@@ -131,6 +222,20 @@ router.post("/cadastro-clube", async (req, res) => {
         error: mensagemParaCliente(resultado.error),
       });
     }
+
+    const usuarioLocal = await buscarUsuarioPorCpf(cpfNorm);
+
+    await registrarEventoCliente({
+      usuarioId: usuarioLocal?.id ?? null,
+      cpf: cpfNorm,
+      evento: EVENTOS_CLIENTE.CADASTRO_CLUBE_API,
+      sucesso: true,
+      req,
+      detalhes: {
+        aceiteLegal: true,
+        clienteCodigo: resultado.codigo ?? null,
+      },
+    });
 
     return res.status(201).json({
       success: true,

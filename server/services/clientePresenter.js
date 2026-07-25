@@ -160,7 +160,6 @@ export function apresentarCliente({ usuario, cliente, raw }) {
     detalhes: [],
     clube: {
       nivel: "Clube Superama",
-      pontos: "—",
       statusClube: "ativo",
     },
   };

@@ -1,3 +1,11 @@
+export function formatarCpf(valor) {
+  const digits = valor.replace(/\D/g, "").slice(0, 11);
+  return digits
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+}
+
 export function formatarCpfCnpj(valor) {
   const digits = valor.replace(/\D/g, "").slice(0, 14);
   if (digits.length <= 11) {
@@ -16,4 +24,9 @@ export function formatarCpfCnpj(valor) {
 export function cpfValido(valor) {
   const digits = valor.replace(/\D/g, "");
   return digits.length === 11 || digits.length === 14;
+}
+
+/** Apenas CPF (11 dígitos) — login e cadastro do cliente. */
+export function cpfSomenteValido(valor) {
+  return valor.replace(/\D/g, "").length === 11;
 }

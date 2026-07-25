@@ -8,6 +8,11 @@ const ESTADO_CIVIL_VALIDOS = [
   "OUTROS",
 ];
 
+function numeroOu(valor, fallback) {
+  const n = Number(valor);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+}
+
 /** Valores fixos do payload que funcionou na API (substituídos só dados do usuário). */
 const FIXOS = {
   sexo: process.env.CADASTRO_SEXO_PADRAO || "M",
@@ -22,8 +27,8 @@ const FIXOS = {
   ufExpRG: process.env.CADASTRO_UF || "PR",
   profissao: "",
   escolaridade: process.env.CADASTRO_ESCOLARIDADE || "SUPERIOR",
-  contaContabil: 0,
-  contaGerencial: 0,
+  contaContabil: numeroOu(process.env.CADASTRO_CONTA_CONTABIL, 112201),
+  contaGerencial: numeroOu(process.env.CADASTRO_CONTA_GERENCIAL, 112201),
   contribuinte: process.env.CADASTRO_CONTRIBUINTE || "S",
   unidadeCadastro: process.env.CADASTRO_UNIDADE || "001",
   observacao: process.env.CADASTRO_OBSERVACAO || "Cadastro Clube Superama",
@@ -136,6 +141,10 @@ export function montarPayloadAtualizacao(dadosForm, clienteApi) {
     sexo: dadosForm.sexo || base.sexo,
     estadoCivil: dadosForm.estadoCivil || base.estadoCivil,
     endereco: enderecoForm,
+    // Evita sobrescrever no RP quando já existe uma conta definida.
+    // Se o cadastro atual não tiver, aplica o padrão 112201 (ou env).
+    contaContabil: base.contaContabil ?? base.conta_contabil,
+    contaGerencial: base.contaGerencial ?? base.conta_gerencial,
   });
 }
 
@@ -161,6 +170,9 @@ export function montarPayloadCadastro(dados) {
 
   const endereco = montarEndereco(dados.endereco);
 
+  const contaContabil = numeroOu(dados.contaContabil, FIXOS.contaContabil);
+  const contaGerencial = numeroOu(dados.contaGerencial, FIXOS.contaGerencial);
+
   return {
     nome,
     sexo: dados.sexo || FIXOS.sexo,
@@ -183,8 +195,8 @@ export function montarPayloadCadastro(dados) {
     profissao: FIXOS.profissao,
     escolaridade: FIXOS.escolaridade,
     email: dados.email?.trim() || process.env.CADASTRO_EMAIL_PADRAO || "",
-    contaContabil: FIXOS.contaContabil,
-    contaGerencial: FIXOS.contaGerencial,
+    contaContabil,
+    contaGerencial,
     contribuinte: FIXOS.contribuinte,
     unidadeCadastro: FIXOS.unidadeCadastro,
     observacao: FIXOS.observacao,

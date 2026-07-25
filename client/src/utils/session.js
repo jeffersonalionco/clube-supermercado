@@ -3,10 +3,10 @@ import { mensagemParaUsuario } from "./mensagensUsuario.js";
 
 const STORAGE_KEY = "superama_session";
 
-export function saveSession({ token, usuario }) {
+export function saveSession({ token, usuario, programa }) {
   localStorage.setItem(
     STORAGE_KEY,
-    JSON.stringify({ token, usuario, savedAt: Date.now() })
+    JSON.stringify({ token, usuario, programa: programa ?? null, savedAt: Date.now() })
   );
 }
 
@@ -34,6 +34,7 @@ export async function fetchAutenticado(path, options = {}) {
 
   const response = await fetch(apiUrl(path), {
     ...options,
+    cache: options.cache ?? "no-store",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${session.token}`,

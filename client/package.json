@@ -1,7 +1,7 @@
 {
   "name": "superama-client",
   "private": true,
-  "version": "1.0.0",
+  "version": "0.9.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "html2pdf.js": "^0.14.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

@@ -65,9 +65,15 @@ async function carregarCatalogoProdutos(codigos) {
   return catalogo;
 }
 
-function somarProdutos(produtos) {
+function arredondarMoeda(valor) {
+  return Math.round(Number(valor) * 100) / 100;
+}
+
+function somarProdutos(produtos, campo = "valorTotal") {
   if (!Array.isArray(produtos)) return 0;
-  return produtos.reduce((acc, p) => acc + (Number(p.valorTotal) || 0), 0);
+  return arredondarMoeda(
+    produtos.reduce((acc, p) => acc + (Number(p[campo]) || 0), 0)
+  );
 }
 
 function labelDataBR(dataStr) {
@@ -99,12 +105,23 @@ function mapearProdutos(produtosBrutos, catalogo) {
   return (produtosBrutos || []).map((p) => {
     const codigo = String(p.codigoProduto ?? "").trim();
     const dados = catalogo.get(codigo) || PRODUTO_VAZIO;
+    const descricaoInline = String(p.descricao ?? "").trim();
+    const valorBruto = arredondarMoeda(p.valorBruto ?? p.valorTotal);
+    const valorDesconto = arredondarMoeda(p.valorDesconto ?? 0);
+    const valorLiquido = arredondarMoeda(
+      p.valorLiquido ?? valorBruto - valorDesconto
+    );
+
     return {
       codigoProduto: p.codigoProduto,
-      descricao: dados.descricao,
-      codigoBarras: dados.codigoBarras,
+      descricao: descricaoInline || dados.descricao,
+      codigoBarras: p.codigoBarras || dados.codigoBarras,
       quantidade: Number(p.quantidadeUnitaria) || 0,
-      valorTotal: Number(p.valorTotal) || 0,
+      valorBruto,
+      valorDesconto,
+      valorLiquido,
+      valorTotal: valorLiquido,
+      temDesconto: valorDesconto > 0,
       oferta: p.oferta === "SIM",
       ofertaLabel: p.oferta === "SIM" ? "Oferta" : null,
     };
@@ -115,23 +132,46 @@ export async function apresentarVendas(itens, periodo) {
   const lista = Array.isArray(itens) ? itens : [];
 
   const todosCodigos = lista.flatMap((item) =>
-    (item.produtos || []).map((p) => p.codigoProduto)
+    (item.produtos || [])
+      .filter((p) => !String(p.descricao ?? "").trim())
+      .map((p) => p.codigoProduto)
   );
   const catalogo = await carregarCatalogoProdutos(todosCodigos);
 
   const vendas = lista.map((item) => {
     const produtos = mapearProdutos(item.produtos, catalogo);
-    const total = somarProdutos(produtos);
+    const subtotal = arredondarMoeda(
+      item.subtotalItens ?? somarProdutos(produtos, "valorBruto")
+    );
+    const totalDesconto = arredondarMoeda(item.totalDesconto ?? 0);
+    const totalDescontoCupom = arredondarMoeda(item.totalDescontoCupom ?? 0);
+    const total = arredondarMoeda(
+      item.totalLiquido ?? item.valorTotalCupom ?? somarProdutos(produtos)
+    );
 
     return {
       data: item.data,
       numeroDcto: String(item.numeroDcto ?? ""),
+      pdv: item.pdv ? String(item.pdv) : null,
+      chaveCupom: item.chaveCupom || null,
+      formaPagamento: item.formaPagamento || null,
+      formasPagamento: item.formasPagamento || [],
       unidade: item.unidade || null,
+      cancelada: Boolean(item.cancelada),
+      convenio: Boolean(item.convenio),
+      elegivelPontos: item.elegivelPontos !== false && !item.cancelada && !item.convenio,
+      subtotal,
+      totalDesconto,
+      totalDescontoCupom,
+      temDesconto: totalDesconto > 0,
       total,
       quantidadeProdutos: produtos.length,
       produtos,
     };
   });
+
+  const vendaContaPontos = (v) => !v.cancelada && !v.convenio;
+  const vendasAtivas = vendas.filter(vendaContaPontos);
 
   const porDataMap = new Map();
   for (const venda of vendas) {
@@ -144,16 +184,21 @@ export async function apresentarVendas(itens, periodo) {
 
   const porData = [...porDataMap.entries()]
     .map(([data, vendasDia]) => {
-      const totalDia = vendasDia.reduce((acc, v) => acc + v.total, 0);
+      const ativasDia = vendasDia.filter(vendaContaPontos);
+      const totalDia = ativasDia.reduce((acc, v) => acc + v.total, 0);
       const totalItens = vendasDia.reduce(
         (acc, v) => acc + v.quantidadeProdutos,
         0
       );
+      const canceladasDia = vendasDia.filter((v) => v.cancelada).length;
+      const convenioDia = vendasDia.filter((v) => v.convenio).length;
       return {
         data,
         dataLabel: labelDataBR(data),
         totalDia,
         quantidadeVendas: vendasDia.length,
+        quantidadeCanceladas: canceladasDia,
+        quantidadeConvenio: convenioDia,
         totalItens,
         vendas: vendasDia.sort((a, b) =>
           String(b.numeroDcto).localeCompare(String(a.numeroDcto))
@@ -162,18 +207,27 @@ export async function apresentarVendas(itens, periodo) {
     })
     .sort(ordenarPorDataDesc);
 
-  const totalGasto = vendas.reduce((acc, v) => acc + v.total, 0);
+  const totalGasto = arredondarMoeda(vendasAtivas.reduce((acc, v) => acc + v.total, 0));
+  const totalDescontos = arredondarMoeda(
+    vendasAtivas.reduce((acc, v) => acc + v.totalDesconto, 0)
+  );
   const totalItens = vendas.reduce((acc, v) => acc + v.quantidadeProdutos, 0);
+  const totalCanceladas = vendas.filter((v) => v.cancelada).length;
+  const totalConvenio = vendas.filter((v) => v.convenio).length;
 
   return {
     periodo,
     resumo: {
       totalVendas: vendas.length,
+      totalVendasAtivas: vendasAtivas.length,
+      totalCanceladas,
+      totalConvenio,
       totalGasto,
+      totalDescontos,
       totalItens,
       ticketMedio:
-        vendas.length > 0
-          ? Math.round((totalGasto / vendas.length) * 100) / 100
+        vendasAtivas.length > 0
+          ? arredondarMoeda(totalGasto / vendasAtivas.length)
           : 0,
     },
     porData,
