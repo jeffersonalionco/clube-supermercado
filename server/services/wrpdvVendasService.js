@@ -208,6 +208,61 @@ async function buscarLinhasFinCupom(cabecalho) {
 }
 
 /**
+ * Soma o gasto de um CPF no período (cupons FINN, excluindo cancelados).
+ * Mais leve que buscarCuponsResumoWrpdv (não carrega linhas FIN de convênio).
+ */
+export async function somarGastoClienteWrpdv(cpfCnpj, dataini, datafim) {
+  const documento = normalizarCpfCnpj(cpfCnpj);
+  if (!documento) {
+    return { ok: false, error: "CPF/CNPJ inválido", totalGasto: 0, quantidadeCupons: 0 };
+  }
+
+  const inicio = parseDataBR(dataini);
+  const fim = parseDataBR(datafim);
+  if (!inicio || !fim) {
+    return { ok: false, error: "Datas inválidas", totalGasto: 0, quantidadeCupons: 0 };
+  }
+
+  try {
+    const tabelas = mesesNoPeriodo(inicio, fim);
+    const cabecalhos = [];
+
+    for (const tabela of tabelas) {
+      const lote = await buscarCabecalhosCupons(tabela, documento, inicio, fim);
+      cabecalhos.push(...lote);
+    }
+
+    const cancelados = await mapaCuponsCancelados(cabecalhos);
+    let totalGasto = 0;
+    let quantidadeCupons = 0;
+
+    for (const cab of cabecalhos) {
+      const chave = `${cab.pdv}-${cab.cupom}`;
+      if (cancelados.get(chave) === true) continue;
+
+      const finn = parseFinn(cab.finnRegistro);
+      const valor = Number(finn.valor) || 0;
+      totalGasto += valor;
+      quantidadeCupons += 1;
+    }
+
+    return {
+      ok: true,
+      totalGasto: Math.round(totalGasto * 100) / 100,
+      quantidadeCupons,
+    };
+  } catch (error) {
+    console.error("[wrpdv/gasto-cliente]", error.message);
+    return {
+      ok: false,
+      error: "Não foi possível calcular o gasto do período",
+      totalGasto: 0,
+      quantidadeCupons: 0,
+    };
+  }
+}
+
+/**
  * Agrega compras por CPF no período (todas as vendas com CPF no cupom FINN).
  * Retorna Map<cpf, { totalGasto, quantidadeCupons, ultimaCompra }>.
  */

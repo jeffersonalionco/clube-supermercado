@@ -13,6 +13,7 @@ import clienteRoutes from "./routes/cliente.js";
 import adminRoutes from "./routes/admin.js";
 import adminBrindesRoutes from "./routes/adminBrindes.js";
 import adminLegalRoutes from "./routes/adminLegal.js";
+import adminNovidadesRoutes from "./routes/adminNovidades.js";
 import legalRoutes from "./routes/legal.js";
 import { mensagemParaCliente } from "./utils/mensagemCliente.js";
 
@@ -60,6 +61,7 @@ app.use("/api/cliente", clienteRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/admin/brindes", adminBrindesRoutes);
 app.use("/api/admin/legal", adminLegalRoutes);
+app.use("/api/admin/novidades", adminNovidadesRoutes);
 
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true });

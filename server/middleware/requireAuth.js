@@ -4,12 +4,16 @@ import { buscarUsuarioPorId } from "../services/usuarioService.js";
 
 export async function requireAuth(req, res, next) {
   const header = req.headers.authorization;
+  const queryToken =
+    typeof req.query?.token === "string" ? req.query.token.trim() : "";
 
-  if (!header?.startsWith("Bearer ")) {
+  const token = header?.startsWith("Bearer ")
+    ? header.slice(7)
+    : queryToken || null;
+
+  if (!token) {
     return res.status(401).json({ error: "Sessão não informada" });
   }
-
-  const token = header.slice(7);
 
   try {
     const payload = jwt.verify(token, getSessionSecret());
@@ -17,6 +21,14 @@ export async function requireAuth(req, res, next) {
 
     if (!usuario || usuario.cpf !== payload.cpf) {
       return res.status(401).json({ error: "Sessão inválida" });
+    }
+
+    const versaoAtual = Number(usuario.senha_versao) || 1;
+    const versaoToken = payload.sv != null ? Number(payload.sv) : 1;
+    if (versaoToken !== versaoAtual) {
+      return res.status(401).json({
+        error: "Sessão expirada após alteração de senha. Faça login novamente.",
+      });
     }
 
     req.usuario = usuario;

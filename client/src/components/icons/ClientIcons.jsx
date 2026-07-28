@@ -133,6 +133,21 @@ export function IconOffers({ size = 22 }) {
   );
 }
 
+export function IconNews({ size = 22 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M4 5h12a2 2 0 012 2v12H6a2 2 0 01-2-2V5z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <path d="M18 7h2a2 2 0 012 2v8a2 2 0 01-2 2h-4" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M8 9h6M8 13h6M8 17h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function IconPoints({ size = 22 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden>

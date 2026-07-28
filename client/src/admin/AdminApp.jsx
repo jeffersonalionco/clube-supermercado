@@ -9,6 +9,7 @@ import AdminLegalPage from "../pages/admin/AdminLegalPage.jsx";
 import AdminManualPage from "../pages/admin/AdminManualPage.jsx";
 import AdminProgramaPage from "../pages/admin/AdminProgramaPage.jsx";
 import AdminConteudoPage from "../pages/admin/AdminConteudoPage.jsx";
+import AdminNovidadesPage from "../pages/admin/AdminNovidadesPage.jsx";
 import AdminClubeDescontosPage from "../pages/admin/AdminClubeDescontosPage.jsx";
 import { clearAdminSession, loadAdminSession } from "../utils/adminSession.js";
 import "../styles/admin.css";
@@ -31,6 +32,9 @@ function adminTabFromHash() {
   }
   if (path === "admin/conteudo" || path.startsWith("admin/conteudo/")) {
     return "conteudo";
+  }
+  if (path === "admin/novidades" || path.startsWith("admin/novidades/")) {
+    return "novidades";
   }
   if (
     path === "admin/clube-descontos" ||
@@ -59,6 +63,7 @@ function hashForAdminTab(tab) {
   if (tab === "manual") return "#/admin/manual";
   if (tab === "programa") return "#/admin/programa";
   if (tab === "conteudo") return "#/admin/conteudo";
+  if (tab === "novidades") return "#/admin/novidades";
   if (tab === "clube-descontos") return "#/admin/clube-descontos";
   return "#/admin/pontos";
 }
@@ -126,6 +131,10 @@ export default function AdminApp() {
 
   if (tab === "conteudo") {
     return <AdminConteudoPage {...layoutProps} />;
+  }
+
+  if (tab === "novidades") {
+    return <AdminNovidadesPage {...layoutProps} />;
   }
 
   if (tab === "clube-descontos") {

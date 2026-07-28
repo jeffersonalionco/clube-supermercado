@@ -17,6 +17,10 @@ import { apresentarCliente } from "../services/clientePresenter.js";
 import { atualizarDadosUsuario } from "../services/usuarioService.js";
 import { listarProdutosClubeDescontos } from "../services/produtosClubeDescontosService.js";
 import {
+  nivelFidelidadeFallback,
+  obterNivelFidelidadeCliente,
+} from "../services/nivelFidelidadeService.js";
+import {
   obterExtratoPontos,
   obterHistoricoCompleto,
   obterSaldoPontos,
@@ -44,6 +48,20 @@ import {
   apresentarConteudoCliente,
   obterConfigConteudo,
 } from "../services/conteudoConfigService.js";
+import {
+  listarOfertasTv,
+  proxyMediaTv,
+  resolverMediaPathSeguro,
+} from "../services/tvSlidesService.js";
+import {
+  obterEstadoRadio,
+  proxyAudioRadio,
+  resolverAudioRadioSeguro,
+} from "../services/radioService.js";
+import {
+  buscarNovidadePublica,
+  listarNovidadesPublicas,
+} from "../services/novidadesService.js";
 
 const MSG_PONTOS_INATIVO =
   "O programa de pontos não está disponível no momento.";
@@ -121,6 +139,17 @@ router.get("/programa", async (_req, res) => {
   }
 });
 
+/** Nível de fidelidade do ano corrente (sem consultar ERP). */
+router.get("/nivel", async (req, res) => {
+  try {
+    const clube = await obterNivelFidelidadeCliente(req.usuario.cpf);
+    return res.json({ clube });
+  } catch (error) {
+    console.error("[cliente/nivel]", error.message);
+    return res.json({ clube: nivelFidelidadeFallback() });
+  }
+});
+
 /** Dados do cliente logado — CPF vem só do token, nunca do body/query. */
 router.get("/me", async (req, res) => {
   try {
@@ -132,10 +161,19 @@ router.get("/me", async (req, res) => {
       });
     }
 
+    let clube;
+    try {
+      clube = await obterNivelFidelidadeCliente(req.usuario.cpf);
+    } catch (error) {
+      console.error("[cliente/me/nivel]", error.message);
+      clube = nivelFidelidadeFallback();
+    }
+
     const dados = apresentarCliente({
       usuario: req.usuario,
       cliente: consulta.cliente,
       raw: consulta.raw,
+      clube,
     });
 
     return res.json({
@@ -222,6 +260,13 @@ router.put("/me", async (req, res) => {
       });
     }
 
+    let clube;
+    try {
+      clube = await obterNivelFidelidadeCliente(req.usuario.cpf);
+    } catch {
+      clube = nivelFidelidadeFallback();
+    }
+
     const dados = apresentarCliente({
       usuario: {
         ...req.usuario,
@@ -230,6 +275,7 @@ router.put("/me", async (req, res) => {
       },
       cliente: clienteAtual,
       raw: atualizado.ok ? atualizado.raw : consulta.raw,
+      clube,
     });
 
     return res.json({
@@ -436,6 +482,141 @@ router.get("/brindes", requirePontosAtivo, async (req, res) => {
     });
   } catch (error) {
     console.error("[cliente/brindes]", error.message);
+    return res.status(500).json({
+      error: mensagemParaCliente(error.message),
+    });
+  }
+});
+
+/** Ofertas da TV da loja (playlist ativa). */
+router.get("/ofertas", async (_req, res) => {
+  try {
+    const dados = await listarOfertasTv();
+    return res.json(dados);
+  } catch (error) {
+    console.error("[cliente/ofertas]", error.message);
+    return res.status(502).json({
+      error: "Não foi possível carregar as ofertas da loja no momento.",
+    });
+  }
+});
+
+/** Proxy de mídia das ofertas (aceita ?token= para <img>/<video>). */
+router.get("/ofertas/media/:arquivo", async (req, res) => {
+  const mediaPath = resolverMediaPathSeguro(req.params.arquivo);
+  if (!mediaPath) {
+    return res.status(400).json({ error: "Mídia inválida" });
+  }
+
+  try {
+    const upstream = await proxyMediaTv(mediaPath, {
+      range: req.headers.range,
+    });
+
+    if (!upstream.ok && upstream.status !== 206) {
+      return res.status(upstream.status === 404 ? 404 : 502).json({
+        error: "Mídia indisponível",
+      });
+    }
+
+    res.status(upstream.status);
+    const contentType = upstream.headers.get("content-type");
+    const contentLength = upstream.headers.get("content-length");
+    const acceptRanges = upstream.headers.get("accept-ranges");
+    const contentRange = upstream.headers.get("content-range");
+    const cacheControl = upstream.headers.get("cache-control");
+
+    if (contentType) res.set("Content-Type", contentType);
+    if (contentLength) res.set("Content-Length", contentLength);
+    if (acceptRanges) res.set("Accept-Ranges", acceptRanges);
+    if (contentRange) res.set("Content-Range", contentRange);
+    res.set("Cache-Control", cacheControl || "private, max-age=300");
+
+    const buf = Buffer.from(await upstream.arrayBuffer());
+    return res.send(buf);
+  } catch (error) {
+    console.error("[cliente/ofertas/media]", error.message);
+    return res.status(502).json({ error: "Falha ao carregar mídia" });
+  }
+});
+
+/** Estado ao vivo da Rádio Mercado (somente leitura). */
+router.get("/radio", async (_req, res) => {
+  try {
+    const estado = await obterEstadoRadio();
+    return res.json(estado);
+  } catch (error) {
+    console.error("[cliente/radio]", error.message);
+    return res.status(502).json({
+      error: "Rádio indisponível no momento.",
+    });
+  }
+});
+
+/** Proxy do áudio da rádio (aceita ?token= para <audio>). */
+router.get("/radio/audio/:arquivo", async (req, res) => {
+  const audioPath = resolverAudioRadioSeguro(req.params.arquivo);
+  if (!audioPath) {
+    return res.status(400).json({ error: "Áudio inválido" });
+  }
+
+  try {
+    const upstream = await proxyAudioRadio(audioPath, {
+      range: req.headers.range,
+    });
+
+    if (!upstream.ok && upstream.status !== 206) {
+      return res.status(upstream.status === 404 ? 404 : 502).json({
+        error: "Áudio indisponível",
+      });
+    }
+
+    res.status(upstream.status);
+    const contentType = upstream.headers.get("content-type");
+    const contentLength = upstream.headers.get("content-length");
+    const acceptRanges = upstream.headers.get("accept-ranges");
+    const contentRange = upstream.headers.get("content-range");
+
+    if (contentType) res.set("Content-Type", contentType);
+    if (contentLength) res.set("Content-Length", contentLength);
+    if (acceptRanges) res.set("Accept-Ranges", acceptRanges);
+    if (contentRange) res.set("Content-Range", contentRange);
+    res.set("Cache-Control", "private, max-age=60");
+
+    const buf = Buffer.from(await upstream.arrayBuffer());
+    return res.send(buf);
+  } catch (error) {
+    console.error("[cliente/radio/audio]", error.message);
+    return res.status(502).json({ error: "Falha ao carregar áudio" });
+  }
+});
+
+router.get("/novidades", async (_req, res) => {
+  try {
+    const novidades = await listarNovidadesPublicas();
+    return res.json({ novidades });
+  } catch (error) {
+    console.error("[cliente/novidades]", error.message);
+    return res.status(500).json({
+      error: mensagemParaCliente(error.message),
+    });
+  }
+});
+
+router.get("/novidades/:id", async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id < 1) {
+    return res.status(400).json({ error: "ID inválido" });
+  }
+
+  try {
+    const novidade = await buscarNovidadePublica(id);
+    if (!novidade) {
+      return res.status(404).json({ error: "Novidade não encontrada" });
+    }
+    return res.json({ novidade });
+  } catch (error) {
+    console.error("[cliente/novidades/:id]", error.message);
     return res.status(500).json({
       error: mensagemParaCliente(error.message),
     });

@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Allow: /#/privacidade
+Allow: /#/regulamento
+Disallow: /#/admin
+Disallow: /admin
+Disallow: /api/
+
+Sitemap: https://clube.mercadosuperama.com.br/sitemap.xml

@@ -1,4 +1,5 @@
 import Logo from "./Logo.jsx";
+import NivelBadge from "./NivelBadge.jsx";
 import { filtrarTabItems } from "./clientTabNavItems.js";
 import "../styles/bottom-nav.css";
 
@@ -16,11 +17,14 @@ export default function ClientDesktopNav({
   view,
   onNavigate,
   usuario,
+  clube,
   onPerfil,
   onLogout,
+  onAbrirNivel,
   pontosAtivo = true,
 }) {
   const nome = usuario?.nome || "Cliente";
+  const primeiroNome = String(nome).trim().split(/\s+/)[0] || "Cliente";
   const items = filtrarTabItems(pontosAtivo);
 
   return (
@@ -55,19 +59,32 @@ export default function ClientDesktopNav({
         </nav>
 
         <div className="client-desktop-nav__account">
-          {onPerfil && (
-            <button
-              type="button"
-              className="client-desktop-nav__user"
-              onClick={onPerfil}
-              aria-label="Meu perfil"
-            >
-              <span className="client-desktop-nav__avatar" aria-hidden>
-                {iniciaisDoNome(nome)}
-              </span>
-              <span className="client-desktop-nav__user-name">{nome}</span>
-            </button>
-          )}
+          <div className="client-desktop-nav__user-cluster">
+            {onPerfil && (
+              <button
+                type="button"
+                className="client-desktop-nav__user"
+                onClick={onPerfil}
+                aria-label={`Meu perfil — ${nome}`}
+                title={nome}
+              >
+                <span className="nivel-avatar-wrap">
+                  <span className="client-desktop-nav__avatar" aria-hidden>
+                    {iniciaisDoNome(nome)}
+                  </span>
+                </span>
+                <span className="client-desktop-nav__user-name">{primeiroNome}</span>
+              </button>
+            )}
+            {clube && (
+              <NivelBadge
+                clube={clube}
+                size="sm"
+                className="client-desktop-nav__nivel"
+                onClick={onAbrirNivel}
+              />
+            )}
+          </div>
           {onLogout && (
             <button
               type="button"

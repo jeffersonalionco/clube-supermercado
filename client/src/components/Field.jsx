@@ -6,12 +6,15 @@ export default function Field({
   id,
 }) {
   return (
-    <label className="auth-field" htmlFor={id}>
+    <label
+      className={`auth-field${error ? " auth-field--error" : ""}`}
+      htmlFor={id}
+    >
       <span className="auth-field__label">{label}</span>
       <div className={`auth-field__control ${error ? "auth-field__control--error" : ""}`}>
         {children}
       </div>
-      {hint && <small className="auth-field__hint">{hint}</small>}
+      {hint && !error && <small className="auth-field__hint">{hint}</small>}
       {error && <small className="auth-field__error">{error}</small>}
     </label>
   );

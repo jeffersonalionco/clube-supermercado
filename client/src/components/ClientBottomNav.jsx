@@ -1,11 +1,19 @@
 import { filtrarTabItems } from "./clientTabNavItems.js";
 import "../styles/bottom-nav.css";
 
-export default function ClientBottomNav({ view, onNavigate, pontosAtivo = true }) {
+export default function ClientBottomNav({
+  view,
+  onNavigate,
+  pontosAtivo = true,
+  coachAtivo = false,
+}) {
   const items = filtrarTabItems(pontosAtivo);
 
   return (
-    <nav className="client-bottom-nav" aria-label="Navegação principal">
+    <nav
+      className={`client-bottom-nav${coachAtivo ? " client-bottom-nav--coach" : ""}`}
+      aria-label="Navegação principal"
+    >
       <div className="client-bottom-nav__inner">
         {items.map(({ id, label, Icon }) => {
           const ativo = view === id;

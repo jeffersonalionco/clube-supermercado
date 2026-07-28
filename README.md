@@ -14,6 +14,8 @@ App web do clube de clientes do supermercado. **React** (Vite) no frontend e **N
 - Node.js 18+
 - PostgreSQL em `localhost`
 - Acesso à API externa (`http://10.1.1.198:9000`)
+- Documentação da API ERP (RP Info): ver [`server/docs/API-ERP.md`](server/docs/API-ERP.md)  
+  https://servicosflex.rpinfo.com.br:7443/v1.0/documentacao?location=documentacao#/
 
 ## Configuração
 

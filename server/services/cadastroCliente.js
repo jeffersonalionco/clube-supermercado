@@ -1,4 +1,8 @@
 import { normalizarCpfCnpj } from "./apiClient.js";
+import {
+  assertDadosCadastroCliente,
+  parseDataNascimento,
+} from "../utils/validacaoCadastro.js";
 
 const ESTADO_CIVIL_VALIDOS = [
   "CASADO",
@@ -65,13 +69,7 @@ export function normalizarDataNascimento(valor) {
 }
 
 export function validarDataNascimento(valor) {
-  const match = String(valor || "").trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-  if (!match) return false;
-  const dia = Number(match[1]);
-  const mes = Number(match[2]);
-  const ano = Number(match[3]);
-  if (mes < 1 || mes > 12 || dia < 1 || dia > 31 || ano < 1900) return false;
-  return true;
+  return parseDataNascimento(normalizarDataNascimento(valor)).ok;
 }
 
 function montarEndereco(override) {
@@ -151,22 +149,27 @@ export function montarPayloadAtualizacao(dadosForm, clienteApi) {
 export function montarPayloadCadastro(dados) {
   const cpf = normalizarCpfCnpj(dados.cpf);
   const celular = apenasDigitos(dados.celular || dados.telefone);
-  const fone = apenasDigitos(dados.fone) || celular || process.env.CADASTRO_FONE || "5154654";
+  const fone =
+    apenasDigitos(dados.fone) || celular || process.env.CADASTRO_FONE || "5154654";
+  const emailRaw = String(dados.email || "").trim().toLowerCase();
+  const email =
+    emailRaw ||
+    String(process.env.CADASTRO_EMAIL_PADRAO || "")
+      .trim()
+      .toLowerCase();
+  const nome = String(dados.nome || "")
+    .trim()
+    .replace(/\s+/g, " ");
+  const dataNascimento = normalizarDataNascimento(dados.dataNascimento);
 
-  if (cpf.length !== 11) {
-    throw new Error("CPF inválido");
-  }
-  if (!celular || celular.length < 10) {
-    throw new Error("Informe um telefone/celular válido");
-  }
-  if (!validarDataNascimento(dados.dataNascimento)) {
-    throw new Error("Informe a data de nascimento no formato DD/MM/AAAA");
-  }
-
-  const nome = dados.nome?.trim();
-  if (!nome || nome.length < 2) {
-    throw new Error("Informe o nome completo");
-  }
+  assertDadosCadastroCliente({
+    cpf,
+    nome,
+    email,
+    celular,
+    dataNascimento,
+    sexo: dados.sexo,
+  });
 
   const endereco = montarEndereco(dados.endereco);
 
@@ -184,7 +187,7 @@ export function montarPayloadCadastro(dados) {
     classe: FIXOS.classe,
     enderecoResidencial: { ...endereco },
     enderecoComercial: { ...endereco },
-    dataNascimento: dados.dataNascimento.trim(),
+    dataNascimento,
     cpf,
     cnpj: FIXOS.cnpj,
     rg: FIXOS.rg,
@@ -194,7 +197,7 @@ export function montarPayloadCadastro(dados) {
     estadoCivil: resolverEstadoCivil(dados.estadoCivil),
     profissao: FIXOS.profissao,
     escolaridade: FIXOS.escolaridade,
-    email: dados.email?.trim() || process.env.CADASTRO_EMAIL_PADRAO || "",
+    email,
     contaContabil,
     contaGerencial,
     contribuinte: FIXOS.contribuinte,
@@ -203,6 +206,10 @@ export function montarPayloadCadastro(dados) {
     vendedor: FIXOS.vendedor,
     ramoAtividade: FIXOS.ramoAtividade,
     caracTrib: FIXOS.caracTrib,
-    razaoSocial: dados.razaoSocial?.trim() || nome,
+    razaoSocial:
+      String(dados.razaoSocial || nome)
+        .trim()
+        .replace(/\s+/g, " ")
+        .slice(0, 120) || nome,
   };
 }

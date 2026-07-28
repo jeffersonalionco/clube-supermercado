@@ -5,8 +5,15 @@ import { fetchAutenticado } from "../utils/session.js";
 import { formatarCpfCnpj } from "../utils/cpf.js";
 import {
   dataNascimentoValida,
+  emailValido,
   formatarDataNascimento,
   formatarTelefone,
+  IDADE_MINIMA_CADASTRO,
+  LIMITE_EMAIL,
+  LIMITE_NOME,
+  maiorDeIdadeCadastro,
+  nomeValido,
+  telefoneValido,
 } from "../utils/format.js";
 import { mensagemParaUsuario } from "../utils/mensagensUsuario.js";
 import "../styles/auth-mobile.css";
@@ -106,19 +113,28 @@ export default function EditarDadosPage({ onVoltar, onSalvo }) {
       return;
     }
 
-    if (!nome.trim() || nome.trim().length < 2) {
-      setError("Informe o nome completo");
+    if (!maiorDeIdadeCadastro(dataNascimento)) {
+      setError(
+        `É necessário ter pelo menos ${IDADE_MINIMA_CADASTRO} anos para manter o cadastro`
+      );
       return;
     }
 
-    if (!email.trim()) {
-      setError("Informe o e-mail");
+    if (!nomeValido(nome)) {
+      setError(
+        `Informe o nome completo (apenas letras, entre 2 e ${LIMITE_NOME} caracteres)`
+      );
+      return;
+    }
+
+    if (!emailValido(email)) {
+      setError("Informe um e-mail válido");
       return;
     }
 
     const telDigits = telefone.replace(/\D/g, "");
-    if (telDigits.length < 10) {
-      setError("Informe um telefone válido");
+    if (!telefoneValido(telDigits)) {
+      setError("Informe um celular válido com DDD");
       return;
     }
 
@@ -126,8 +142,8 @@ export default function EditarDadosPage({ onVoltar, onSalvo }) {
 
     try {
       const payload = {
-        nome: nome.trim(),
-        email: email.trim(),
+        nome: nome.trim().replace(/\s+/g, " "),
+        email: email.trim().toLowerCase(),
         celular: telDigits,
         dataNascimento,
       };
@@ -221,6 +237,7 @@ export default function EditarDadosPage({ onVoltar, onSalvo }) {
               type="text"
               autoComplete="name"
               value={nome}
+              maxLength={LIMITE_NOME}
               onChange={(e) => setNome(e.target.value)}
               disabled={saving}
               required
@@ -233,6 +250,7 @@ export default function EditarDadosPage({ onVoltar, onSalvo }) {
               type="email"
               autoComplete="email"
               value={email}
+              maxLength={LIMITE_EMAIL}
               onChange={(e) => setEmail(e.target.value)}
               disabled={saving}
               required

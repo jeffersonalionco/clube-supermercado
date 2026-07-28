@@ -144,6 +144,8 @@ export async function buscarClientePorCpfCnpj(cpfCnpj) {
 }
 
 export async function cadastrarClienteApi(payload) {
+  // Documentação: https://servicosflex.rpinfo.com.br:7443/v1.0/documentacao?location=documentacao#/
+  // Endpoint de criação: POST /v2.0/clientes (ver server/docs/API-ERP.md)
   const response = await apiRequest("/v2.0/clientes", {
     method: "POST",
     body: JSON.stringify(payload),

@@ -52,6 +52,12 @@ const NAV = [
     icon: "▶",
   },
   {
+    id: "novidades",
+    label: "Novidades",
+    desc: "Avisos e dicas publicados no app",
+    icon: "✎",
+  },
+  {
     id: "manual",
     label: "Manual do programa",
     desc: "Regras de pontos, resgates e operação",

@@ -108,7 +108,7 @@ export function dadosParaFormulario(cliente) {
   };
 }
 
-export function apresentarCliente({ usuario, cliente, raw }) {
+export function apresentarCliente({ usuario, cliente, raw, clube }) {
   const base = normalizarClienteApi(
     cliente && typeof cliente === "object" ? cliente : {}
   );
@@ -132,7 +132,7 @@ export function apresentarCliente({ usuario, cliente, raw }) {
     endereco: base.enderecoTexto,
     dataNascimento: base.dtNasc || base.dataNascimento,
     situacao: pick(base, ["situacao", "status"]),
-    categoria: "Clube Superama",
+    categoria: clube?.nivel ? `Clube Superama+ · ${clube.nivel}` : "Clube Superama+",
     sexo:
       base.sexo === "M"
         ? "Masculino"
@@ -158,9 +158,12 @@ export function apresentarCliente({ usuario, cliente, raw }) {
     perfil,
     formulario: dadosParaFormulario(cliente),
     detalhes: [],
-    clube: {
-      nivel: "Clube Superama",
+    clube: clube || {
+      nivel: "Bronze",
+      nivelId: "bronze",
+      nivelDescricao: "Cliente ocasional",
       statusClube: "ativo",
+      gastoAno: 0,
     },
   };
 }

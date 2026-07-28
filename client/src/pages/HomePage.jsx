@@ -10,6 +10,7 @@ import {
   IconContact,
   IconConvenio,
   IconGift,
+  IconNews,
   IconOffers,
   IconPoints,
   IconReceipt,
@@ -22,9 +23,12 @@ import { clearSession, fetchAutenticado } from "../utils/session.js";
 import { resolveImagemUrl } from "../utils/imagem.js";
 import { mensagemParaUsuario } from "../utils/mensagensUsuario.js";
 import { formatarMoeda } from "../utils/moeda.js";
+import NivelBadge from "../components/NivelBadge.jsx";
+import { useNivelClube } from "../utils/nivelClube.js";
 import "../styles/home.css";
 import "../styles/home-dashboard.css";
 import "../styles/home-video.css";
+import "../styles/novidades.css";
 import { useRefetchOnVisible } from "../hooks/useRefetchOnVisible.js";
 import ClienteInsightsPanel from "../components/charts/ClienteInsightsPanel.jsx";
 import HomeVideoCard from "../components/HomeVideoCard.jsx";
@@ -288,11 +292,35 @@ function HomeDeskActionTile({ icon, title, subtitle, onClick, variant = "default
   );
 }
 
-function HomeDeskQuickNav({ onPremios, onCompras, onPontos, onPerfil, onContato, pontosAtivo = true }) {
+function HomeDeskQuickNav({
+  onPremios,
+  onCompras,
+  onPontos,
+  onOfertas,
+  onNovidades,
+  onPerfil,
+  onContato,
+  pontosAtivo = true,
+}) {
   const itens = [
+    onOfertas && {
+      id: "ofertas",
+      variant: "featured",
+      icon: <IconOffers size={18} />,
+      title: "Ofertas",
+      subtitle: "Promoções da loja",
+      onClick: onOfertas,
+    },
+    onNovidades && {
+      id: "novidades",
+      icon: <IconNews size={18} />,
+      title: "Novidades",
+      subtitle: "Avisos e dicas",
+      onClick: onNovidades,
+    },
     onPremios && {
       id: "premios",
-      variant: "featured",
+      variant: pontosAtivo ? "default" : "featured",
       icon: <IconGift size={18} />,
       title: "Prêmios",
       subtitle: "Troque pontos por brindes",
@@ -300,7 +328,7 @@ function HomeDeskQuickNav({ onPremios, onCompras, onPontos, onPerfil, onContato,
     },
     onCompras && {
       id: "compras",
-      variant: pontosAtivo ? "default" : "featured",
+      variant: !onOfertas && !pontosAtivo ? "featured" : "default",
       icon: <IconCart size={18} />,
       title: "Minhas compras",
       subtitle: pontosAtivo ? "Cupons e itens" : "Cupons e itens",
@@ -773,6 +801,7 @@ function HomeAtividade({ itens, onPontos, onCompras, pontosAtivo = true }) {
 
 function HomeContaChip({ perfil, clube, cuponsProcessados }) {
   const [copiado, setCopiado] = useState(false);
+  const { abrirDetalhe } = useNivelClube() || {};
 
   async function copiarNumero() {
     if (!perfil?.codigoCliente) return;
@@ -787,10 +816,21 @@ function HomeContaChip({ perfil, clube, cuponsProcessados }) {
 
   return (
     <section className="home-dash-card home-dash-card--conta" aria-label="Resumo da conta">
-      <div className="home-conta-stat">
-        <span className="home-conta-stat__val">{clube?.nivel || "Clube"}</span>
-        <span className="home-conta-stat__lbl">Seu clube</span>
-      </div>
+      <button
+        type="button"
+        className="home-conta-stat home-conta-stat--nivel"
+        onClick={abrirDetalhe}
+        aria-label={`Seu nível ${clube?.nivel || ""}. Toque para ver detalhes`}
+      >
+        <span className="home-conta-stat__lbl">Seu nível</span>
+        <NivelBadge
+          clube={clube}
+          size="sm"
+          clickable={false}
+          className="nivel-badge--compact"
+        />
+        <span className="home-conta-stat__hint">Toque para ver a evolução</span>
+      </button>
       {cuponsProcessados != null && (
         <div className="home-conta-stat">
           <span className="home-conta-stat__val">{cuponsProcessados}</span>
@@ -879,10 +919,13 @@ export default function HomePage({
   onCompras,
   onPremios,
   onPontos,
+  onOfertas,
+  onNovidades,
   onPerfil,
   onContato,
   onRegulamento,
   onPrivacidade,
+  onClubeReady,
 }) {
   const [loading, setLoading] = useState(true);
   const [atualizando, setAtualizando] = useState(false);
@@ -890,6 +933,8 @@ export default function HomePage({
   const [dados, setDados] = useState(null);
   const [videoHome, setVideoHome] = useState(null);
   const [descontosClube, setDescontosClube] = useState([]);
+  const nivelCtx = useNivelClube();
+  const abrirDetalheNivel = nivelCtx?.abrirDetalhe;
 
   const carregar = useCallback(async ({ silencioso = false } = {}) => {
     if (silencioso) {
@@ -937,6 +982,7 @@ export default function HomePage({
           brindes: brindesRes.brindes ?? [],
           cuponsProcessados: historicoRes.resumo?.totalCompras ?? 0,
         });
+        onClubeReady?.(perfilRes.clube);
       } else {
         const vendasRes = await buscarVendasInsights();
 
@@ -951,6 +997,7 @@ export default function HomePage({
           brindes: [],
           cuponsProcessados: 0,
         });
+        onClubeReady?.(perfilRes.clube);
       }
     } catch (err) {
       if (err.code === "UNAUTHORIZED") {
@@ -962,7 +1009,7 @@ export default function HomePage({
       setLoading(false);
       setAtualizando(false);
     }
-  }, [onLogout, pontosAtivo]);
+  }, [onLogout, onClubeReady, pontosAtivo]);
 
   useEffect(() => {
     carregar();
@@ -1143,13 +1190,15 @@ export default function HomePage({
             <div className="home-hero__text">
               <p className="home-hero__ola">Olá,</p>
               <h1 className="home-hero__nome">{primeiroNome}</h1>
-              <p className="home-hero__sub">Membro do Clube Superama+</p>
+              {membroDesde && (
+                <p className="home-hero__desde">Cliente desde {membroDesde}</p>
+              )}
             </div>
-            {membroDesde && (
-              <div className="home-hero__badge home-hero__badge--membro">
-                Cliente desde {membroDesde}
-              </div>
-            )}
+            <NivelBadge
+              clube={clube}
+              size="md"
+              className="home-hero__nivel home-hero__nivel--corner"
+            />
           </section>
 
           <div className={`home-stats home-stats--rich${!pontosAtivo ? " home-stats--sem-pontos" : ""}`}>
@@ -1167,10 +1216,25 @@ export default function HomePage({
                 onCompras={onCompras}
               />
             )}
-            <div className="home-stat">
-              <span className="home-stat__value">{clube.nivel}</span>
-              <span className="home-stat__label">Seu clube</span>
-            </div>
+            <button
+              type="button"
+              className="home-stat home-stat--nivel"
+              onClick={abrirDetalheNivel}
+              aria-label={`Seu nível ${clube.nivel || ""}. Toque para ver detalhes`}
+            >
+              <span className="home-stat__nivel-wrap">
+                <NivelBadge
+                  clube={clube}
+                  size="sm"
+                  clickable={false}
+                  className="nivel-badge--compact"
+                />
+              </span>
+              <span className="home-stat__label">Seu nível</span>
+              {clube.anoReferencia && (
+                <span className="home-stat__hint">{clube.anoReferencia}</span>
+              )}
+            </button>
             {perfil.codigoCliente && (
               <div className="home-stat">
                 <span className="home-stat__value">{perfil.codigoCliente}</span>
@@ -1199,6 +1263,32 @@ export default function HomePage({
           )}
 
           <main className="home-main">
+            {(onOfertas || onNovidades) && (
+              <div className="home-teaser-row" aria-label="Ofertas e novidades">
+                {onOfertas && (
+                  <button
+                    type="button"
+                    className="home-teaser home-teaser--ofertas"
+                    onClick={onOfertas}
+                  >
+                    <span className="home-teaser__eyebrow">Loja</span>
+                    <span className="home-teaser__title">Ofertas</span>
+                    <span className="home-teaser__sub">Ver promoções</span>
+                  </button>
+                )}
+                {onNovidades && (
+                  <button
+                    type="button"
+                    className="home-teaser home-teaser--novidades"
+                    onClick={onNovidades}
+                  >
+                    <span className="home-teaser__eyebrow">Clube</span>
+                    <span className="home-teaser__title">Novidades</span>
+                    <span className="home-teaser__sub">Avisos da loja</span>
+                  </button>
+                )}
+              </div>
+            )}
             {pontosAtivo ? (
               <div className="home-grid">
                 <nav className="home-menu" aria-label="Área do cliente">
@@ -1348,7 +1438,23 @@ export default function HomePage({
                 </div>
               )}
               <div className="home-desk-hero__stats">
-                <HomeDeskStatCard label="Seu clube" value={clube.nivel} />
+                <HomeDeskStatCard
+                  label="Seu nível"
+                  value={
+                    <NivelBadge
+                      clube={clube}
+                      size="sm"
+                      clickable={false}
+                      className="nivel-badge--compact"
+                    />
+                  }
+                  hint={
+                    clube.proximoNivel && clube.faltaParaProximo > 0
+                      ? `Faltam ${formatarMoeda(clube.faltaParaProximo)} para ${clube.proximoNivel.nome}`
+                      : "Toque para ver a escada de níveis"
+                  }
+                  onClick={abrirDetalheNivel}
+                />
                 {pontosAtivo && dados.cuponsProcessados != null && (
                   <HomeDeskStatCard
                     label="Cupons pontuados"
@@ -1384,6 +1490,8 @@ export default function HomePage({
             onPremios={onPremios}
             onCompras={onCompras}
             onPontos={onPontos}
+            onOfertas={onOfertas}
+            onNovidades={onNovidades}
             onPerfil={onPerfil}
             onContato={onContato}
             pontosAtivo={pontosAtivo}

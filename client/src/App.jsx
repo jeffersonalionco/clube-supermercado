@@ -6,10 +6,12 @@ import EditarDadosPage from "./pages/EditarDadosPage.jsx";
 import ComprasPage from "./pages/ComprasPage.jsx";
 import PremiosPage from "./pages/PremiosPage.jsx";
 import PontosHistoricoPage from "./pages/PontosHistoricoPage.jsx";
+import OfertasPage from "./pages/OfertasPage.jsx";
+import NovidadesPage from "./pages/NovidadesPage.jsx";
 import PerfilPage from "./pages/PerfilPage.jsx";
 import ContatoPage from "./pages/ContatoPage.jsx";
 import LegalPage from "./pages/LegalPage.jsx";
-import { clearSession, loadSession } from "./utils/session.js";
+import { clearSession, fetchAutenticado, loadSession } from "./utils/session.js";
 import {
   ALL_VIEWS,
   PUBLIC_VIEWS,
@@ -22,6 +24,7 @@ import {
 } from "./utils/navigation.js";
 import ClientAppShell from "./components/ClientAppShell.jsx";
 import { useProgramaPontos } from "./hooks/useProgramaPontos.js";
+import { useSeo } from "./seo/useSeo.js";
 
 const VIEWS_PONTOS = new Set(["pontos", "premios"]);
 
@@ -40,7 +43,18 @@ function isAdminRoute() {
 function ClientApp() {
   const [session, setSession] = useState(() => loadSession());
   const [view, setView] = useState("home");
+  const [clube, setClube] = useState(null);
   const { pontosAtivo } = useProgramaPontos(session);
+
+  const seoPage = !session?.token
+    ? PUBLIC_VIEWS.includes(view)
+      ? view
+      : "login"
+    : PUBLIC_VIEWS.includes(view)
+      ? view
+      : "app";
+
+  useSeo(seoPage);
 
   const navegar = useCallback((novaView, { substituir = false } = {}) => {
     const usarReplace = substituir || TAB_VIEWS.includes(novaView);
@@ -96,6 +110,24 @@ function ClientApp() {
     }
   }, [session?.token, pontosAtivo, view]);
 
+  useEffect(() => {
+    if (!session?.token) {
+      setClube(null);
+      return;
+    }
+
+    let cancelado = false;
+    fetchAutenticado("/api/cliente/nivel")
+      .then((data) => {
+        if (!cancelado && data?.clube) setClube(data.clube);
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelado = true;
+    };
+  }, [session?.token]);
+
   const handleLogin = useCallback((novaSessao) => {
     setSession(novaSessao);
     setView("home");
@@ -105,6 +137,7 @@ function ClientApp() {
   const handleLogout = useCallback(() => {
     clearSession();
     setSession(null);
+    setClube(null);
     setView("home");
     replaceView("home");
   }, []);
@@ -116,6 +149,14 @@ function ClientApp() {
       page = <LegalPage slug={view} onVoltar={voltar} />;
     } else if (view === "editar") {
       page = <EditarDadosPage onVoltar={voltar} onSalvo={voltar} />;
+    } else if (view === "ofertas") {
+      page = (
+        <OfertasPage tabMode onInicio={() => navegar("home")} />
+      );
+    } else if (view === "novidades") {
+      page = (
+        <NovidadesPage tabMode onInicio={() => navegar("home")} />
+      );
     } else if (view === "compras") {
       page = (
         <ComprasPage
@@ -169,10 +210,13 @@ function ClientApp() {
           onCompras={() => navegar("compras")}
           onPremios={pontosAtivo ? () => navegar("premios") : undefined}
           onPontos={pontosAtivo ? () => navegar("pontos") : undefined}
+          onOfertas={() => navegar("ofertas")}
+          onNovidades={() => navegar("novidades")}
           onPerfil={() => navegar("perfil")}
           onContato={() => navegar("contato")}
           onRegulamento={() => navegar("regulamento")}
           onPrivacidade={() => navegar("privacidade")}
+          onClubeReady={setClube}
         />
       );
     }
@@ -182,6 +226,7 @@ function ClientApp() {
         view={view}
         onNavigate={navegar}
         usuario={session?.usuario}
+        clube={clube}
         onPerfil={() => navegar("perfil")}
         onLogout={handleLogout}
         pontosAtivo={pontosAtivo}

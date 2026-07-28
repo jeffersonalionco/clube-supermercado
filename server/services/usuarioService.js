@@ -29,8 +29,8 @@ function extrairNomeCliente(cliente) {
 export async function buscarUsuarioPorCpf(cpfCnpj) {
   const cpf = normalizarCpfCnpj(cpfCnpj);
   const { rows } = await getPool().query(
-    `SELECT id, cpf, senha_hash, cliente_codigo, nome, criado_em, atualizado_em,
-            aceite_regulamento_em, aceite_privacidade_em
+    `SELECT id, cpf, senha_hash, cliente_codigo, nome, dados_api, criado_em, atualizado_em,
+            aceite_regulamento_em, aceite_privacidade_em, senha_versao
      FROM usuario WHERE cpf = $1`,
     [cpf]
   );
@@ -39,7 +39,7 @@ export async function buscarUsuarioPorCpf(cpfCnpj) {
 
 export async function buscarUsuarioPorId(id) {
   const { rows } = await getPool().query(
-    `SELECT id, cpf, senha_hash, cliente_codigo, nome, criado_em
+    `SELECT id, cpf, senha_hash, cliente_codigo, nome, criado_em, senha_versao
      FROM usuario WHERE id = $1`,
     [id]
   );
@@ -190,10 +190,11 @@ export async function alterarSenhaUsuario(id, novaSenha) {
   const { rows } = await getPool().query(
     `UPDATE usuario
      SET senha_hash = $2,
+         senha_versao = COALESCE(senha_versao, 1) + 1,
          atualizado_em = NOW()
      WHERE id = $1
      RETURNING id, cpf, cliente_codigo, nome, criado_em, atualizado_em,
-               aceite_regulamento_em, aceite_privacidade_em`,
+               aceite_regulamento_em, aceite_privacidade_em, senha_versao`,
     [id, senhaHash]
   );
   return rows[0] || null;

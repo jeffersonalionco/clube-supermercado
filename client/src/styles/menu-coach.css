@@ -1,0 +1,125 @@
+.menu-coach {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .menu-coach {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 3500;
+    pointer-events: none;
+  }
+
+  .menu-coach__backdrop {
+    position: absolute;
+    inset: 0;
+    border: none;
+    padding: 0;
+    background: rgba(8, 26, 69, 0.55);
+    pointer-events: auto;
+    cursor: pointer;
+  }
+
+  .menu-coach__card {
+    position: absolute;
+    left: 1rem;
+    right: 1rem;
+    bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px));
+    z-index: 2;
+    padding: 1.1rem 1.15rem 1.15rem;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 12px 40px rgba(8, 26, 69, 0.28);
+    text-align: center;
+    pointer-events: auto;
+    animation: menu-coach-in 0.35s ease;
+  }
+
+  .menu-coach__seta {
+    position: absolute;
+    left: 50%;
+    bottom: -8px;
+    width: 16px;
+    height: 16px;
+    margin-left: -8px;
+    background: #fff;
+    transform: rotate(45deg);
+    box-shadow: 2px 2px 4px rgba(8, 26, 69, 0.08);
+  }
+
+  .menu-coach__titulo {
+    margin: 0 0 0.35rem;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #0d2b66;
+    letter-spacing: -0.02em;
+  }
+
+  .menu-coach__texto {
+    margin: 0 0 1rem;
+    font-size: 0.9rem;
+    line-height: 1.45;
+    color: #5c6b7a;
+  }
+
+  .menu-coach__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.75rem;
+    padding: 0 1.5rem;
+    border: none;
+    border-radius: 999px;
+    background: #1b4fa0;
+    color: #fff;
+    font: inherit;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .menu-coach__spotlight {
+    position: absolute;
+    left: 0.4rem;
+    right: 0.4rem;
+    bottom: max(0.2rem, env(safe-area-inset-bottom, 0px));
+    height: 4.35rem;
+    border-radius: 18px;
+    border: 1.5px solid rgba(255, 255, 255, 0.85);
+    box-shadow:
+      0 0 0 9999px rgba(8, 26, 69, 0.55),
+      0 0 24px rgba(27, 79, 160, 0.45);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Backdrop cobre tudo; o spotlight “corta” visualmente a barra */
+  .menu-coach__backdrop {
+    background: transparent;
+  }
+
+  .client-bottom-nav.client-bottom-nav--coach {
+    z-index: 3600;
+    box-shadow:
+      0 -4px 28px rgba(27, 79, 160, 0.22),
+      0 0 0 1px rgba(27, 79, 160, 0.2);
+  }
+
+  @keyframes menu-coach-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-coach__card {
+    animation: none;
+  }
+}

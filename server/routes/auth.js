@@ -8,8 +8,9 @@ import { montarPayloadCadastro } from "../services/cadastroCliente.js";
 import { mensagemParaCliente } from "../utils/mensagemCliente.js";
 import { criarTokenSessao } from "../services/sessionToken.js";
 import { requireAuth } from "../middleware/requireAuth.js";
-import { authLimiter, verificarCpfLimiter } from "../middleware/rateLimit.js";
+import { authLimiter, verificarCpfLimiter, recuperarSenhaRedefinirLimiter, recuperarSenhaSolicitarLimiter } from "../middleware/rateLimit.js";
 import { validarSenhaCadastro, validarSenhaLogin } from "../utils/senha.js";
+import { cpfDigitosValidos } from "../utils/validacaoCadastro.js";
 import {
   buscarUsuarioPorCpf,
   criarUsuario,
@@ -24,6 +25,11 @@ import {
   apresentarProgramaCliente,
   obterConfigPrograma,
 } from "../services/programaConfigService.js";
+import {
+  mensagemRecuperacaoGenerica,
+  redefinirSenhaComRecuperacao,
+  solicitarRecuperacaoSenha,
+} from "../services/senhaRecuperacaoService.js";
 
 const router = Router();
 
@@ -59,7 +65,7 @@ router.post("/login", async (req, res) => {
   const { cpf, senha, aceiteLegal } = req.body || {};
   const cpfNorm = normalizarCpfCnpj(cpf);
 
-  if (!cpfNorm || cpfNorm.length !== 11) {
+  if (!cpfDigitosValidos(cpfNorm)) {
     return res.status(400).json({ error: "Informe um CPF válido" });
   }
 
@@ -169,7 +175,7 @@ router.post("/login", async (req, res) => {
 router.get("/verificar-cpf/:cpf", verificarCpfLimiter, async (req, res) => {
   const cpfNorm = normalizarCpfCnpj(req.params.cpf);
 
-  if (!cpfNorm || cpfNorm.length !== 11) {
+  if (!cpfDigitosValidos(cpfNorm)) {
     return res.status(400).json({ error: "Informe um CPF válido" });
   }
 
@@ -195,7 +201,7 @@ router.post("/cadastro-clube", async (req, res) => {
   const body = req.body || {};
   const cpfNorm = normalizarCpfCnpj(body.cpf || body.cpfCnpj);
 
-  if (!cpfNorm || cpfNorm.length !== 11) {
+  if (!cpfDigitosValidos(cpfNorm)) {
     return res.status(400).json({ error: "CPF inválido" });
   }
 
@@ -249,5 +255,82 @@ router.post("/cadastro-clube", async (req, res) => {
     });
   }
 });
+
+router.post(
+  "/recuperar-senha/solicitar",
+  recuperarSenhaSolicitarLimiter,
+  async (req, res) => {
+    const cpfNorm = normalizarCpfCnpj(req.body?.cpf);
+
+    if (!cpfDigitosValidos(cpfNorm)) {
+      return res.status(400).json({ error: "Informe um CPF válido" });
+    }
+
+    try {
+      const resultado = await solicitarRecuperacaoSenha({
+        cpf: cpfNorm,
+        ip: req.ip,
+      });
+      return res.json(resultado);
+    } catch (error) {
+      console.error("[auth/recuperar-senha/solicitar]", error.message);
+      return res.json({
+        success: true,
+        message: mensagemRecuperacaoGenerica(),
+      });
+    }
+  }
+);
+
+router.post(
+  "/recuperar-senha/redefinir",
+  recuperarSenhaRedefinirLimiter,
+  async (req, res) => {
+    const { token, cpf, codigo, novaSenha, confirmacaoSenha } = req.body || {};
+
+    const senhaOk = validarSenhaCadastro(novaSenha);
+    if (!senhaOk.ok) {
+      return res.status(400).json({ error: senhaOk.error });
+    }
+
+    if (String(novaSenha || "") !== String(confirmacaoSenha || "")) {
+      return res.status(400).json({ error: "A confirmação da senha não confere" });
+    }
+
+    try {
+      const resultado = await redefinirSenhaComRecuperacao({
+        token,
+        cpf,
+        codigo,
+        novaSenha,
+      });
+
+      if (!resultado.ok) {
+        return res.status(resultado.status || 400).json({ error: resultado.error });
+      }
+
+      await registrarEventoCliente({
+        usuarioId: resultado.usuario.id,
+        cpf: resultado.usuario.cpf,
+        evento: EVENTOS_CLIENTE.SENHA_RECUPERADA,
+        sucesso: true,
+        req,
+        detalhes: {
+          metodo: token ? "link" : "codigo",
+        },
+      });
+
+      return res.json({
+        success: true,
+        message: "Senha redefinida com sucesso. Faça login com a nova senha.",
+      });
+    } catch (error) {
+      console.error("[auth/recuperar-senha/redefinir]", error.message);
+      return res.status(500).json({
+        error: mensagemParaCliente(error.message),
+      });
+    }
+  }
+);
 
 export default router;

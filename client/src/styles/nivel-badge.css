@@ -1,0 +1,399 @@
+/* Níveis de fidelidade — visual gamer / progresso */
+
+.nivel-badge {
+  --nb-glow: transparent;
+  --nb-bg: #f4f4f5;
+  --nb-border: rgba(0, 0, 0, 0.08);
+  --nb-text: #3f3f46;
+  --nb-shine: rgba(255, 255, 255, 0.45);
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: 100%;
+  padding: 0.22rem 0.55rem 0.22rem 0.28rem;
+  border-radius: 999px;
+  border: 1px solid var(--nb-border);
+  background:
+    linear-gradient(135deg, var(--nb-shine), transparent 42%),
+    var(--nb-bg);
+  color: var(--nb-text);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.2) inset,
+    0 4px 14px var(--nb-glow);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  white-space: nowrap;
+  vertical-align: middle;
+  overflow: hidden;
+  animation: nivel-badge-in 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.nivel-badge::after {
+  content: "";
+  position: absolute;
+  top: -40%;
+  left: -60%;
+  width: 45%;
+  height: 180%;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.55) 48%,
+    transparent 100%
+  );
+  transform: skewX(-22deg);
+  pointer-events: none;
+  opacity: 0;
+}
+
+.nivel-badge__icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+.nivel-badge__label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  padding-right: 0.1rem;
+}
+
+.nivel-badge--sm {
+  padding: 0.15rem 0.42rem 0.15rem 0.2rem;
+  gap: 0.25rem;
+}
+
+.nivel-badge--sm .nivel-badge__label {
+  font-size: 0.62rem;
+}
+
+.nivel-badge--lg {
+  padding: 0.32rem 0.7rem 0.32rem 0.35rem;
+  gap: 0.4rem;
+}
+
+.nivel-badge--lg .nivel-badge__label {
+  font-size: 0.8rem;
+}
+
+.nivel-badge--bronze {
+  --nb-bg: linear-gradient(135deg, #9a3412 0%, #ea580c 38%, #fb923c 68%, #fdba74 100%);
+  --nb-border: rgba(255, 237, 213, 0.75);
+  --nb-text: #fff7ed;
+  --nb-glow: rgba(249, 115, 22, 0.65);
+  --nb-shine: rgba(255, 247, 237, 0.55);
+  animation:
+    nivel-badge-in 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    nivel-badge-pulse-bronze 2s ease-in-out infinite,
+    nivel-badge-bob 2.8s ease-in-out infinite;
+}
+
+.nivel-badge--bronze::after {
+  animation: nivel-badge-shine 2.6s ease-in-out infinite;
+}
+
+.nivel-badge--prata {
+  --nb-bg: linear-gradient(135deg, #334155 0%, #94a3b8 42%, #f8fafc 78%, #cbd5e1 100%);
+  --nb-border: rgba(248, 250, 252, 0.85);
+  --nb-text: #0f172a;
+  --nb-glow: rgba(148, 163, 184, 0.65);
+  --nb-shine: rgba(255, 255, 255, 0.7);
+  animation:
+    nivel-badge-in 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    nivel-badge-pulse-prata 2.3s ease-in-out infinite;
+}
+
+.nivel-badge--prata::after {
+  animation: nivel-badge-shine 2.8s ease-in-out infinite 0.4s;
+}
+
+.nivel-badge--ouro {
+  --nb-bg: linear-gradient(135deg, #5c3d00 0%, #d4a017 45%, #ffe566 100%);
+  --nb-border: rgba(255, 230, 120, 0.7);
+  --nb-text: #2a1a00;
+  --nb-glow: rgba(255, 193, 7, 0.55);
+  --nb-shine: rgba(255, 255, 220, 0.55);
+  animation:
+    nivel-badge-in 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    nivel-badge-pulse-ouro 2.4s ease-in-out infinite;
+}
+
+.nivel-badge--ouro::after {
+  animation: nivel-badge-shine 2.4s ease-in-out infinite 0.2s;
+}
+
+.nivel-badge--diamante {
+  --nb-bg: linear-gradient(135deg, #1e1b4b 0%, #2563eb 40%, #22d3ee 78%, #c084fc 100%);
+  --nb-border: rgba(186, 230, 253, 0.75);
+  --nb-text: #f8fafc;
+  --nb-glow: rgba(56, 189, 248, 0.55);
+  --nb-shine: rgba(255, 255, 255, 0.4);
+  animation:
+    nivel-badge-in 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    nivel-badge-pulse-diamante 2.2s ease-in-out infinite;
+}
+
+.nivel-badge--diamante::after {
+  animation: nivel-badge-shine 2.2s ease-in-out infinite;
+}
+
+@keyframes nivel-badge-in {
+  from {
+    opacity: 0;
+    transform: scale(0.86) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes nivel-badge-shine {
+  0%,
+  35% {
+    left: -60%;
+    opacity: 0;
+  }
+  45% {
+    opacity: 0.85;
+  }
+  70% {
+    left: 120%;
+    opacity: 0;
+  }
+  100% {
+    left: 120%;
+    opacity: 0;
+  }
+}
+
+@keyframes nivel-badge-bob {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-1.5px) scale(1.03);
+  }
+}
+
+@keyframes nivel-badge-pulse-bronze {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(255, 247, 237, 0.35) inset,
+      0 4px 16px rgba(249, 115, 22, 0.55),
+      0 0 18px rgba(251, 146, 60, 0.35);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(255, 247, 237, 0.5) inset,
+      0 6px 24px rgba(249, 115, 22, 0.8),
+      0 0 28px rgba(255, 140, 66, 0.55);
+  }
+}
+
+@keyframes nivel-badge-pulse-prata {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.35) inset,
+      0 4px 14px rgba(148, 163, 184, 0.5);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.55) inset,
+      0 6px 20px rgba(226, 232, 240, 0.75);
+  }
+}
+
+@keyframes nivel-badge-pulse-ouro {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.25) inset,
+      0 4px 14px rgba(255, 193, 7, 0.45);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.35) inset,
+      0 4px 20px rgba(255, 213, 79, 0.75);
+  }
+}
+
+@keyframes nivel-badge-pulse-diamante {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.2) inset,
+      0 4px 16px rgba(56, 189, 248, 0.45);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.35) inset,
+      0 6px 24px rgba(167, 139, 250, 0.65);
+  }
+}
+
+/* Avatar + badge */
+.nivel-avatar-wrap {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.nivel-avatar-wrap .nivel-badge--corner {
+  position: absolute;
+  right: -0.35rem;
+  bottom: -0.3rem;
+  z-index: 2;
+  padding: 0.12rem;
+  border-radius: 999px;
+}
+
+.nivel-avatar-wrap .nivel-badge--corner .nivel-badge__label {
+  display: none;
+}
+
+.nivel-badge--inline-row {
+  margin-top: 0.35rem;
+}
+
+.home-stat--nivel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  min-width: 0;
+  border: none;
+  background: var(--home-surface);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s ease, box-shadow 0.15s ease;
+}
+
+.home-stat--nivel:active {
+  transform: scale(0.98);
+}
+
+.home-stat__nivel-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.65rem;
+  max-width: 100%;
+}
+
+.home-stat--nivel .home-stat__label {
+  margin-top: 0.15rem;
+}
+
+.home-stat--nivel .home-stat__hint {
+  margin: 0;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: var(--home-muted);
+  opacity: 0.85;
+}
+
+.home-stat--nivel .nivel-badge--compact {
+  max-width: 100%;
+}
+
+.home-desk-stat--nivel .home-desk-stat__value,
+.home-desk-stat .nivel-badge--compact {
+  max-width: 100%;
+}
+
+.home-conta-stat--nivel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.home-conta-stat--nivel .home-conta-stat__hint {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--home-muted, #5c6b7a);
+}
+
+/* Badge compacto para cards apertados */
+.nivel-badge--compact {
+  padding: 0.14rem 0.42rem 0.14rem 0.18rem;
+  gap: 0.22rem;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.18) inset,
+    0 2px 8px var(--nb-glow);
+  animation: nivel-badge-in 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.nivel-badge--compact.nivel-badge--bronze,
+.nivel-badge--compact.nivel-badge--prata,
+.nivel-badge--compact.nivel-badge--ouro,
+.nivel-badge--compact.nivel-badge--diamante {
+  animation: nivel-badge-in 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.nivel-badge--compact::after {
+  display: none;
+}
+
+.nivel-badge--compact .nivel-badge__label {
+  font-size: 0.58rem;
+  letter-spacing: 0.03em;
+}
+
+.nivel-badge--compact .nivel-badge__icon {
+  transform: scale(0.92);
+}
+
+.nivel-badge--clickable {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  appearance: none;
+  font: inherit;
+}
+
+.nivel-badge--clickable:hover {
+  filter: brightness(1.06);
+}
+
+.nivel-badge--clickable:active {
+  transform: scale(0.96);
+}
+
+.home-hero__nivel {
+  margin-top: 0;
+}
+
+.client-desktop-nav__nivel {
+  margin-left: 0.15rem;
+  flex-shrink: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nivel-badge,
+  .nivel-badge--bronze,
+  .nivel-badge--prata,
+  .nivel-badge--ouro,
+  .nivel-badge--diamante,
+  .nivel-badge--compact,
+  .nivel-badge::after {
+    animation: none !important;
+  }
+}

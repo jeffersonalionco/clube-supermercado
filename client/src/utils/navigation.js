@@ -1,4 +1,11 @@
-export const TAB_VIEWS = ["home", "compras", "pontos", "premios"];
+export const TAB_VIEWS = [
+  "home",
+  "ofertas",
+  "compras",
+  "pontos",
+  "premios",
+  "novidades",
+];
 export const APP_VIEWS = [...TAB_VIEWS, "perfil", "contato", "editar"];
 export const PUBLIC_VIEWS = ["regulamento", "privacidade"];
 export const ALL_VIEWS = [...APP_VIEWS, ...PUBLIC_VIEWS];

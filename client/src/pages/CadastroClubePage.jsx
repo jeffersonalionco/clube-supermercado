@@ -2,11 +2,18 @@ import { useState } from "react";
 import AuthShell from "../components/AuthShell.jsx";
 import Field from "../components/Field.jsx";
 import { apiUrl, parseApiResponse } from "../utils/api.js";
-import { formatarCpf } from "../utils/cpf.js";
+import { cpfSomenteValido, formatarCpf } from "../utils/cpf.js";
 import {
   dataNascimentoValida,
+  emailValido,
   formatarDataNascimento,
   formatarTelefone,
+  IDADE_MINIMA_CADASTRO,
+  LIMITE_EMAIL,
+  LIMITE_NOME,
+  maiorDeIdadeCadastro,
+  nomeValido,
+  telefoneValido,
 } from "../utils/format.js";
 import { mensagemParaUsuario } from "../utils/mensagensUsuario.js";
 import AceiteLegal from "../components/AceiteLegal.jsx";
@@ -28,9 +35,19 @@ function Btn({ loading, children, variant = "primary", type = "button", ...props
   );
 }
 
+function limparErroCampo(setErros, campo) {
+  setErros((prev) => {
+    if (!prev[campo]) return prev;
+    const next = { ...prev };
+    delete next[campo];
+    return next;
+  });
+}
+
 export default function CadastroClubePage({
   cpf,
   onVoltar,
+  onCadastroConcluido,
   onAbrirRegulamento,
   onAbrirPrivacidade,
 }) {
@@ -42,39 +59,78 @@ export default function CadastroClubePage({
   const [sexo, setSexo] = useState("");
   const [estadoCivil, setEstadoCivil] = useState("");
   const [aceiteLegal, setAceiteLegal] = useState(false);
-  const [erroAceite, setErroAceite] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [enviado, setEnviado] = useState(false);
+
+  function validarCampos() {
+    const erros = {};
+
+    if (!cpfSomenteValido(cpf)) {
+      erros.cpf = "CPF inválido";
+    }
+
+    if (!dataNascimentoValida(dataNascimento)) {
+      erros.dataNascimento = "Informe uma data válida (DD/MM/AAAA)";
+    } else if (!maiorDeIdadeCadastro(dataNascimento)) {
+      erros.dataNascimento = `É necessário ter pelo menos ${IDADE_MINIMA_CADASTRO} anos`;
+    }
+
+    if (!telefoneValido(telefone)) {
+      erros.telefone = "Informe um celular válido com DDD";
+    }
+
+    if (!nomeValido(nome)) {
+      erros.nome = `Nome completo (apenas letras, 2 a ${LIMITE_NOME} caracteres)`;
+    }
+
+    if (!emailValido(email)) {
+      erros.email = "Informe um e-mail válido";
+    }
+
+    if (!aceiteLegal) {
+      erros.aceiteLegal = "Aceite o Regulamento e a Política de Privacidade";
+    }
+
+    return erros;
+  }
 
   async function handleSubmit(event) {
     event.preventDefault();
     setError("");
 
-    if (!dataNascimentoValida(dataNascimento)) {
-      setError("Informe uma data de nascimento válida");
-      return;
-    }
+    const erros = validarCampos();
+    setFieldErrors(erros);
 
-    if (!nome.trim() || nome.trim().length < 2) {
-      setError("Informe o nome completo");
-      return;
-    }
+    if (Object.keys(erros).length) {
+      const qtd = Object.keys(erros).length;
+      setError(
+        qtd === 1
+          ? "Corrija o campo destacado em vermelho para continuar."
+          : `Corrija os ${qtd} campos destacados em vermelho para continuar.`
+      );
 
-    if (!email.trim()) {
-      setError("Informe o e-mail");
-      return;
-    }
-
-    const telDigits = telefone.replace(/\D/g, "");
-    if (telDigits.length < 10) {
-      setError("Informe um telefone válido");
-      return;
-    }
-
-    if (!aceiteLegal) {
-      setErroAceite(true);
-      setError("Aceite o Regulamento e a Política de Privacidade para continuar");
+      const ordem = [
+        "cpf",
+        "dataNascimento",
+        "telefone",
+        "nome",
+        "email",
+        "aceiteLegal",
+      ];
+      const primeiro = ordem.find((k) => erros[k]);
+      if (primeiro && primeiro !== "aceiteLegal") {
+        document.getElementById(
+          primeiro === "dataNascimento"
+            ? "nascimento"
+            : primeiro === "telefone"
+              ? "tel"
+              : primeiro === "cpf"
+                ? "cpf-clube"
+                : primeiro
+        )?.focus?.();
+      }
       return;
     }
 
@@ -83,10 +139,10 @@ export default function CadastroClubePage({
     try {
       const payload = {
         cpf: String(cpf).replace(/\D/g, ""),
-        celular: telDigits,
+        celular: telefone.replace(/\D/g, ""),
         dataNascimento,
-        nome: nome.trim(),
-        email: email.trim(),
+        nome: nome.trim().replace(/\s+/g, " "),
+        email: email.trim().toLowerCase(),
         aceiteLegal: true,
       };
 
@@ -113,18 +169,37 @@ export default function CadastroClubePage({
     }
   }
 
+  function irParaCriarSenha() {
+    const digits = String(cpf).replace(/\D/g, "");
+    if (onCadastroConcluido) {
+      onCadastroConcluido({
+        cpf: digits,
+        nome: nome.trim().replace(/\s+/g, " "),
+      });
+      return;
+    }
+    onVoltar?.();
+  }
+
   if (enviado) {
     return (
       <AuthShell
         variant="clube"
         badge="Clube Superama"
         title="Cadastro realizado!"
-        description="Agora você já pode acessar sua conta."
+        description="Falta só criar sua senha de acesso."
         onBack={onVoltar}
         backLabel="Login"
         footer={
           <div className="auth-footer__inner">
-            <Btn onClick={onVoltar}>Ir para o login</Btn>
+            <div className="auth-callout auth-callout--destaque" role="status">
+              <strong>Próximo passo: criar senha</strong>
+              <p>
+                Você ainda não tem senha. Na próxima tela, digite uma senha nova
+                (mínimo 8 caracteres) e entre no clube.
+              </p>
+            </div>
+            <Btn onClick={irParaCriarSenha}>Criar minha senha agora</Btn>
           </div>
         }
       >
@@ -133,16 +208,20 @@ export default function CadastroClubePage({
             ✓
           </div>
           <h2>Parabéns{nome ? `, ${nome.split(" ")[0]}` : ""}!</h2>
-          <p>
-            Seu cadastro no Clube Superama foi concluído com sucesso.
-          </p>
+          <p>Seu cadastro no Clube Superama+ foi concluído com sucesso.</p>
           <p className="auth-form-sub" style={{ marginTop: "0.75rem" }}>
-            Use seu CPF e crie uma senha de acesso na próxima tela.
+            CPF: <strong>{formatarCpf(cpf)}</strong>
           </p>
         </div>
       </AuthShell>
     );
   }
+
+  const resumoErro =
+    error ||
+    (Object.keys(fieldErrors).length
+      ? "Corrija os campos destacados em vermelho."
+      : "");
 
   return (
     <AuthShell
@@ -158,6 +237,14 @@ export default function CadastroClubePage({
       backLabel="Login"
       footer={
         <div className="auth-footer__inner">
+          {resumoErro && (
+            <div className="auth-alert auth-alert--error auth-alert--footer" role="alert">
+              <span className="auth-alert__icon" aria-hidden>
+                !
+              </span>
+              <span>{resumoErro}</span>
+            </div>
+          )}
           <Btn loading={loading} type="submit" form="form-clube">
             {loading ? "Cadastrando" : "Quero entrar no clube"}
           </Btn>
@@ -171,31 +258,39 @@ export default function CadastroClubePage({
         <h2 className="auth-form-title">Seus dados</h2>
         <p className="auth-form-sub">Campos marcados com * são obrigatórios.</p>
 
-        {error && (
-          <div className="auth-alert auth-alert--error" role="alert">
-            <span className="auth-alert__icon" aria-hidden>!</span>
-            <span>{error}</span>
-          </div>
-        )}
-
-        <Field label="CPF *" id="cpf-clube">
-          <input id="cpf-clube" type="text" value={formatarCpf(cpf)} readOnly />
+        <Field label="CPF *" id="cpf-clube" error={fieldErrors.cpf}>
+          <input
+            id="cpf-clube"
+            type="text"
+            value={formatarCpf(cpf)}
+            readOnly
+            aria-invalid={Boolean(fieldErrors.cpf)}
+          />
         </Field>
 
-        <Field label="Data de nascimento *" id="nascimento">
+        <Field
+          label="Data de nascimento *"
+          id="nascimento"
+          error={fieldErrors.dataNascimento}
+        >
           <input
             id="nascimento"
             type="text"
             inputMode="numeric"
             placeholder="dia/mês/ano"
             value={dataNascimento}
-            onChange={(e) => setDataNascimento(formatarDataNascimento(e.target.value))}
+            onChange={(e) => {
+              setDataNascimento(formatarDataNascimento(e.target.value));
+              limparErroCampo(setFieldErrors, "dataNascimento");
+              setError("");
+            }}
             disabled={loading}
             required
+            aria-invalid={Boolean(fieldErrors.dataNascimento)}
           />
         </Field>
 
-        <Field label="Celular / WhatsApp *" id="tel">
+        <Field label="Celular / WhatsApp *" id="tel" error={fieldErrors.telefone}>
           <input
             id="tel"
             type="tel"
@@ -203,26 +298,37 @@ export default function CadastroClubePage({
             autoComplete="tel"
             placeholder="(00) 00000-0000"
             value={telefone}
-            onChange={(e) => setTelefone(formatarTelefone(e.target.value))}
+            onChange={(e) => {
+              setTelefone(formatarTelefone(e.target.value));
+              limparErroCampo(setFieldErrors, "telefone");
+              setError("");
+            }}
             disabled={loading}
             required
+            aria-invalid={Boolean(fieldErrors.telefone)}
           />
         </Field>
 
-        <Field label="Nome completo *" id="nome">
+        <Field label="Nome completo *" id="nome" error={fieldErrors.nome}>
           <input
             id="nome"
             type="text"
             autoComplete="name"
             placeholder="Como no documento"
             value={nome}
-            onChange={(e) => setNome(e.target.value)}
+            maxLength={LIMITE_NOME}
+            onChange={(e) => {
+              setNome(e.target.value);
+              limparErroCampo(setFieldErrors, "nome");
+              setError("");
+            }}
             disabled={loading}
             required
+            aria-invalid={Boolean(fieldErrors.nome)}
           />
         </Field>
 
-        <Field label="E-mail *" id="email">
+        <Field label="E-mail *" id="email" error={fieldErrors.email}>
           <input
             id="email"
             type="email"
@@ -230,9 +336,15 @@ export default function CadastroClubePage({
             autoComplete="email"
             placeholder="seu@email.com"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            maxLength={LIMITE_EMAIL}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              limparErroCampo(setFieldErrors, "email");
+              setError("");
+            }}
             disabled={loading}
             required
+            aria-invalid={Boolean(fieldErrors.email)}
           />
         </Field>
 
@@ -271,12 +383,18 @@ export default function CadastroClubePage({
           checked={aceiteLegal}
           onChange={(v) => {
             setAceiteLegal(v);
-            if (v) setErroAceite(false);
+            if (v) limparErroCampo(setFieldErrors, "aceiteLegal");
+            setError("");
           }}
           onAbrirRegulamento={onAbrirRegulamento}
           onAbrirPrivacidade={onAbrirPrivacidade}
-          erro={erroAceite}
+          erro={Boolean(fieldErrors.aceiteLegal)}
         />
+        {fieldErrors.aceiteLegal && (
+          <small className="auth-field__error auth-field__error--aceite">
+            {fieldErrors.aceiteLegal}
+          </small>
+        )}
       </form>
     </AuthShell>
   );

@@ -60,6 +60,24 @@
   color: var(--legal-muted);
 }
 
+.legal-header__sub {
+  margin: 0.1rem 0 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--legal-muted);
+}
+
+.legal-header__sub a {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(100, 116, 139, 0.35);
+}
+
+.legal-header__sub a:hover {
+  color: var(--legal-primary, #1b4fa0);
+  border-bottom-color: currentColor;
+}
+
 .legal-header__title {
   margin: 0.15rem 0 0;
   font-size: 1.25rem;
@@ -225,8 +243,9 @@
 }
 
 .auth-aceite--error {
-  border-color: #e57373;
-  background: #fff8f8;
+  border-color: #e31c23;
+  background: #fff5f5;
+  box-shadow: 0 0 0 3px rgba(227, 28, 35, 0.12);
 }
 
 .auth-legal-links {

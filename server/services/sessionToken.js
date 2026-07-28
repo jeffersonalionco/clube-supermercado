@@ -8,6 +8,7 @@ export function criarTokenSessao(usuario) {
     {
       sub: usuario.id,
       cpf: usuario.cpf,
+      sv: Number(usuario.senha_versao) || 1,
     },
     getSessionSecret(),
     { expiresIn: EXPIRES_IN }

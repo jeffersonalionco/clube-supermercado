@@ -9,6 +9,7 @@ export const EVENTOS_CLIENTE = {
   CADASTRO_CLUBE_API: "cadastro_clube_api",
   ATUALIZACAO_PERFIL: "atualizacao_perfil",
   SENHA_ADMIN: "senha_admin",
+  SENHA_RECUPERADA: "senha_recuperada",
   RESGATE_COMPROVANTE: "resgate_comprovante",
   RESGATE_ASSINATURA: "resgate_assinatura",
 };
@@ -21,6 +22,7 @@ export const ROTULOS_EVENTO = {
   [EVENTOS_CLIENTE.CADASTRO_CLUBE_API]: "Cadastro no clube (API)",
   [EVENTOS_CLIENTE.ATUALIZACAO_PERFIL]: "Alteração de dados cadastrais",
   [EVENTOS_CLIENTE.SENHA_ADMIN]: "Senha redefinida pelo administrador",
+  [EVENTOS_CLIENTE.SENHA_RECUPERADA]: "Senha redefinida por recuperação",
   [EVENTOS_CLIENTE.RESGATE_COMPROVANTE]: "Resgate de prêmio(s) com comprovante",
   [EVENTOS_CLIENTE.RESGATE_ASSINATURA]: "Assinatura do comprovante de resgate confirmada",
 };

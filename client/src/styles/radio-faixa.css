@@ -1,0 +1,102 @@
+.radio-faixa {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin: 0 0 1.15rem;
+  padding: 0.85rem 0.95rem;
+  border-radius: 16px;
+  background: linear-gradient(120deg, #0d2b66 0%, #1b4fa0 58%, #163d7a 100%);
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(13, 43, 102, 0.22);
+}
+
+.radio-faixa__info {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.radio-faixa__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.2rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.radio-faixa__dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.radio-faixa__dot--on {
+  background: #e31c23;
+  box-shadow: 0 0 0 3px rgba(227, 28, 35, 0.28);
+}
+
+.radio-faixa__station {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.radio-faixa__track {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.78);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.radio-faixa__erro {
+  margin: 0.35rem 0 0;
+  font-size: 0.72rem;
+  color: #ffd0d2;
+}
+
+.radio-faixa__play {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.6rem;
+  padding: 0 0.95rem;
+  border: none;
+  border-radius: 999px;
+  background: #fff;
+  color: #0d2b66;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+}
+
+.radio-faixa__play:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.radio-faixa__play--on {
+  background: #e31c23;
+  color: #fff;
+}
+
+@media (min-width: 1024px) {
+  .radio-faixa {
+    padding: 1rem 1.15rem;
+  }
+
+  .radio-faixa__station {
+    font-size: 1.05rem;
+  }
+}

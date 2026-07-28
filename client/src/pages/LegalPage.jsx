@@ -4,6 +4,8 @@ import MetajiCredit from "../components/MetajiCredit.jsx";
 import { apiUrl, parseApiResponse } from "../utils/api.js";
 import { renderizarConteudoLegal } from "../utils/legalContent.js";
 import { mensagemParaUsuario } from "../utils/mensagensUsuario.js";
+import { useSeo } from "../seo/useSeo.js";
+import { SITE } from "../seo/site.js";
 import "../styles/legal.css";
 
 const LABELS = {
@@ -89,6 +91,12 @@ export default function LegalPage({ slug, onVoltar }) {
 
   const tituloPagina = dados?.titulo || LABELS[slug] || "Documento";
 
+  useSeo(slug === "privacidade" || slug === "regulamento" ? slug : "login", {
+    title: dados?.titulo
+      ? `${dados.titulo} | ${SITE.name}`
+      : undefined,
+  });
+
   return (
     <div className="legal-app">
       <header className="legal-header">
@@ -108,7 +116,12 @@ export default function LegalPage({ slug, onVoltar }) {
           <div className="legal-header__brand">
             <Logo variant="header" className="legal-header__logo" />
             <div>
-              <p className="legal-header__tag">Clube Superama+</p>
+              <p className="legal-header__tag">{SITE.name}</p>
+              <p className="legal-header__sub">
+                <a href={SITE.mercadoUrl} rel="noopener noreferrer">
+                  {SITE.tagline}
+                </a>
+              </p>
               <h1 className="legal-header__title">{tituloPagina}</h1>
             </div>
           </div>

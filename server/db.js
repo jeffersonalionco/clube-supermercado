@@ -130,6 +130,8 @@ async function ensureSchema() {
   await migrarPainelAdmin(db);
   await migrarConfigPrograma(db);
   await migrarConfigConteudo(db);
+  await migrarSenhaRecuperacao(db);
+  await migrarNovidades(db);
 
   const { seedAdministradorDoEnv } = await import("./services/painelAdminService.js");
   await seedAdministradorDoEnv();
@@ -424,6 +426,60 @@ async function migrarConfigConteudo(db) {
     INSERT INTO config_conteudo (id, video_home_url, video_home_titulo, video_home_ativo)
     VALUES (1, '', '', false)
     ON CONFLICT (id) DO NOTHING
+  `);
+}
+
+async function migrarSenhaRecuperacao(db) {
+  await db.query(`
+    ALTER TABLE usuario
+    ADD COLUMN IF NOT EXISTS senha_versao INTEGER NOT NULL DEFAULT 1
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS senha_recuperacao (
+      id BIGSERIAL PRIMARY KEY,
+      cpf VARCHAR(14) NOT NULL,
+      token_hash VARCHAR(64) NOT NULL UNIQUE,
+      codigo_hash VARCHAR(64) NOT NULL,
+      email_destino VARCHAR(255),
+      expira_em TIMESTAMPTZ NOT NULL,
+      usado_em TIMESTAMPTZ,
+      tentativas INTEGER NOT NULL DEFAULT 0,
+      ip VARCHAR(64),
+      criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_senha_recuperacao_cpf_criado
+    ON senha_recuperacao (cpf, criado_em DESC)
+  `);
+
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_senha_recuperacao_ativos
+    ON senha_recuperacao (cpf)
+    WHERE usado_em IS NULL
+  `);
+}
+
+async function migrarNovidades(db) {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS novidade (
+      id SERIAL PRIMARY KEY,
+      titulo VARCHAR(160) NOT NULL,
+      resumo VARCHAR(400) NOT NULL DEFAULT '',
+      corpo TEXT NOT NULL,
+      imagem_url VARCHAR(500),
+      ativo BOOLEAN NOT NULL DEFAULT true,
+      publicado_em TIMESTAMPTZ,
+      criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      atualizado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_novidade_ativo_pub
+    ON novidade (ativo, publicado_em DESC NULLS LAST, id DESC)
   `);
 }
 
