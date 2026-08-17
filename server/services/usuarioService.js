@@ -39,7 +39,8 @@ export async function buscarUsuarioPorCpf(cpfCnpj) {
 
 export async function buscarUsuarioPorId(id) {
   const { rows } = await getPool().query(
-    `SELECT id, cpf, senha_hash, cliente_codigo, nome, criado_em, senha_versao
+    `SELECT id, cpf, senha_hash, cliente_codigo, nome, criado_em,
+            aceite_regulamento_em, senha_versao
      FROM usuario WHERE id = $1`,
     [id]
   );
@@ -130,30 +131,82 @@ function mapUsuarioAdmin(row) {
   };
 }
 
-function montarFiltroBusca(busca) {
-  const termo = String(busca || "").trim();
-  if (!termo) {
-    return { where: "", params: [] };
+function normalizarDataFiltro(valor, rotulo) {
+  const data = String(valor || "").trim();
+  if (!data) return null;
+
+  const match = data.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) {
+    throw new Error(`${rotulo} inválida`);
   }
 
-  const cpfDigits = termo.replace(/\D/g, "");
-  if (cpfDigits.length >= 3) {
-    return {
-      where: "WHERE u.cpf LIKE $1",
-      params: [`%${cpfDigits}%`],
-    };
+  const ano = Number(match[1]);
+  const mes = Number(match[2]);
+  const dia = Number(match[3]);
+  const teste = new Date(Date.UTC(ano, mes - 1, dia));
+  if (
+    teste.getUTCFullYear() !== ano ||
+    teste.getUTCMonth() !== mes - 1 ||
+    teste.getUTCDate() !== dia
+  ) {
+    throw new Error(`${rotulo} inválida`);
+  }
+
+  return data;
+}
+
+function montarFiltrosUsuarios(busca, dataInicio, dataFim) {
+  const condicoes = [];
+  const params = [];
+  const termo = String(busca || "").trim();
+
+  if (termo) {
+    const cpfDigits = termo.replace(/\D/g, "");
+    params.push(cpfDigits.length >= 3 ? `%${cpfDigits}%` : `%${termo}%`);
+    condicoes.push(
+      cpfDigits.length >= 3
+        ? `u.cpf LIKE $${params.length}`
+        : `u.nome ILIKE $${params.length}`
+    );
+  }
+
+  const inicio = normalizarDataFiltro(dataInicio, "Data inicial");
+  const fim = normalizarDataFiltro(dataFim, "Data final");
+
+  if (inicio && fim && inicio > fim) {
+    throw new Error("A data inicial não pode ser posterior à data final");
+  }
+
+  if (inicio) {
+    params.push(inicio);
+    condicoes.push(
+      `u.criado_em >= ($${params.length}::date AT TIME ZONE 'America/Sao_Paulo')`
+    );
+  }
+
+  if (fim) {
+    params.push(fim);
+    condicoes.push(
+      `u.criado_em < (($${params.length}::date + INTERVAL '1 day') AT TIME ZONE 'America/Sao_Paulo')`
+    );
   }
 
   return {
-    where: "WHERE u.nome ILIKE $1",
-    params: [`%${termo}%`],
+    where: condicoes.length ? `WHERE ${condicoes.join(" AND ")}` : "",
+    params,
   };
 }
 
-export async function listarUsuarios({ busca = "", limite = 50, offset = 0 } = {}) {
+export async function listarUsuarios({
+  busca = "",
+  dataInicio = "",
+  dataFim = "",
+  limite = 50,
+  offset = 0,
+} = {}) {
   const lim = Math.min(Math.max(Number(limite) || 50, 1), 200);
   const off = Math.max(Number(offset) || 0, 0);
-  const { where, params } = montarFiltroBusca(busca);
+  const { where, params } = montarFiltrosUsuarios(busca, dataInicio, dataFim);
 
   const listParams = [...params, lim, off];
   const limitIdx = params.length + 1;

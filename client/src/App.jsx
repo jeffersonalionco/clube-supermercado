@@ -11,6 +11,8 @@ import NovidadesPage from "./pages/NovidadesPage.jsx";
 import PerfilPage from "./pages/PerfilPage.jsx";
 import ContatoPage from "./pages/ContatoPage.jsx";
 import LegalPage from "./pages/LegalPage.jsx";
+import DescadastrarEmailPage from "./pages/DescadastrarEmailPage.jsx";
+import AssistirVideoPage from "./pages/AssistirVideoPage.jsx";
 import { clearSession, fetchAutenticado, loadSession } from "./utils/session.js";
 import {
   ALL_VIEWS,
@@ -38,6 +40,18 @@ function resolveViewFromPopState(event) {
 function isAdminRoute() {
   const hash = window.location.hash.slice(1).replace(/^\//, "").trim();
   return hash === "admin" || hash.startsWith("admin/");
+}
+
+function isDescadastrarEmailRoute() {
+  const hash = window.location.hash.slice(1).replace(/^\//, "").trim();
+  return (
+    hash === "descadastrar-email" || hash.startsWith("descadastrar-email?")
+  );
+}
+
+function isAssistirVideoRoute() {
+  const hash = window.location.hash.slice(1).replace(/^\//, "").trim();
+  return hash === "assistir-video" || hash.startsWith("assistir-video?");
 }
 
 function ClientApp() {
@@ -252,9 +266,33 @@ function ClientApp() {
 
 export default function App() {
   const [adminRoute] = useState(() => isAdminRoute());
+  const [descadastrarRoute] = useState(() => isDescadastrarEmailRoute());
+  const [assistirVideoRoute] = useState(() => isAssistirVideoRoute());
 
   if (adminRoute) {
     return <AdminApp />;
+  }
+
+  if (descadastrarRoute) {
+    return (
+      <DescadastrarEmailPage
+        onVoltar={() => {
+          window.location.hash = "/";
+          window.location.reload();
+        }}
+      />
+    );
+  }
+
+  if (assistirVideoRoute) {
+    return (
+      <AssistirVideoPage
+        onVoltar={() => {
+          window.location.hash = "/";
+          window.location.reload();
+        }}
+      />
+    );
   }
 
   return <ClientApp />;

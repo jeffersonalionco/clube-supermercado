@@ -10,6 +10,37 @@ export function inicioDiaCadastro(criadoEm) {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
+/**
+ * Map<cpf, Date> com o início do dia de cadastro na plataforma.
+ * Usado nos relatórios para ignorar cupons anteriores ao clube.
+ */
+export function mapaDataMinimaCadastro(membros) {
+  const map = new Map();
+  for (const m of membros || []) {
+    const cpf = String(m?.cpf ?? "").trim();
+    const raw = m?.criado_em ?? m?.criadoEm ?? null;
+    if (!cpf || !raw) continue;
+    const inicio = inicioDiaCadastro(raw);
+    if (Number.isNaN(inicio.getTime())) continue;
+    map.set(cpf, inicio);
+  }
+  return map;
+}
+
+/** True se a data/hora do cupom é no dia do cadastro ou depois. */
+export function cupomNoOuAposCadastro(dataHora, criadoEmOuInicioDia) {
+  if (!dataHora || !criadoEmOuInicioDia) return false;
+  const venda = new Date(dataHora);
+  if (Number.isNaN(venda.getTime())) return false;
+  const inicio =
+    criadoEmOuInicioDia instanceof Date &&
+    criadoEmOuInicioDia.getHours?.() === 0 &&
+    criadoEmOuInicioDia.getMinutes?.() === 0
+      ? criadoEmOuInicioDia
+      : inicioDiaCadastro(criadoEmOuInicioDia);
+  return venda >= inicio;
+}
+
 export function dataInicioPlataformaBR(criadoEm) {
   return formatarDataBR(inicioDiaCadastro(criadoEm));
 }

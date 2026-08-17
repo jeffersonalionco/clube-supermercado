@@ -56,6 +56,11 @@ import {
   obterConfigConteudo,
 } from "../services/conteudoConfigService.js";
 import { listarProdutosClubeDescontos } from "../services/produtosClubeDescontosService.js";
+import { obterRelatorioClube } from "../services/relatorioClubeService.js";
+import { obterRadarCompras } from "../services/radarComprasService.js";
+import { obterSegmentacaoRfm } from "../services/rfmSegmentacaoService.js";
+import { obterRelatorioNiveisFidelidade } from "../services/niveisFidelidadeRelatorioService.js";
+import { obterFunilNovosMembros } from "../services/funilNovosMembrosService.js";
 
 const router = Router();
 
@@ -216,6 +221,96 @@ router.get("/resumo", async (_req, res) => {
   } catch (error) {
     console.error("[admin/resumo]", error.message);
     return res.status(500).json({
+      error: mensagemParaCliente(error.message),
+    });
+  }
+});
+
+router.get("/relatorio-clube", async (req, res) => {
+  try {
+    const dados = await obterRelatorioClube({
+      dataInicio: String(req.query.dataInicio || "").trim(),
+      dataFim: String(req.query.dataFim || "").trim(),
+      dias: Number(req.query.dias) || 30,
+    });
+    return res.json(dados);
+  } catch (error) {
+    console.error("[admin/relatorio-clube]", error.message);
+    const status = /data|período|periodo|ultrapassar/i.test(error.message)
+      ? 400
+      : 500;
+    return res.status(status).json({
+      error: mensagemParaCliente(error.message),
+    });
+  }
+});
+
+router.get("/relatorio/radar-compras", async (req, res) => {
+  try {
+    const dados = await obterRadarCompras({
+      dataInicio: String(req.query.dataInicio || "").trim(),
+      dataFim: String(req.query.dataFim || "").trim(),
+      dias: Number(req.query.dias) || 30,
+    });
+    return res.json(dados);
+  } catch (error) {
+    console.error("[admin/relatorio/radar-compras]", error.message);
+    const status = /data|período|periodo|ultrapassar/i.test(error.message)
+      ? 400
+      : 500;
+    return res.status(status).json({
+      error: mensagemParaCliente(error.message),
+    });
+  }
+});
+
+router.get("/relatorio/segmentacao-rfm", async (req, res) => {
+  try {
+    const dados = await obterSegmentacaoRfm({
+      dataInicio: String(req.query.dataInicio || "").trim(),
+      dataFim: String(req.query.dataFim || "").trim(),
+      dias: Number(req.query.dias) || 90,
+    });
+    return res.json(dados);
+  } catch (error) {
+    console.error("[admin/relatorio/segmentacao-rfm]", error.message);
+    const status = /data|período|periodo|ultrapassar/i.test(error.message)
+      ? 400
+      : 500;
+    return res.status(status).json({
+      error: mensagemParaCliente(error.message),
+    });
+  }
+});
+
+router.get("/relatorio/niveis-fidelidade", async (req, res) => {
+  try {
+    const dados = await obterRelatorioNiveisFidelidade({
+      ano: Number(req.query.ano) || undefined,
+    });
+    return res.json(dados);
+  } catch (error) {
+    console.error("[admin/relatorio/niveis-fidelidade]", error.message);
+    return res.status(500).json({
+      error: mensagemParaCliente(error.message),
+    });
+  }
+});
+
+router.get("/relatorio/funil-novos-membros", async (req, res) => {
+  try {
+    const dados = await obterFunilNovosMembros({
+      dataInicio: String(req.query.dataInicio || "").trim(),
+      dataFim: String(req.query.dataFim || "").trim(),
+      dias: Number(req.query.dias) || 30,
+    });
+    return res.json(dados);
+  } catch (error) {
+    console.error("[admin/relatorio/funil-novos-membros]", error.message);
+    const status = /data|período|periodo|ultrapassar/i.test(error.message)
+      ? 400
+      : 500;
+    return res.status(status).json({
       error: mensagemParaCliente(error.message),
     });
   }
@@ -532,13 +627,22 @@ router.patch("/administradores/:id", async (req, res) => {
 router.get("/usuarios", async (req, res) => {
   try {
     const busca = String(req.query.busca || "").trim();
+    const dataInicio = String(req.query.dataInicio || "").trim();
+    const dataFim = String(req.query.dataFim || "").trim();
     const limite = Number(req.query.limite) || 50;
     const offset = Number(req.query.offset) || 0;
-    const resultado = await listarUsuarios({ busca, limite, offset });
+    const resultado = await listarUsuarios({
+      busca,
+      dataInicio,
+      dataFim,
+      limite,
+      offset,
+    });
     return res.json(resultado);
   } catch (error) {
     console.error("[admin/usuarios GET]", error.message);
-    return res.status(500).json({ error: mensagemParaCliente(error.message) });
+    const status = /data inicial|data final/i.test(error.message) ? 400 : 500;
+    return res.status(status).json({ error: mensagemParaCliente(error.message) });
   }
 });
 

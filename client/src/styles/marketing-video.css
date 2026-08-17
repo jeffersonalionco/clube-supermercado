@@ -1,0 +1,74 @@
+.mkt-video-page {
+  min-height: 100dvh;
+  background:
+    radial-gradient(1200px 500px at 10% -10%, #1b4fa033, transparent),
+    linear-gradient(180deg, #0b1220 0%, #111827 100%);
+  color: #e2e8f0;
+  padding: 1.25rem;
+  box-sizing: border-box;
+}
+
+.mkt-video-page__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: 960px;
+  margin: 0 auto 1.25rem;
+}
+
+.mkt-video-page__brand {
+  margin: 0 0 0.25rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #93c5fd;
+}
+
+.mkt-video-page__head h1 {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.mkt-video-page__player {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.mkt-video-page__player video {
+  width: 100%;
+  max-height: min(72dvh, 640px);
+  background: #000;
+  border-radius: 12px;
+  display: block;
+}
+
+.mkt-video-page__nota {
+  margin: 0.85rem 0 0;
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.mkt-video-page__nota a {
+  color: #93c5fd;
+}
+
+.mkt-video-page__erro {
+  max-width: 960px;
+  margin: 2rem auto;
+  color: #fecaca;
+}
+
+.mkt-video-page__fechar {
+  border: 1px solid #334155;
+  background: transparent;
+  color: #e2e8f0;
+  border-radius: 8px;
+  padding: 0.45rem 0.85rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.mkt-video-page__fechar:hover {
+  background: #1e293b;
+}

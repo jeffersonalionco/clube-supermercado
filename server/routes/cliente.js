@@ -139,14 +139,16 @@ router.get("/programa", async (_req, res) => {
   }
 });
 
-/** Nível de fidelidade do ano corrente (sem consultar ERP). */
+/** Nível de fidelidade do ano corrente (gasto só após ativação do clube). */
 router.get("/nivel", async (req, res) => {
   try {
-    const clube = await obterNivelFidelidadeCliente(req.usuario.cpf);
+    const clube = await obterNivelFidelidadeCliente(req.usuario.cpf, {
+      usuario: req.usuario,
+    });
     return res.json({ clube });
   } catch (error) {
     console.error("[cliente/nivel]", error.message);
-    return res.json({ clube: nivelFidelidadeFallback() });
+    return res.json({ clube: nivelFidelidadeFallback(req.usuario) });
   }
 });
 
@@ -163,10 +165,12 @@ router.get("/me", async (req, res) => {
 
     let clube;
     try {
-      clube = await obterNivelFidelidadeCliente(req.usuario.cpf);
+      clube = await obterNivelFidelidadeCliente(req.usuario.cpf, {
+        usuario: req.usuario,
+      });
     } catch (error) {
       console.error("[cliente/me/nivel]", error.message);
-      clube = nivelFidelidadeFallback();
+      clube = nivelFidelidadeFallback(req.usuario);
     }
 
     const dados = apresentarCliente({
@@ -262,9 +266,11 @@ router.put("/me", async (req, res) => {
 
     let clube;
     try {
-      clube = await obterNivelFidelidadeCliente(req.usuario.cpf);
+      clube = await obterNivelFidelidadeCliente(req.usuario.cpf, {
+        usuario: req.usuario,
+      });
     } catch {
-      clube = nivelFidelidadeFallback();
+      clube = nivelFidelidadeFallback(req.usuario);
     }
 
     const dados = apresentarCliente({

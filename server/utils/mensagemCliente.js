@@ -1,5 +1,5 @@
 const BLOQUEADOS =
-  /stacktrace|exception|jsonparse|\.java:|br\.com\.rpinfo|falha na estrutura|valores possíveis|ECONNREFUSED|password authentication|relation .* does not exist|syntax error at/i;
+  /stacktrace|exception|jsonparse|\.java:|br\.com\.rpinfo|falha na estrutura|valores possíveis|ECONNREFUSED|ENOTFOUND|ETIMEDOUT|fetch failed|password authentication|relation .* does not exist|syntax error at/i;
 
 export function mensagemParaCliente(erro) {
   if (!erro) return "Não foi possível concluir. Tente novamente.";

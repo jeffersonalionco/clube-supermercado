@@ -161,6 +161,16 @@ export default function CadastroClubePage({
         throw new Error(mensagemParaUsuario(data.error));
       }
 
+      if (onCadastroConcluido) {
+        onCadastroConcluido({
+          cpf: payload.cpf,
+          nome: payload.nome,
+          email: payload.email,
+          telefone,
+        });
+        return;
+      }
+
       setEnviado(true);
     } catch (err) {
       setError(mensagemParaUsuario(err.message));
@@ -175,6 +185,8 @@ export default function CadastroClubePage({
       onCadastroConcluido({
         cpf: digits,
         nome: nome.trim().replace(/\s+/g, " "),
+        email: email.trim().toLowerCase(),
+        telefone,
       });
       return;
     }

@@ -33,6 +33,41 @@ function formatarDataCurta(valor) {
   }
 }
 
+function dataLocalInput(data) {
+  const ano = data.getFullYear();
+  const mes = String(data.getMonth() + 1).padStart(2, "0");
+  const dia = String(data.getDate()).padStart(2, "0");
+  return `${ano}-${mes}-${dia}`;
+}
+
+function intervaloRapido(tipo) {
+  if (tipo === "todos" || tipo === "personalizado") {
+    return { inicio: "", fim: "" };
+  }
+
+  const fim = new Date();
+  fim.setHours(12, 0, 0, 0);
+  const inicio = new Date(fim);
+
+  if (tipo === "ultimos7") inicio.setDate(inicio.getDate() - 6);
+  if (tipo === "ultimos30") inicio.setDate(inicio.getDate() - 29);
+  if (tipo === "mes") inicio.setDate(1);
+
+  return {
+    inicio: dataLocalInput(inicio),
+    fim: dataLocalInput(fim),
+  };
+}
+
+const OPCOES_PERIODO = [
+  { id: "todos", label: "Todos" },
+  { id: "hoje", label: "Hoje" },
+  { id: "ultimos7", label: "Últimos 7 dias" },
+  { id: "ultimos30", label: "Últimos 30 dias" },
+  { id: "mes", label: "Este mês" },
+  { id: "personalizado", label: "Personalizado" },
+];
+
 function iniciaisNome(nome) {
   const partes = String(nome || "?")
     .trim()
@@ -63,6 +98,12 @@ function InfoBloco({ titulo, itens }) {
 export default function AdminUsuariosPage({ tab, onTabChange, onLogout, admin }) {
   const [busca, setBusca] = useState("");
   const [buscaAtiva, setBuscaAtiva] = useState("");
+  const [periodo, setPeriodo] = useState("todos");
+  const [periodoAtivo, setPeriodoAtivo] = useState("todos");
+  const [dataInicio, setDataInicio] = useState("");
+  const [dataFim, setDataFim] = useState("");
+  const [dataInicioAtiva, setDataInicioAtiva] = useState("");
+  const [dataFimAtiva, setDataFimAtiva] = useState("");
   const [lista, setLista] = useState([]);
   const [total, setTotal] = useState(0);
   const [loadingLista, setLoadingLista] = useState(true);
@@ -82,6 +123,8 @@ export default function AdminUsuariosPage({ tab, onTabChange, onLogout, admin })
     try {
       const params = new URLSearchParams();
       if (buscaAtiva) params.set("busca", buscaAtiva);
+      if (dataInicioAtiva) params.set("dataInicio", dataInicioAtiva);
+      if (dataFimAtiva) params.set("dataFim", dataFimAtiva);
       params.set("limite", "100");
       const data = await fetchAdmin(`/api/admin/usuarios?${params}`);
       setLista(data.usuarios || []);
@@ -98,7 +141,7 @@ export default function AdminUsuariosPage({ tab, onTabChange, onLogout, admin })
     } finally {
       setLoadingLista(false);
     }
-  }, [buscaAtiva, onLogout]);
+  }, [buscaAtiva, dataInicioAtiva, dataFimAtiva, onLogout]);
 
   useEffect(() => {
     carregarLista();
@@ -138,15 +181,50 @@ export default function AdminUsuariosPage({ tab, onTabChange, onLogout, admin })
 
   function handleBuscar(event) {
     event.preventDefault();
+    if (periodo === "personalizado" && (!dataInicio || !dataFim)) {
+      setError("Informe a data inicial e a data final.");
+      return;
+    }
+    if (dataInicio && dataFim && dataInicio > dataFim) {
+      setError("A data inicial não pode ser posterior à data final.");
+      return;
+    }
+
+    setError("");
     setBuscaAtiva(busca.trim());
+    setPeriodoAtivo(periodo);
+    setDataInicioAtiva(dataInicio);
+    setDataFimAtiva(dataFim);
     setSelecionado(null);
+  }
+
+  function handleSelecionarPeriodo(novoPeriodo) {
+    setPeriodo(novoPeriodo);
+    if (novoPeriodo !== "personalizado") {
+      const intervalo = intervaloRapido(novoPeriodo);
+      setDataInicio(intervalo.inicio);
+      setDataFim(intervalo.fim);
+    }
   }
 
   function handleLimparBusca() {
     setBusca("");
     setBuscaAtiva("");
+    setPeriodo("todos");
+    setPeriodoAtivo("todos");
+    setDataInicio("");
+    setDataFim("");
+    setDataInicioAtiva("");
+    setDataFimAtiva("");
     setSelecionado(null);
   }
+
+  const temFiltroAtivo = Boolean(
+    buscaAtiva || dataInicioAtiva || dataFimAtiva
+  );
+  const rotuloPeriodo =
+    OPCOES_PERIODO.find((opcao) => opcao.id === periodoAtivo)?.label ||
+    "Período";
 
   async function handleAlterarSenha(event) {
     event.preventDefault();
@@ -211,7 +289,11 @@ export default function AdminUsuariosPage({ tab, onTabChange, onLogout, admin })
             <span className="admin-usuarios-stat__valor">
               {loadingLista ? "—" : total}
             </span>
-            <span className="admin-usuarios-stat__label">Cadastrados no clube</span>
+            <span className="admin-usuarios-stat__label">
+              {dataInicioAtiva || dataFimAtiva
+                ? "Cadastrados no período"
+                : "Cadastrados no clube"}
+            </span>
           </article>
           <article className="admin-usuarios-stat admin-usuarios-stat--saldo">
             <span className="admin-usuarios-stat__valor">
@@ -219,11 +301,12 @@ export default function AdminUsuariosPage({ tab, onTabChange, onLogout, admin })
             </span>
             <span className="admin-usuarios-stat__label">Com saldo de pontos</span>
           </article>
-          {buscaAtiva && (
+          {temFiltroAtivo && (
             <article className="admin-usuarios-stat admin-usuarios-stat--filtro">
-              <span className="admin-usuarios-stat__valor">{lista.length}</span>
+              <span className="admin-usuarios-stat__valor">{total}</span>
               <span className="admin-usuarios-stat__label">
-                Resultado da busca · &quot;{buscaAtiva}&quot;
+                {rotuloPeriodo}
+                {buscaAtiva ? ` · “${buscaAtiva}”` : ""}
               </span>
             </article>
           )}
@@ -242,6 +325,52 @@ export default function AdminUsuariosPage({ tab, onTabChange, onLogout, admin })
             </header>
 
             <form className="admin-usuarios-busca" onSubmit={handleBuscar}>
+              <fieldset className="admin-usuarios-periodo">
+                <legend>Período de cadastro</legend>
+                <div className="admin-usuarios-periodo__opcoes">
+                  {OPCOES_PERIODO.map((opcao) => (
+                    <button
+                      key={opcao.id}
+                      type="button"
+                      className={`admin-usuarios-periodo__opcao${
+                        periodo === opcao.id
+                          ? " admin-usuarios-periodo__opcao--ativa"
+                          : ""
+                      }`}
+                      onClick={() => handleSelecionarPeriodo(opcao.id)}
+                      aria-pressed={periodo === opcao.id}
+                    >
+                      {opcao.label}
+                    </button>
+                  ))}
+                </div>
+
+                {periodo === "personalizado" && (
+                  <div className="admin-usuarios-periodo__datas">
+                    <label>
+                      <span>Data inicial</span>
+                      <input
+                        type="date"
+                        value={dataInicio}
+                        max={dataFim || undefined}
+                        onChange={(e) => setDataInicio(e.target.value)}
+                        required
+                      />
+                    </label>
+                    <label>
+                      <span>Data final</span>
+                      <input
+                        type="date"
+                        value={dataFim}
+                        min={dataInicio || undefined}
+                        onChange={(e) => setDataFim(e.target.value)}
+                        required
+                      />
+                    </label>
+                  </div>
+                )}
+              </fieldset>
+
               <div className="admin-usuarios-busca__campo">
                 <span className="admin-usuarios-busca__icone" aria-hidden>
                   ⌕
@@ -259,15 +388,15 @@ export default function AdminUsuariosPage({ tab, onTabChange, onLogout, admin })
                 className="admin-btn admin-btn--primary admin-btn--sm"
                 disabled={loadingLista}
               >
-                {loadingLista ? "…" : "Buscar"}
+                {loadingLista ? "…" : "Aplicar filtros"}
               </button>
-              {buscaAtiva && (
+              {temFiltroAtivo && (
                 <button
                   type="button"
                   className="admin-btn admin-btn--ghost admin-btn--sm"
                   onClick={handleLimparBusca}
                 >
-                  Limpar
+                  Limpar filtros
                 </button>
               )}
             </form>

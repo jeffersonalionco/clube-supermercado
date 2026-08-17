@@ -1,0 +1,312 @@
+/* Sheet de compartilhamento do nível — arte social */
+
+html.nivel-share-open,
+body.nivel-share-open {
+  overflow: hidden !important;
+}
+
+.nivel-share {
+  position: fixed;
+  inset: 0;
+  z-index: 10060;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  isolation: isolate;
+  animation: nivel-share-fade 0.28s ease;
+}
+
+.nivel-share__backdrop {
+  position: absolute;
+  inset: 0;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  background: rgba(8, 26, 69, 0.78);
+}
+
+.nivel-share__sheet {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 480px);
+  max-height: min(94dvh, 820px);
+  overflow: hidden;
+  border-radius: 28px 28px 0 0;
+  background: #f3f6fb;
+  box-shadow: 0 -18px 50px rgba(0, 0, 0, 0.4);
+  color: #142033;
+  animation: nivel-share-up 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.nivel-share__head {
+  flex-shrink: 0;
+  padding: 0.35rem 1.25rem 1rem;
+  text-align: center;
+  color: #fff;
+  background:
+    radial-gradient(ellipse 80% 70% at 80% 0%, rgba(227, 28, 35, 0.32), transparent 55%),
+    linear-gradient(155deg, #0d2b66 0%, #081a45 55%, #1b4fa0 100%);
+}
+
+.nivel-share__handle {
+  width: 40px;
+  height: 4px;
+  margin: 0.2rem auto 0.75rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.nivel-share__eyebrow {
+  margin: 0 0 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.nivel-share__head h2 {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.25rem, 4.2vw, 1.5rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.nivel-share__lead {
+  margin: 0 auto;
+  max-width: 22rem;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.nivel-share__body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 1rem 1.15rem 0.5rem;
+  scrollbar-width: none;
+}
+
+.nivel-share__body::-webkit-scrollbar {
+  display: none;
+}
+
+.nivel-share__formatos {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 0.85rem;
+}
+
+.nivel-share__chip {
+  border: 1px solid #c9d5e8;
+  background: #fff;
+  color: #1b4fa0;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.nivel-share__chip.is-ativo {
+  background: #1b4fa0;
+  border-color: #1b4fa0;
+  color: #fff;
+}
+
+.nivel-share__preview {
+  position: relative;
+  margin: 0 auto 1rem;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #071536;
+  box-shadow: 0 12px 32px rgba(8, 26, 69, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.nivel-share__preview--stories {
+  width: min(100%, 220px);
+  aspect-ratio: 9 / 16;
+}
+
+.nivel-share__preview--feed {
+  width: min(100%, 260px);
+  aspect-ratio: 1;
+}
+
+.nivel-share__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.nivel-share__loading {
+  margin: 0;
+  padding: 2.5rem 1rem;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.88rem;
+}
+
+.nivel-share__busy {
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.5rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.nivel-share__texto-label {
+  display: grid;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #475569;
+}
+
+.nivel-share__texto {
+  width: 100%;
+  resize: vertical;
+  min-height: 7.5rem;
+  border: 1px solid #d5deeb;
+  border-radius: 14px;
+  padding: 0.75rem 0.85rem;
+  font: inherit;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #142033;
+  background: #fff;
+}
+
+.nivel-share__status {
+  margin: 0.75rem 0 0;
+  padding: 0.65rem 0.8rem;
+  border-radius: 12px;
+  background: #ecfdf3;
+  color: #166534;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.nivel-share__erro {
+  margin: 0.75rem 0 0;
+  padding: 0.65rem 0.8rem;
+  border-radius: 12px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 0.82rem;
+}
+
+.nivel-share__footer {
+  flex-shrink: 0;
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.85rem 1.15rem calc(0.95rem + env(safe-area-inset-bottom, 0px));
+  background: #fff;
+  border-top: 1px solid #e2e8f0;
+}
+
+.nivel-share__btn {
+  font: inherit;
+  font-weight: 800;
+  border-radius: 14px;
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+  border: none;
+}
+
+.nivel-share__btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.nivel-share__btn--primary {
+  background: linear-gradient(135deg, #e31c23, #1b4fa0);
+  color: #fff;
+  box-shadow: 0 8px 22px rgba(27, 79, 160, 0.28);
+}
+
+.nivel-share__acoes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.nivel-share__btn--ghost {
+  background: #eef3fb;
+  color: #0d2b66;
+  border: 1px solid #d5deeb;
+}
+
+.nivel-share__fechar {
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.35rem;
+  cursor: pointer;
+}
+
+@keyframes nivel-share-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes nivel-share-up {
+  from {
+    opacity: 0;
+    transform: translateY(36px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (min-width: 1024px) {
+  .nivel-share {
+    align-items: center;
+    padding: 1.5rem;
+  }
+
+  .nivel-share__sheet {
+    border-radius: 28px;
+    max-height: min(90dvh, 760px);
+  }
+
+  .nivel-share__handle {
+    display: none;
+  }
+
+  .nivel-share__head {
+    border-radius: 28px 28px 0 0;
+    padding: 1.25rem 1.5rem 1.1rem;
+  }
+
+  .nivel-share__footer {
+    border-radius: 0 0 28px 28px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nivel-share,
+  .nivel-share__sheet {
+    animation: none;
+  }
+}

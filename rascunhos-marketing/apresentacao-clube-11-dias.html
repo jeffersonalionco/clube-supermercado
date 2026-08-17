@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Clube Superama+ · Relatório Executivo Financeiro — 11 dias</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy: #0a1f4d;
+      --blue: #1b4fa0;
+      --blue-mid: #2563b8;
+      --blue-soft: #e8eef8;
+      --red: #e31c23;
+      --red-soft: #fde8e9;
+      --ink: #12263a;
+      --muted: #5b6b7c;
+      --line: #d7e0ea;
+      --white: #ffffff;
+      --green: #15803d;
+      --green-soft: #ecfdf5;
+      --amber: #b45309;
+      --amber-soft: #fff7ed;
+      --shadow: 0 20px 60px rgba(10, 31, 77, 0.14);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: "DM Sans", system-ui, sans-serif;
+      color: var(--ink);
+      background: #061433;
+      overflow: hidden;
+    }
+    .deck { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+    .slide {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      padding: clamp(1.25rem, 3vh, 2.4rem) clamp(1.4rem, 3.5vw, 3rem);
+      opacity: 0; visibility: hidden;
+      transform: translateY(14px) scale(0.985);
+      transition: opacity 0.4s ease, transform 0.4s ease, visibility 0.4s;
+      background:
+        radial-gradient(1100px 520px at 100% -10%, rgba(37,99,184,0.16), transparent 55%),
+        radial-gradient(800px 420px at -10% 110%, rgba(227,28,35,0.07), transparent 50%),
+        linear-gradient(160deg, #f7f9fc 0%, #eef3f9 48%, #e8eef6 100%);
+      overflow: auto;
+    }
+    .slide.is-active { opacity: 1; visibility: visible; transform: none; z-index: 2; }
+    .slide--cover {
+      color: #fff; justify-content: center;
+      background: linear-gradient(160deg, #0a1f4d 0%, #123a7a 45%, #0d2b66 100%);
+    }
+    .slide--cover::before {
+      content: ""; position: absolute; inset: 0; z-index: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 70% 20%, rgba(37,99,184,0.45), transparent 60%),
+        radial-gradient(ellipse 50% 40% at 10% 90%, rgba(227,28,35,0.25), transparent 55%);
+    }
+    .slide--cover > * { position: relative; z-index: 1; }
+    .slide-head {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 1rem; margin-bottom: clamp(0.7rem, 1.8vh, 1.35rem);
+    }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--blue); background: var(--blue-soft); border-radius: 999px; padding: 0.32rem 0.7rem;
+    }
+    .slide--cover .eyebrow {
+      background: rgba(255,255,255,0.12); color: #fff; border: 1px solid rgba(255,255,255,0.2);
+    }
+    h1 {
+      font-family: "Instrument Serif", Georgia, serif; font-weight: 400;
+      font-size: clamp(2rem, 4.4vw, 3.3rem); line-height: 1.08; letter-spacing: -0.02em; max-width: 16ch;
+    }
+    h2 {
+      font-family: "Instrument Serif", Georgia, serif; font-weight: 400;
+      font-size: clamp(1.55rem, 2.8vw, 2.25rem); line-height: 1.15; letter-spacing: -0.02em; color: var(--navy);
+    }
+    .lede {
+      margin-top: 0.5rem; font-size: clamp(0.88rem, 1.25vw, 1.02rem);
+      color: var(--muted); max-width: 58ch; line-height: 1.45;
+    }
+    .slide--cover .lede { color: rgba(255,255,255,0.82); max-width: 44ch; }
+    .brand-mark { display: flex; align-items: center; gap: 0.75rem; }
+    .brand-mark img {
+      height: 40px; width: auto; background: #fff; border-radius: 10px; padding: 5px 9px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+    }
+    .meta-pill {
+      font-size: 0.74rem; font-weight: 600; color: var(--muted);
+      background: rgba(255,255,255,0.75); border: 1px solid var(--line);
+      border-radius: 10px; padding: 0.5rem 0.8rem; text-align: right; line-height: 1.35;
+    }
+    .slide--cover .meta-pill {
+      background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.85);
+    }
+    .grid { display: grid; gap: 0.75rem; }
+    .grid-2 { grid-template-columns: repeat(2, 1fr); }
+    .grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .grid-4 { grid-template-columns: repeat(4, 1fr); }
+    .grid-5 { grid-template-columns: repeat(5, 1fr); }
+    .kpi {
+      background: var(--white); border: 1px solid var(--line); border-radius: 16px;
+      padding: 0.95rem 1rem 1rem; position: relative; overflow: hidden;
+      box-shadow: 0 8px 24px rgba(10,31,77,0.045);
+    }
+    .kpi::after {
+      content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--blue);
+    }
+    .kpi--accent::after { background: var(--red); }
+    .kpi--good::after { background: var(--green); }
+    .kpi--warn::after { background: var(--amber); }
+    .kpi__label {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 0.35rem;
+    }
+    .kpi__value {
+      font-size: clamp(1.35rem, 2.4vw, 1.95rem); font-weight: 800; color: var(--navy);
+      letter-spacing: -0.03em; line-height: 1.05; font-variant-numeric: tabular-nums;
+    }
+    .kpi__hint { margin-top: 0.32rem; font-size: 0.78rem; color: var(--muted); line-height: 1.3; }
+    .panel {
+      background: var(--white); border: 1px solid var(--line); border-radius: 16px;
+      padding: 1rem 1.1rem; box-shadow: 0 8px 24px rgba(10,31,77,0.045);
+    }
+    .panel h3 { font-size: 0.9rem; font-weight: 700; color: var(--navy); margin-bottom: 0.7rem; }
+    .bars { display: flex; align-items: flex-end; gap: 0.4rem; height: 150px; padding-top: 0.4rem; }
+    .bar { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.3rem; height: 100%; justify-content: flex-end; }
+    .bar__fill {
+      width: 100%; border-radius: 8px 8px 4px 4px;
+      background: linear-gradient(180deg, var(--blue-mid), var(--navy)); min-height: 4px;
+    }
+    .bar__fill.is-peak { background: linear-gradient(180deg, var(--red), #9f1217); }
+    .bar__val { font-size: 0.65rem; font-weight: 700; color: var(--navy); }
+    .bar__day { font-size: 0.58rem; font-weight: 600; color: var(--muted); text-transform: uppercase; }
+    .funnel { display: grid; gap: 0.5rem; }
+    .funnel__row { display: grid; grid-template-columns: 130px 1fr 78px; align-items: center; gap: 0.65rem; }
+    .funnel__label { font-size: 0.82rem; font-weight: 600; }
+    .funnel__track { height: 26px; background: var(--blue-soft); border-radius: 999px; overflow: hidden; }
+    .funnel__fill {
+      height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--navy), var(--blue-mid));
+      display: flex; align-items: center; padding-left: 0.7rem; color: #fff; font-size: 0.7rem; font-weight: 700;
+    }
+    .funnel__fill--2 { background: linear-gradient(90deg, #0f766e, #14b8a6); }
+    .funnel__fill--3 { background: linear-gradient(90deg, var(--amber), #f59e0b); }
+    .funnel__pct { font-size: 0.82rem; font-weight: 800; color: var(--navy); text-align: right; font-variant-numeric: tabular-nums; }
+    .seg-list { display: grid; gap: 0.45rem; }
+    .seg {
+      display: grid; grid-template-columns: 1.15fr 0.55fr 0.85fr 0.75fr;
+      gap: 0.4rem; align-items: center; padding: 0.6rem 0.75rem; border-radius: 12px;
+      background: #f8fafc; border: 1px solid var(--line); font-size: 0.8rem;
+    }
+    .seg strong { font-size: 0.86rem; color: var(--navy); }
+    .seg span { color: var(--muted); }
+    .seg .money { text-align: right; font-weight: 800; color: var(--navy); font-variant-numeric: tabular-nums; }
+    .seg .avg { text-align: right; font-weight: 700; color: var(--blue); font-variant-numeric: tabular-nums; }
+    .seg--alert { background: var(--red-soft); border-color: #fecaca; }
+    .seg--alert .money { color: var(--red); }
+    .seg--ok { background: var(--green-soft); border-color: #bbf7d0; }
+    .table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+    .table th {
+      text-align: left; font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--muted); padding: 0.45rem 0.35rem; border-bottom: 1px solid var(--line);
+    }
+    .table td { padding: 0.55rem 0.35rem; border-bottom: 1px solid #edf2f7; }
+    .table .num { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--navy); }
+    .callout { border-radius: 14px; padding: 0.85rem 1rem; border: 1px solid var(--line); background: var(--white); }
+    .callout--red { background: var(--red-soft); border-color: #fecaca; }
+    .callout--blue { background: var(--blue-soft); border-color: #bfdbfe; }
+    .callout--green { background: var(--green-soft); border-color: #bbf7d0; }
+    .callout--amber { background: var(--amber-soft); border-color: #fed7aa; }
+    .callout strong { display: block; margin-bottom: 0.2rem; color: var(--navy); font-size: 0.88rem; }
+    .callout p { font-size: 0.82rem; color: var(--muted); line-height: 1.4; }
+    .agenda { list-style: none; display: grid; gap: 0.55rem; max-width: 680px; margin-top: 1.2rem; }
+    .agenda li {
+      display: grid; grid-template-columns: 40px 1fr; gap: 0.75rem; align-items: center;
+      background: var(--white); border: 1px solid var(--line); border-radius: 12px; padding: 0.75rem 0.9rem;
+    }
+    .agenda__n {
+      width: 40px; height: 40px; border-radius: 11px;
+      background: linear-gradient(135deg, var(--navy), var(--blue));
+      color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 0.85rem;
+    }
+    .agenda__t { font-weight: 700; color: var(--navy); }
+    .agenda__d { font-size: 0.78rem; color: var(--muted); margin-top: 0.1rem; }
+    .recs { display: grid; gap: 0.55rem; }
+    .rec {
+      display: grid; grid-template-columns: auto 1fr; gap: 0.8rem;
+      padding: 0.85rem 1rem; border-radius: 12px; background: var(--white); border: 1px solid var(--line);
+    }
+    .rec__prio {
+      font-size: 0.62rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0.3rem 0.5rem; border-radius: 7px; height: fit-content; color: #fff; background: var(--red);
+    }
+    .rec__prio--2 { background: var(--amber); }
+    .rec__prio--3 { background: var(--blue); }
+    .rec h4 { font-size: 0.9rem; color: var(--navy); margin-bottom: 0.2rem; }
+    .rec p { font-size: 0.8rem; color: var(--muted); line-height: 1.4; }
+    .cover-stats {
+      display: grid; grid-template-columns: repeat(4, minmax(0, 150px)); gap: 0.65rem; margin-top: 1.8rem;
+    }
+    .cover-stats div {
+      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 12px; padding: 0.75rem 0.8rem; backdrop-filter: blur(10px);
+    }
+    .cover-stats strong { display: block; font-size: 1.25rem; font-weight: 800; letter-spacing: -0.02em; }
+    .cover-stats span { font-size: 0.66rem; opacity: 0.8; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+    .footer-note {
+      margin-top: auto; padding-top: 0.85rem; font-size: 0.72rem; color: var(--muted);
+      display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+    }
+    .two-col { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 0.85rem; flex: 1; align-items: stretch; }
+    .tag {
+      display: inline-block; font-size: 0.64rem; font-weight: 800; letter-spacing: 0.06em;
+      text-transform: uppercase; padding: 0.22rem 0.45rem; border-radius: 6px;
+      background: var(--blue-soft); color: var(--blue);
+    }
+    .money-hero {
+      background: linear-gradient(135deg, #0a1f4d, #1b4fa0); color: #fff;
+      border-radius: 18px; padding: 1.2rem 1.35rem; border: none;
+    }
+    .money-hero .big {
+      font-size: clamp(1.8rem, 3.5vw, 2.6rem); font-weight: 800; letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums; line-height: 1;
+    }
+    .money-hero .sub { margin-top: 0.35rem; font-size: 0.85rem; opacity: 0.85; }
+    .nav {
+      position: fixed; z-index: 50; left: 50%; bottom: 1rem; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 0.5rem;
+      background: rgba(10,31,77,0.9); color: #fff; padding: 0.4rem 0.5rem; border-radius: 999px;
+      box-shadow: var(--shadow); backdrop-filter: blur(12px);
+    }
+    .nav button {
+      border: none; background: rgba(255,255,255,0.12); color: #fff;
+      width: 34px; height: 34px; border-radius: 50%; cursor: pointer; font-size: 1rem; font-weight: 700;
+    }
+    .nav__progress { width: min(26vw, 160px); height: 4px; background: rgba(255,255,255,0.2); border-radius: 99px; overflow: hidden; }
+    .nav__progress > i { display: block; height: 100%; background: #fff; width: 0%; transition: width 0.3s ease; }
+    .nav__count { font-size: 0.72rem; font-weight: 700; min-width: 3.2rem; text-align: center; opacity: 0.9; }
+    .hint-keys {
+      position: fixed; top: 0.85rem; right: 0.85rem; z-index: 40;
+      font-size: 0.68rem; font-weight: 600; color: rgba(255,255,255,0.75);
+      background: rgba(10,31,77,0.55); padding: 0.35rem 0.6rem; border-radius: 999px;
+    }
+    @media (max-width: 900px) {
+      .grid-2, .grid-3, .grid-4, .grid-5, .two-col, .cover-stats { grid-template-columns: 1fr 1fr; }
+      .seg { grid-template-columns: 1fr 1fr; }
+      body { overflow: auto; }
+      .deck { height: auto; min-height: 100vh; }
+      .slide { position: relative; opacity: 1; visibility: visible; transform: none; min-height: 100vh; }
+      .hint-keys { display: none; }
+    }
+    @media print {
+      @page { size: landscape; margin: 10mm; }
+      html, body { height: auto !important; overflow: visible !important; background: #fff !important; }
+      .nav, .hint-keys { display: none !important; }
+      .deck { width: auto; height: auto; overflow: visible; }
+      .slide {
+        position: relative !important; inset: auto !important;
+        opacity: 1 !important; visibility: visible !important; transform: none !important;
+        page-break-after: always; break-after: page;
+        width: 100%; min-height: 0; height: auto;
+        padding: 8mm 10mm !important;
+        box-shadow: none !important; overflow: visible !important;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact;
+      }
+      .slide:last-child { page-break-after: auto; break-after: auto; }
+      .bars { height: 120px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="hint-keys">← → navegar · Ctrl+P = PDF</div>
+  <div class="deck" id="deck">
+
+    <!-- 1 CAPA -->
+    <section class="slide slide--cover is-active" data-slide>
+      <div class="brand-mark" style="margin-bottom:1.3rem;">
+        <img src="logo.png" alt="Clube Superama+" />
+      </div>
+      <div class="eyebrow">Relatório executivo financeiro · Diretoria &amp; Gerência</div>
+      <h1 style="margin-top:0.9rem;">Clube Superama+ · 11 dias em números</h1>
+      <p class="lede" style="margin-top:0.9rem;">
+        Leitura financeira da implantação: faturamento, ticket, gasto por membro, receita em risco e potencial de conversão na loja.
+      </p>
+      <div class="cover-stats">
+        <div><strong>R$&nbsp;19.284</strong><span>Faturamento clube</span></div>
+        <div><strong>R$&nbsp;1.753</strong><span>Média / dia</span></div>
+        <div><strong>R$&nbsp;125</strong><span>Ticket médio</span></div>
+        <div><strong>R$&nbsp;10,3&nbsp;mil</strong><span>Receita em risco</span></div>
+      </div>
+      <div class="footer-note" style="color:rgba(255,255,255,0.7);margin-top:2.5rem;">
+        <span>Período: 01 a 11 de agosto de 2026 · 126 membros</span>
+        <span>Vera Cruz do Oeste / PR · Uso interno</span>
+      </div>
+    </section>
+
+    <!-- 2 AGENDA -->
+    <section class="slide" data-slide>
+      <div class="slide-head">
+        <div>
+          <div class="eyebrow">Roteiro</div>
+          <h2>Foco em valores</h2>
+          <p class="lede">Cada bloco traz R$ reais do PDV e da plataforma para a diretoria decidir onde acelerar.</p>
+        </div>
+        <div class="meta-pill">01–11/08/2026<br />11 dias corridos</div>
+      </div>
+      <ol class="agenda">
+        <li><div class="agenda__n">01</div><div><div class="agenda__t">Painel financeiro</div><div class="agenda__d">R$ totais, por dia, por membro e por cupom</div></div></li>
+        <li><div class="agenda__n">02</div><div><div class="agenda__t">Cadastros &amp; ritmo</div><div class="agenda__d">Curva diária desde o go-live</div></div></li>
+        <li><div class="agenda__n">03</div><div><div class="agenda__t">Mix de vendas</div><div class="agenda__d">Top produtos em valor (R$)</div></div></li>
+        <li><div class="agenda__n">04</div><div><div class="agenda__t">Funil com valor</div><div class="agenda__d">Ativação e potencial de receita</div></div></li>
+        <li><div class="agenda__n">05</div><div><div class="agenda__t">RFM em R$</div><div class="agenda__d">Quem gera e quem coloca receita em risco</div></div></li>
+        <li><div class="agenda__n">06</div><div><div class="agenda__t">Plano 30 dias</div><div class="agenda__d">Ações com impacto financeiro estimado</div></div></li>
+      </ol>
+    </section>
+
+    <!-- 3 PAINEL FINANCEIRO -->
+    <section class="slide" data-slide>
+      <div class="slide-head">
+        <div>
+          <div class="eyebrow">Números que a diretoria precisa ver</div>
+          <h2>Painel financeiro dos 11 dias</h2>
+          <p class="lede">Vendas no caixa com CPF de membros, apenas após o cadastro na plataforma.</p>
+        </div>
+        <div class="meta-pill">Fonte: PDV WR<br />+ plataforma Clube</div>
+      </div>
+      <div class="money-hero" style="margin-bottom:0.85rem;">
+        <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;opacity:0.8;">Faturamento total do Clube no período</div>
+        <div class="big">R$ 19.284,10</div>
+        <div class="sub">154 cupons · 60 membros comprando · média de <b>R$ 1.753,10 / dia</b></div>
+      </div>
+      <div class="grid grid-4" style="margin-bottom:0.85rem;">
+        <div class="kpi kpi--good"><div class="kpi__label">Ticket médio / cupom</div><div class="kpi__value">R$ 125,22</div><div class="kpi__hint">154 cupons no período</div></div>
+        <div class="kpi"><div class="kpi__label">Gasto médio / membro ativo</div><div class="kpi__value">R$ 321,40</div><div class="kpi__hint">entre os 60 que compraram</div></div>
+        <div class="kpi"><div class="kpi__label">Fat. / membro da base</div><div class="kpi__value">R$ 153,05</div><div class="kpi__hint">diluído nos 126 cadastrados</div></div>
+        <div class="kpi kpi--warn"><div class="kpi__label">Valor em produtos</div><div class="kpi__value">R$ 20.529</div><div class="kpi__hint">591 itens · ~R$ 34,74 / item</div></div>
+      </div>
+      <div class="grid grid-3">
+        <div class="callout callout--green">
+          <strong>Ritmo diário</strong>
+          <p>~<b>14 cupons/dia</b> com CPF do clube · ~<b>R$ 1.753/dia</b>. Em ritmo linear, projeção de ~R$ 52,6 mil / mês (30d).</p>
+        </div>
+        <div class="callout callout--amber">
+          <strong>Penetração da base</strong>
+          <p><b>47,6%</b> dos membros compraram no período. Os outros 52,4% ainda não geraram R$ no caixa via clube.</p>
+        </div>
+        <div class="callout callout--blue">
+          <strong>Itens por cupom</strong>
+          <p>Média de <b>3,84 itens</b> por cupom. Ticket saudável para início de programa em supermercado.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 CADASTROS -->
+    <section class="slide" data-slide>
+      <div class="slide-head">
+        <div>
+          <div class="eyebrow">Aquisição</div>
+          <h2>Cadastros que alimentam a receita</h2>
+          <p class="lede">74 novos em 01–11/08. Cada membro ativo já gasta, em média, R$ 321 no período.</p>
+        </div>
+        <div class="meta-pill">110 novos desde 30/07<br />Base atual: 126</div>
+      </div>
+      <div class="two-col">
+        <div class="panel">
+          <h3>Cadastros por dia (go-live → 11/08)</h3>
+          <div class="bars" id="cadBars"></div>
+        </div>
+        <div class="grid" style="align-content:start;">
+          <div class="kpi kpi--accent"><div class="kpi__label">Novos 01–11/08</div><div class="kpi__value">74</div><div class="kpi__hint">~6,7 cadastros/dia</div></div>
+          <div class="kpi kpi--good"><div class="kpi__label">Se 74 ativarem a R$ 321</div><div class="kpi__value">R$ 23,8 mil</div><div class="kpi__hint">potencial teórico da cohort*</div></div>
+          <div class="kpi"><div class="kpi__label">Já realizados (cohort)</div><div class="kpi__value">32</div><div class="kpi__hint">com 1ª compra · 43,2%</div></div>
+          <div class="callout callout--blue">
+            <strong>*Leitura</strong>
+            <p>Potencial = 74 × R$ 321,40 (média dos ativos). Hoje só 32 da cohort compraram — há R$ em cima da mesa na ativação.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 VENDAS / MIX -->
+    <section class="slide" data-slide>
+      <div class="slide-head">
+        <div>
+          <div class="eyebrow">Performance comercial</div>
+          <h2>Onde o dinheiro do Clube está</h2>
+          <p class="lede">Açougue concentra o ticket. Top 10 produtos = <b>R$ 5.800,76</b> (30,1% do faturamento do clube).</p>
+        </div>
+        <div class="meta-pill">R$ 19.284,10 total<br />154 cupons</div>
+      </div>
+      <div class="grid grid-5" style="margin-bottom:0.85rem;">
+        <div class="kpi kpi--good"><div class="kpi__label">Faturamento</div><div class="kpi__value">19.284</div><div class="kpi__hint">R$ no período</div></div>
+        <div class="kpi"><div class="kpi__label">/ dia</div><div class="kpi__value">1.753</div><div class="kpi__hint">R$ média diária</div></div>
+        <div class="kpi"><div class="kpi__label">Ticket</div><div class="kpi__value">125,22</div><div class="kpi__hint">R$ / cupom</div></div>
+        <div class="kpi"><div class="kpi__label">Top 10</div><div class="kpi__value">5.801</div><div class="kpi__hint">R$ · 30% do total</div></div>
+        <div class="kpi kpi--warn"><div class="kpi__label">Fora do clube</div><div class="kpi__value">147</div><div class="kpi__hint">CPFs comprando sem cadastro</div></div>
+      </div>
+      <div class="panel">
+        <h3>Ranking em valor (R$) · membros <span class="tag">Açougue lidera</span></h3>
+        <table class="table">
+          <thead>
+            <tr><th>Produto</th><th class="num">Qtde</th><th class="num">Cupons</th><th class="num">Valor (R$)</th><th class="num">% do fat.</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Carne Bov. Ponta de Costela</td><td class="num">84,7 kg</td><td class="num">20</td><td class="num">2.366,49</td><td class="num">12,3%</td></tr>
+            <tr><td>Carne Bov. Moída</td><td class="num">18,4 kg</td><td class="num">14</td><td class="num">603,82</td><td class="num">3,1%</td></tr>
+            <tr><td>Filé de Agulha</td><td class="num">16,8 kg</td><td class="num">8</td><td class="num">575,90</td><td class="num">3,0%</td></tr>
+            <tr><td>Carne Bov. Paleta</td><td class="num">13,1 kg</td><td class="num">6</td><td class="num">560,01</td><td class="num">2,9%</td></tr>
+            <tr><td>Linguiça Toscana Friella</td><td class="num">24,0 kg</td><td class="num">12</td><td class="num">347,53</td><td class="num">1,8%</td></tr>
+            <tr><td>Casaco Biamar 7475</td><td class="num">1 un</td><td class="num">1</td><td class="num">299,00</td><td class="num">1,6%</td></tr>
+            <tr><td>Bisteca Bovina</td><td class="num">5,6 kg</td><td class="num">4</td><td class="num">267,12</td><td class="num">1,4%</td></tr>
+            <tr><td>Patinho / Pos Ver</td><td class="num">5,5 kg</td><td class="num">5</td><td class="num">262,33</td><td class="num">1,4%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 6 FUNIL VALOR -->
+    <section class="slide" data-slide>
+      <div class="slide-head">
+        <div>
+          <div class="eyebrow">Ativação com R$</div>
+          <h2>Funil: de cadastro a receita</h2>
+          <p class="lede">Cohort 01–11/08 (74 novos). Quase metade já comprou; o dinheiro parado está na 1ª e na 2ª compra.</p>
+        </div>
+        <div class="meta-pill">Ticket médio R$ 125,22<br />Gasto ativo R$ 321,40</div>
+      </div>
+      <div class="two-col">
+        <div class="panel">
+          <h3>Cadastro → compra → recorrência</h3>
+          <div class="funnel">
+            <div class="funnel__row">
+              <div class="funnel__label">Cadastrados</div>
+              <div class="funnel__track"><div class="funnel__fill" style="width:100%">74</div></div>
+              <div class="funnel__pct">100%</div>
+            </div>
+            <div class="funnel__row">
+              <div class="funnel__label">1ª compra</div>
+              <div class="funnel__track"><div class="funnel__fill funnel__fill--2" style="width:43.2%">32</div></div>
+              <div class="funnel__pct">43,2%</div>
+            </div>
+            <div class="funnel__row">
+              <div class="funnel__label">2ª compra</div>
+              <div class="funnel__track"><div class="funnel__fill funnel__fill--3" style="width:18.8%">6</div></div>
+              <div class="funnel__pct">18,8%*</div>
+            </div>
+          </div>
+          <p style="margin-top:0.7rem;font-size:0.74rem;color:var(--muted);">* sobre quem fez a 1ª compra · tempo médio até 1ª compra: 0,5 dia</p>
+        </div>
+        <div class="grid" style="align-content:start;">
+          <div class="kpi kpi--warn">
+            <div class="kpi__label">42 sem compra · potencial 1ª visita</div>
+            <div class="kpi__value">R$ 5.259</div>
+            <div class="kpi__hint">42 × ticket R$ 125,22</div>
+          </div>
+          <div class="kpi kpi--accent">
+            <div class="kpi__label">26 com 1 compra · potencial 2ª</div>
+            <div class="kpi__value">R$ 3.256</div>
+            <div class="kpi__hint">26 × ticket R$ 125,22</div>
+          </div>
+          <div class="callout callout--green">
+            <strong>Soma rápida de ativação</strong>
+            <p><b>R$ 8.515</b> em receita adicional estimada se ativar os parados e gerar a 2ª compra dos one-timers (cenário ticket médio).</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7 RFM R$ -->
+    <section class="slide" data-slide>
+      <div class="slide-head">
+        <div>
+          <div class="eyebrow">CRM financeiro</div>
+          <h2>Segmentos em R$</h2>
+          <p class="lede">15 clientes (Champions + Fiéis) geram R$ 8.233. 28 em risco concentram R$ 10.280 — prioridade de retenção.</p>
+        </div>
+        <div class="meta-pill">Base 126 · fat. período<br />R$ 19.284</div>
+      </div>
+      <div class="seg-list" style="margin-bottom:0.75rem;">
+        <div class="seg" style="background:transparent;border:none;padding:0 0.75rem;font-size:0.68rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);">
+          <span>Segmento</span><span>Qtd</span><span class="money" style="color:var(--muted);">Faturamento</span><span class="avg" style="color:var(--muted);">R$ / pessoa</span>
+        </div>
+        <div class="seg seg--ok"><div><strong>Champions</strong></div><span><b>8</b> · 6,3%</span><span class="money">R$ 5.419,83</span><span class="avg">R$ 677</span></div>
+        <div class="seg seg--ok"><div><strong>Fiéis</strong></div><span><b>7</b> · 5,6%</span><span class="money">R$ 2.812,95</span><span class="avg">R$ 402</span></div>
+        <div class="seg seg--alert"><div><strong>Em risco</strong></div><span><b>24</b> · 19%</span><span class="money">R$ 7.347,09</span><span class="avg">R$ 306</span></div>
+        <div class="seg seg--alert"><div><strong>Não perder</strong></div><span><b>4</b> · 3,2%</span><span class="money">R$ 2.933,38</span><span class="avg">R$ 733</span></div>
+        <div class="seg"><div><strong>Atenção / Potenciais / Outros</strong></div><span><b>17</b></span><span class="money">R$ 770,85</span><span class="avg">—</span></div>
+        <div class="seg"><div><strong>Sem compra no período</strong></div><span><b>66</b> · 52,4%</span><span class="money">R$ 0</span><span class="avg">R$ 0</span></div>
+      </div>
+      <div class="grid grid-3">
+        <div class="kpi kpi--good"><div class="kpi__label">Núcleo de valor</div><div class="kpi__value">R$ 8.233</div><div class="kpi__hint">15 pessoas · Champions + Fiéis</div></div>
+        <div class="kpi kpi--accent"><div class="kpi__label">Receita em risco</div><div class="kpi__value">R$ 10.280</div><div class="kpi__hint">28 pessoas · Em risco + Não perder</div></div>
+        <div class="kpi"><div class="kpi__label">Concentração</div><div class="kpi__value">53%</div><div class="kpi__hint">do fat. nos 28 em risco / não perder</div></div>
+      </div>
+    </section>
+
+    <!-- 8 OPORTUNIDADES R$ -->
+    <section class="slide" data-slide>
+      <div class="slide-head">
+        <div>
+          <div class="eyebrow">Oportunidade financeira</div>
+          <h2>Três alavancas em R$</h2>
+          <p class="lede">Estimativas conservadoras com o ticket médio atual (R$ 125,22). Sem mídia paga — só operação de loja + e-mail.</p>
+        </div>
+      </div>
+      <div class="grid grid-3" style="margin-bottom:0.85rem;">
+        <div class="panel" style="border-top:4px solid var(--red);">
+          <h3>1 · Converter CPFs fora do clube</h3>
+          <div class="kpi__value" style="font-size:1.8rem;margin:0.4rem 0;">147 pessoas</div>
+          <p style="color:var(--muted);font-size:0.84rem;line-height:1.4;margin-bottom:0.55rem;">Já compram na loja sem cadastro.</p>
+          <div class="callout callout--red" style="padding:0.7rem;">
+            <strong>Meta 30% em 15 dias ≈ 44 cadastros</strong>
+            <p>44 × R$ 125 = <b>R$ 5.510</b> na 1ª compra clube · 44 × R$ 321 = <b>R$ 14.142</b> se atingirem o gasto médio dos ativos.</p>
+          </div>
+        </div>
+        <div class="panel" style="border-top:4px solid var(--amber);">
+          <h3>2 · Ativar cadastrados parados</h3>
+          <div class="kpi__value" style="font-size:1.8rem;margin:0.4rem 0;">42 + 26</div>
+          <p style="color:var(--muted);font-size:0.84rem;line-height:1.4;margin-bottom:0.55rem;">Sem compra + one-timers da cohort.</p>
+          <div class="callout callout--amber" style="padding:0.7rem;">
+            <strong>Potencial imediato</strong>
+            <p>1ª compra dos 42: <b>R$ 5.259</b><br />2ª compra dos 26: <b>R$ 3.256</b><br />Total: <b>R$ 8.515</b></p>
+          </div>
+        </div>
+        <div class="panel" style="border-top:4px solid var(--blue);">
+          <h3>3 · Segurar quem esfria</h3>
+          <div class="kpi__value" style="font-size:1.8rem;margin:0.4rem 0;">R$ 10.280</div>
+          <p style="color:var(--muted);font-size:0.84rem;line-height:1.4;margin-bottom:0.55rem;">Histórico dos 28 Em risco / Não perder.</p>
+          <div class="callout callout--blue" style="padding:0.7rem;">
+            <strong>Não é ganho novo — é proteção</strong>
+            <p>Recuperar 50% desse bloco ≈ <b>R$ 5.140</b> de receita preservada no próximo ciclo.</p>
+          </div>
+        </div>
+      </div>
+      <div class="money-hero">
+        <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;opacity:0.8;">Pacote de oportunidade (cenário otimista operacional)</div>
+        <div class="big">até ~R$ 28 mil</div>
+        <div class="sub">Conversão 147 (cenário gasto médio) + ativação cohort + metade do win-back · horizonte 15–30 dias</div>
+      </div>
+    </section>
+
+    <!-- 9 MARKETING -->
+    <section class="slide" data-slide>
+      <div class="slide-head">
+        <div>
+          <div class="eyebrow">Canal &amp; programa</div>
+          <h2>Comunicação e próximo ciclo de valor</h2>
+          <p class="lede">E-mail já roda ofertas com preço de clube. Níveis ainda 100% Bronze — gasto ano R$ 23.769.</p>
+        </div>
+      </div>
+      <div class="grid grid-2">
+        <div class="panel">
+          <h3>Campanhas · alcance</h3>
+          <table class="table">
+            <thead><tr><th>Campanha</th><th class="num">Envios</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>Ofertas 31/07–01/08</td><td class="num">47</td><td>Concluída</td></tr>
+              <tr><td>Terça da Verdura 04/08</td><td class="num">68</td><td>Concluída · 1 falha</td></tr>
+              <tr><td>Hortifruti 10/08</td><td class="num">90+</td><td>Em envio</td></tr>
+            </tbody>
+          </table>
+          <div class="grid grid-3" style="margin-top:0.85rem;">
+            <div class="kpi"><div class="kpi__label">E-mails válidos</div><div class="kpi__value">119</div><div class="kpi__hint">94% da base</div></div>
+            <div class="kpi kpi--good"><div class="kpi__label">Opt-out</div><div class="kpi__value">0</div><div class="kpi__hint">canal saudável</div></div>
+            <div class="kpi"><div class="kpi__label">Gasto ano</div><div class="kpi__value">23,8k</div><div class="kpi__hint">R$ · 62 com gasto</div></div>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>Leitura para a diretoria</h3>
+          <div class="callout callout--green" style="margin-bottom:0.65rem;">
+            <strong>O clube já fatura</strong>
+            <p>R$ 19,3 mil em 11 dias com 60 compradores. Não é só cadastro — há caixa.</p>
+          </div>
+          <div class="callout callout--amber" style="margin-bottom:0.65rem;">
+            <strong>O upside está na operação</strong>
+            <p>147 fora + 42 sem compra + 28 em risco = maior alavanca que novas campanhas genéricas.</p>
+          </div>
+          <div class="callout callout--blue">
+            <strong>Pontos / níveis</strong>
+            <p>Ainda não vigentes (100% Bronze). Quando ligar, o storytelling deve puxar ticket e recorrência — não só brinde.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10 RECOMENDAÇÕES -->
+    <section class="slide" data-slide>
+      <div class="slide-head">
+        <div>
+          <div class="eyebrow">Plano 30 dias · impacto em R$</div>
+          <h2>Prioridades com dono e meta</h2>
+        </div>
+      </div>
+      <div class="recs">
+        <div class="rec">
+          <div class="rec__prio">P1</div>
+          <div>
+            <h4>Caixa: capturar os 147 CPFs fora do clube</h4>
+            <p>Meta 30% (≈44) em 15 dias. Impacto estimado: <b>R$ 5,5 mil</b> (1ª compra) a <b>R$ 14 mil</b> (gasto médio dos ativos). Dono: gerência de loja.</p>
+          </div>
+        </div>
+        <div class="rec">
+          <div class="rec__prio">P1</div>
+          <div>
+            <h4>Ativar 42 sem compra + 26 one-timers</h4>
+            <p>E-mail dia 3–7 + oferta âncora (açougue/hortifruti). Impacto estimado: até <b>R$ 8,5 mil</b>. Dono: marketing do clube.</p>
+          </div>
+        </div>
+        <div class="rec">
+          <div class="rec__prio rec__prio--2">P2</div>
+          <div>
+            <h4>Win-back dos 28 (R$ 10.280 em histórico)</h4>
+            <p>Contato humano da gerência. Proteger <b>~R$ 5 mil</b> se recuperar metade. Dono: gerência + lista RFM.</p>
+          </div>
+        </div>
+        <div class="rec">
+          <div class="rec__prio rec__prio--2">P2</div>
+          <div>
+            <h4>Empurrar ticket no açougue (já é 30%+ do fat.)</h4>
+            <p>Ofertas clube em ponta de costela / moída / linguiça. Cada +R$ 10 no ticket × 14 cupons/dia ≈ <b>+R$ 140/dia</b> (~R$ 4,2 mil/mês).</p>
+          </div>
+        </div>
+        <div class="rec">
+          <div class="rec__prio rec__prio--3">P3</div>
+          <div>
+            <h4>KPI semanal para a diretoria</h4>
+            <p>Acompanhar: fat. clube (R$), ticket, cupons/dia, % 1ª compra 7d, % 2ª compra 14d, cadastros convertidos dos 147.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11 ENCERRAMENTO -->
+    <section class="slide" data-slide>
+      <div class="slide-head">
+        <div>
+          <div class="eyebrow">Conclusão financeira</div>
+          <h2>Já tem caixa. Agora escala com foco.</h2>
+          <p class="lede">Em 11 dias: base formada, R$ 19,3 mil faturados, canal de e-mail ativo. O próximo salto é ativação e retenção com meta em R$.</p>
+        </div>
+        <div class="brand-mark"><img src="logo.png" alt="Clube Superama+" /></div>
+      </div>
+      <div class="grid grid-4" style="margin:0.7rem 0 1rem;">
+        <div class="kpi kpi--good"><div class="kpi__label">Faturamento</div><div class="kpi__value">R$ 19.284</div><div class="kpi__hint">11 dias</div></div>
+        <div class="kpi"><div class="kpi__label">/ dia</div><div class="kpi__value">R$ 1.753</div><div class="kpi__hint">ritmo atual</div></div>
+        <div class="kpi"><div class="kpi__label">Ticket</div><div class="kpi__value">R$ 125</div><div class="kpi__hint">por cupom</div></div>
+        <div class="kpi kpi--accent"><div class="kpi__label">Upside 30d</div><div class="kpi__value">~R$ 28 mil</div><div class="kpi__hint">cenário operacional</div></div>
+      </div>
+      <div class="panel" style="background:linear-gradient(135deg,#0a1f4d,#1b4fa0);color:#fff;border:none;">
+        <h3 style="color:#fff;margin-bottom:0.45rem;">Próxima reunião (15 dias)</h3>
+        <p style="color:rgba(255,255,255,0.88);font-size:0.92rem;line-height:1.5;max-width:62ch;">
+          Revisar em R$: (1) fat. clube acumulado, (2) quanto veio dos 147 convertidos, (3) receita gerada pelos 42 ativados,
+          (4) quanto do bloco de R$ 10.280 em risco foi preservado.
+        </p>
+      </div>
+      <div class="footer-note">
+        <span>Clube Superama+ · Superama Vera Cruz do Oeste</span>
+        <span>Dados PDV + plataforma · 11/08/2026 · Uso interno</span>
+      </div>
+    </section>
+  </div>
+
+  <nav class="nav" aria-label="Navegação">
+    <button type="button" id="prevBtn" title="Anterior">‹</button>
+    <div class="nav__progress"><i id="progressFill"></i></div>
+    <div class="nav__count" id="pageCount">1 / 11</div>
+    <button type="button" id="nextBtn" title="Próximo">›</button>
+  </nav>
+
+  <script>
+    const slides = [...document.querySelectorAll("[data-slide]")];
+    let idx = 0;
+    const serie = [
+      { d: "30/07", v: 26, peak: true }, { d: "31/07", v: 13 }, { d: "01/08", v: 11 },
+      { d: "03/08", v: 3 }, { d: "04/08", v: 5 }, { d: "05/08", v: 3 }, { d: "06/08", v: 4 },
+      { d: "07/08", v: 23, peak: true }, { d: "08/08", v: 17 }, { d: "09/08", v: 1 },
+      { d: "10/08", v: 1 }, { d: "11/08", v: 3 },
+    ];
+    function renderBars() {
+      const host = document.getElementById("cadBars");
+      if (!host || host.dataset.ready) return;
+      const max = Math.max(...serie.map((s) => s.v));
+      host.innerHTML = serie.map((s) => {
+        const h = Math.max(6, Math.round((s.v / max) * 100));
+        return `<div class="bar"><div class="bar__val">${s.v}</div><div class="bar__fill ${s.peak ? "is-peak" : ""}" style="height:${h}%"></div><div class="bar__day">${s.d}</div></div>`;
+      }).join("");
+      host.dataset.ready = "1";
+    }
+    function show(i) {
+      idx = Math.max(0, Math.min(slides.length - 1, i));
+      slides.forEach((s, n) => s.classList.toggle("is-active", n === idx));
+      document.getElementById("pageCount").textContent = `${idx + 1} / ${slides.length}`;
+      document.getElementById("progressFill").style.width = `${((idx + 1) / slides.length) * 100}%`;
+      if (idx === 3) renderBars();
+    }
+    document.getElementById("prevBtn").onclick = () => show(idx - 1);
+    document.getElementById("nextBtn").onclick = () => show(idx + 1);
+    window.addEventListener("keydown", (e) => {
+      if (["ArrowRight", "ArrowDown", "PageDown", " "].includes(e.key)) { e.preventDefault(); show(idx + 1); }
+      if (["ArrowLeft", "ArrowUp", "PageUp", "Backspace"].includes(e.key)) { e.preventDefault(); show(idx - 1); }
+      if (e.key === "Home") show(0);
+      if (e.key === "End") show(slides.length - 1);
+    });
+    // Prefetch chart for print/PDF (all slides visible in print)
+    window.addEventListener("beforeprint", () => { renderBars(); slides.forEach((s) => s.classList.add("is-active")); });
+    window.addEventListener("afterprint", () => { slides.forEach((s, n) => s.classList.toggle("is-active", n === idx)); });
+    if (window.matchMedia) {
+      window.matchMedia("print").addEventListener("change", (m) => {
+        if (m.matches) { renderBars(); slides.forEach((s) => s.classList.add("is-active")); }
+      });
+    }
+    show(0);
+  </script>
+</body>
+</html>

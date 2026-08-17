@@ -1,5 +1,5 @@
 const BLOQUEADOS =
-  /stacktrace|exception|jsonparse|\.java:|br\.com\.rpinfo|falha na estrutura|valores possíveis|localhost|npm run|backend|proxy|servidor retornou html|rota da api|api externa|http \d{3}|credenciais da api|postgresql|token da api/i;
+  /stacktrace|exception|jsonparse|\.java:|br\.com\.rpinfo|falha na estrutura|valores possíveis|localhost|npm run|backend|proxy|servidor retornou html|rota da api|api externa|http \d{3}|credenciais da api|postgresql|token da api|fetch failed|econnrefused|enotfound|etimedout|erp indispon/i;
 
 export function mensagemParaUsuario(entrada) {
   if (!entrada) {
@@ -43,6 +43,9 @@ function mensagemAmigavelDeErroApi(texto) {
   }
   if (/sessão|token|expirad/i.test(texto)) {
     return "Sua sessão expirou. Faça login novamente.";
+  }
+  if (/fetch failed|econnrefused|enotfound|etimedout|erp indispon|temporariamente indispon/i.test(texto)) {
+    return "Serviço temporariamente indisponível. Tente novamente em alguns minutos.";
   }
   return "Não foi possível concluir. Verifique os dados e tente novamente.";
 }

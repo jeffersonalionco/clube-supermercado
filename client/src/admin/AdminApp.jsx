@@ -11,6 +11,14 @@ import AdminProgramaPage from "../pages/admin/AdminProgramaPage.jsx";
 import AdminConteudoPage from "../pages/admin/AdminConteudoPage.jsx";
 import AdminNovidadesPage from "../pages/admin/AdminNovidadesPage.jsx";
 import AdminClubeDescontosPage from "../pages/admin/AdminClubeDescontosPage.jsx";
+import AdminRelatoriosHubPage from "../pages/admin/AdminRelatoriosHubPage.jsx";
+import AdminRadarComprasPage from "../pages/admin/AdminRadarComprasPage.jsx";
+import AdminSegmentacaoRfmPage from "../pages/admin/AdminSegmentacaoRfmPage.jsx";
+import AdminNiveisFidelidadePage from "../pages/admin/AdminNiveisFidelidadePage.jsx";
+import AdminFunilNovosMembrosPage from "../pages/admin/AdminFunilNovosMembrosPage.jsx";
+import AdminRelatorioClubePage from "../pages/admin/AdminRelatorioClubePage.jsx";
+import AdminMarketingHubPage from "../pages/admin/AdminMarketingHubPage.jsx";
+import AdminMarketingEmailPage from "../pages/admin/AdminMarketingEmailPage.jsx";
 import { clearAdminSession, loadAdminSession } from "../utils/adminSession.js";
 import "../styles/admin.css";
 
@@ -42,6 +50,12 @@ function adminTabFromHash() {
   ) {
     return "clube-descontos";
   }
+  if (path === "admin/relatorio" || path.startsWith("admin/relatorio/")) {
+    return "relatorio";
+  }
+  if (path === "admin/marketing" || path.startsWith("admin/marketing/")) {
+    return "marketing";
+  }
   if (path === "admin/clientes" || path.startsWith("admin/clientes/")) {
     return "clientes";
   }
@@ -54,10 +68,52 @@ function adminTabFromHash() {
   return "pontos";
 }
 
-function hashForAdminTab(tab) {
+function marketingSubFromHash() {
+  const path = adminPathFromHash();
+  if (path.startsWith("admin/marketing/email")) return "email";
+  return "hub";
+}
+
+function relatorioSubFromHash() {
+  const path = adminPathFromHash();
+  if (path.startsWith("admin/relatorio/radar-compras")) return "radar-compras";
+  if (path.startsWith("admin/relatorio/segmentacao-rfm")) {
+    return "segmentacao-rfm";
+  }
+  if (path.startsWith("admin/relatorio/niveis-fidelidade")) {
+    return "niveis-fidelidade";
+  }
+  if (path.startsWith("admin/relatorio/funil-novos-membros")) {
+    return "funil-novos-membros";
+  }
+  if (
+    path.startsWith("admin/relatorio/clube") ||
+    path === "admin/relatorio/completo"
+  ) {
+    return "clube";
+  }
+  return "hub";
+}
+
+function hashForAdminTab(tab, sub) {
   if (tab === "clientes") return "#/admin/clientes";
   if (tab === "brindes") return "#/admin/brindes";
   if (tab === "usuarios") return "#/admin/usuarios";
+  if (tab === "relatorio") {
+    if (sub === "radar-compras") return "#/admin/relatorio/radar-compras";
+    if (sub === "segmentacao-rfm") return "#/admin/relatorio/segmentacao-rfm";
+    if (sub === "niveis-fidelidade") {
+      return "#/admin/relatorio/niveis-fidelidade";
+    }
+    if (sub === "funil-novos-membros") {
+      return "#/admin/relatorio/funil-novos-membros";
+    }
+    if (sub === "clube") return "#/admin/relatorio/clube";
+    return "#/admin/relatorio";
+  }
+  if (tab === "marketing") {
+    return sub === "email" ? "#/admin/marketing/email" : "#/admin/marketing";
+  }
   if (tab === "admins") return "#/admin/admins";
   if (tab === "legal") return "#/admin/legal";
   if (tab === "manual") return "#/admin/manual";
@@ -71,10 +127,14 @@ function hashForAdminTab(tab) {
 export default function AdminApp() {
   const [session, setSession] = useState(() => loadAdminSession());
   const [tab, setTab] = useState(() => adminTabFromHash());
+  const [marketingSub, setMarketingSub] = useState(() => marketingSubFromHash());
+  const [relatorioSub, setRelatorioSub] = useState(() => relatorioSubFromHash());
 
   useEffect(() => {
     function onHashChange() {
       setTab(adminTabFromHash());
+      setMarketingSub(marketingSubFromHash());
+      setRelatorioSub(relatorioSubFromHash());
     }
     window.addEventListener("hashchange", onHashChange);
     return () => window.removeEventListener("hashchange", onHashChange);
@@ -92,6 +152,32 @@ export default function AdminApp() {
   const handleTabChange = useCallback((novaTab) => {
     window.location.hash = hashForAdminTab(novaTab).slice(1);
     setTab(novaTab);
+    if (novaTab === "marketing") setMarketingSub("hub");
+    if (novaTab === "relatorio") setRelatorioSub("hub");
+  }, []);
+
+  const abrirMarketingEmail = useCallback(() => {
+    window.location.hash = hashForAdminTab("marketing", "email").slice(1);
+    setTab("marketing");
+    setMarketingSub("email");
+  }, []);
+
+  const voltarMarketingHub = useCallback(() => {
+    window.location.hash = hashForAdminTab("marketing").slice(1);
+    setTab("marketing");
+    setMarketingSub("hub");
+  }, []);
+
+  const abrirRelatorioPainel = useCallback((painelId) => {
+    window.location.hash = hashForAdminTab("relatorio", painelId).slice(1);
+    setTab("relatorio");
+    setRelatorioSub(painelId);
+  }, []);
+
+  const voltarRelatoriosHub = useCallback(() => {
+    window.location.hash = hashForAdminTab("relatorio").slice(1);
+    setTab("relatorio");
+    setRelatorioSub("hub");
   }, []);
 
   if (!session?.token) {
@@ -115,6 +201,72 @@ export default function AdminApp() {
 
   if (tab === "usuarios") {
     return <AdminUsuariosPage {...layoutProps} />;
+  }
+
+  if (tab === "relatorio") {
+    if (relatorioSub === "radar-compras") {
+      return (
+        <AdminRadarComprasPage
+          {...layoutProps}
+          onVoltarHub={voltarRelatoriosHub}
+        />
+      );
+    }
+    if (relatorioSub === "segmentacao-rfm") {
+      return (
+        <AdminSegmentacaoRfmPage
+          {...layoutProps}
+          onVoltarHub={voltarRelatoriosHub}
+        />
+      );
+    }
+    if (relatorioSub === "niveis-fidelidade") {
+      return (
+        <AdminNiveisFidelidadePage
+          {...layoutProps}
+          onVoltarHub={voltarRelatoriosHub}
+        />
+      );
+    }
+    if (relatorioSub === "funil-novos-membros") {
+      return (
+        <AdminFunilNovosMembrosPage
+          {...layoutProps}
+          onVoltarHub={voltarRelatoriosHub}
+        />
+      );
+    }
+    if (relatorioSub === "clube") {
+      return (
+        <AdminRelatorioClubePage
+          {...layoutProps}
+          onVoltarHub={voltarRelatoriosHub}
+        />
+      );
+    }
+    return (
+      <AdminRelatoriosHubPage
+        {...layoutProps}
+        onAbrirPainel={abrirRelatorioPainel}
+      />
+    );
+  }
+
+  if (tab === "marketing") {
+    if (marketingSub === "email") {
+      return (
+        <AdminMarketingEmailPage
+          {...layoutProps}
+          onVoltarHub={voltarMarketingHub}
+        />
+      );
+    }
+    return (
+      <AdminMarketingHubPage
+        {...layoutProps}
+        onAbrirEmail={abrirMarketingEmail}
+      />
+    );
   }
 
   if (tab === "legal") {

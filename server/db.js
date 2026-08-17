@@ -132,6 +132,7 @@ async function ensureSchema() {
   await migrarConfigConteudo(db);
   await migrarSenhaRecuperacao(db);
   await migrarNovidades(db);
+  await migrarMarketing(db);
 
   const { seedAdministradorDoEnv } = await import("./services/painelAdminService.js");
   await seedAdministradorDoEnv();
@@ -480,6 +481,78 @@ async function migrarNovidades(db) {
   await db.query(`
     CREATE INDEX IF NOT EXISTS idx_novidade_ativo_pub
     ON novidade (ativo, publicado_em DESC NULLS LAST, id DESC)
+  `);
+}
+
+async function migrarMarketing(db) {
+  await db.query(`
+    ALTER TABLE usuario
+    ADD COLUMN IF NOT EXISTS email_promocional_opt_out_em TIMESTAMPTZ,
+    ADD COLUMN IF NOT EXISTS email_promocional_opt_out_motivo TEXT
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS marketing_campanha (
+      id SERIAL PRIMARY KEY,
+      canal VARCHAR(32) NOT NULL DEFAULT 'email',
+      assunto VARCHAR(200) NOT NULL,
+      preheader VARCHAR(200) NOT NULL DEFAULT '',
+      corpo_md TEXT NOT NULL DEFAULT '',
+      corpo_html TEXT NOT NULL DEFAULT '',
+      corpo_texto TEXT NOT NULL DEFAULT '',
+      status VARCHAR(32) NOT NULL DEFAULT 'rascunho',
+      publico VARCHAR(32) NOT NULL DEFAULT 'todos_elegiveis',
+      emails_especificos JSONB NOT NULL DEFAULT '[]'::jsonb,
+      email_teste VARCHAR(255),
+      criado_por VARCHAR(100) NOT NULL DEFAULT 'admin',
+      criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      atualizado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      enviado_em TIMESTAMPTZ,
+      total_destinatarios INTEGER NOT NULL DEFAULT 0,
+      total_enviados INTEGER NOT NULL DEFAULT 0,
+      total_falhas INTEGER NOT NULL DEFAULT 0,
+      total_pulados INTEGER NOT NULL DEFAULT 0
+    )
+  `);
+
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_marketing_campanha_status
+    ON marketing_campanha (status, criado_em DESC)
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS marketing_envio (
+      id BIGSERIAL PRIMARY KEY,
+      campanha_id INTEGER NOT NULL REFERENCES marketing_campanha(id) ON DELETE CASCADE,
+      usuario_id INTEGER REFERENCES usuario(id) ON DELETE SET NULL,
+      cpf VARCHAR(14),
+      email VARCHAR(255) NOT NULL,
+      status VARCHAR(32) NOT NULL DEFAULT 'pendente',
+      erro TEXT,
+      enviado_em TIMESTAMPTZ,
+      criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_marketing_envio_campanha
+    ON marketing_envio (campanha_id, status)
+  `);
+
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_usuario_email_opt_out
+    ON usuario (email_promocional_opt_out_em)
+    WHERE email_promocional_opt_out_em IS NOT NULL
+  `);
+
+  await db.query(`
+    ALTER TABLE marketing_campanha
+    ADD COLUMN IF NOT EXISTS arquivado_em TIMESTAMPTZ
+  `);
+
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_marketing_campanha_arquivado
+    ON marketing_campanha (canal, arquivado_em, criado_em DESC)
   `);
 }
 

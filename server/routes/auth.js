@@ -1,16 +1,24 @@
 import { Router } from "express";
 import {
+  atualizarClienteApi,
   buscarClientePorCpfCnpj,
   cadastrarClienteApi,
   normalizarCpfCnpj,
 } from "../services/apiClient.js";
-import { montarPayloadCadastro } from "../services/cadastroCliente.js";
+import {
+  montarPayloadAtualizacao,
+  montarPayloadCadastro,
+} from "../services/cadastroCliente.js";
 import { mensagemParaCliente } from "../utils/mensagemCliente.js";
 import { criarTokenSessao } from "../services/sessionToken.js";
 import { requireAuth } from "../middleware/requireAuth.js";
 import { authLimiter, verificarCpfLimiter, recuperarSenhaRedefinirLimiter, recuperarSenhaSolicitarLimiter } from "../middleware/rateLimit.js";
 import { validarSenhaCadastro, validarSenhaLogin } from "../utils/senha.js";
-import { cpfDigitosValidos } from "../utils/validacaoCadastro.js";
+import {
+  cpfDigitosValidos,
+  emailValido,
+  telefoneValido,
+} from "../utils/validacaoCadastro.js";
 import {
   buscarUsuarioPorCpf,
   criarUsuario,
@@ -32,6 +40,14 @@ import {
 } from "../services/senhaRecuperacaoService.js";
 
 const router = Router();
+
+function resolverCodigoClienteApi(cliente) {
+  const codigo =
+    cliente?.codigo ?? cliente?.codigo_cliente ?? cliente?.id ?? null;
+  return codigo != null && String(codigo).trim() !== ""
+    ? String(codigo).trim()
+    : null;
+}
 
 /** Status público do programa (login/cadastro). */
 router.get("/programa", async (_req, res) => {
@@ -62,7 +78,7 @@ function respostaLogin(res, status, usuario, extra = {}) {
 }
 
 router.post("/login", async (req, res) => {
-  const { cpf, senha, aceiteLegal } = req.body || {};
+  const { cpf, senha, aceiteLegal, email, celular, telefone } = req.body || {};
   const cpfNorm = normalizarCpfCnpj(cpf);
 
   if (!cpfDigitosValidos(cpfNorm)) {
@@ -130,11 +146,60 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ error: senhaCadastro.error });
     }
 
+    const emailNorm = String(email || "")
+      .trim()
+      .toLowerCase();
+    const celularNorm = String(celular || telefone || "").replace(/\D/g, "");
+
+    if (!emailValido(emailNorm)) {
+      return res.status(400).json({ error: "Informe um e-mail válido" });
+    }
+    if (!telefoneValido(celularNorm)) {
+      return res.status(400).json({
+        error: "Informe um celular válido com DDD",
+      });
+    }
+
+    const codigo = resolverCodigoClienteApi(consulta.cliente);
+    if (!codigo) {
+      return res.status(400).json({
+        error: "Não foi possível identificar o código do seu cadastro no ERP.",
+      });
+    }
+
+    let payloadAtualizacao;
+    try {
+      payloadAtualizacao = montarPayloadAtualizacao(
+        {
+          cpf: cpfNorm,
+          email: emailNorm,
+          celular: celularNorm,
+        },
+        consulta.cliente
+      );
+    } catch (err) {
+      return res.status(400).json({ error: mensagemParaCliente(err.message) });
+    }
+
+    const atualizacao = await atualizarClienteApi(codigo, payloadAtualizacao);
+    if (!atualizacao.ok) {
+      return res.status(400).json({
+        error: mensagemParaCliente(
+          atualizacao.error ||
+            "Não foi possível atualizar seu cadastro no ERP para ativar o clube"
+        ),
+      });
+    }
+
+    const atualizado = await buscarClientePorCpfCnpj(cpfNorm);
+    const clienteFinal = atualizado.ok ? atualizado.cliente : consulta.cliente;
+    const dadosFinais = atualizado.ok ? atualizado.raw : consulta.raw;
+
     const novo = await criarUsuario({
       cpf: cpfNorm,
       senha,
-      clienteApi: consulta.cliente,
-      dadosApi: consulta.raw,
+      clienteApi: clienteFinal,
+      dadosApi: dadosFinais,
       registrarAceiteLegal: true,
     });
 
@@ -148,6 +213,8 @@ router.post("/login", async (req, res) => {
         primeiroAcesso: true,
         aceiteLegal: true,
         clienteCodigo: novo.cliente_codigo,
+        erpAtualizado: true,
+        tipoCliente: "SM",
       },
     });
 
@@ -181,11 +248,30 @@ router.get("/verificar-cpf/:cpf", verificarCpfLimiter, async (req, res) => {
 
   try {
     const local = await buscarUsuarioPorCpf(cpfNorm);
-    const consulta = await buscarClientePorCpfCnpj(cpfNorm);
+
+    // Quem já tem conta na plataforma não depende do ERP para avançar ao login.
+    if (local) {
+      return res.json({
+        existeNoSistema: true,
+        cadastradoNaPlataforma: true,
+      });
+    }
+
+    let consulta;
+    try {
+      consulta = await buscarClientePorCpfCnpj(cpfNorm);
+    } catch (erpError) {
+      console.error("[auth/verificar-cpf] ERP indisponível:", erpError.message);
+      return res.status(503).json({
+        error:
+          "Cadastro temporariamente indisponível. Tente novamente em alguns minutos.",
+        erpIndisponivel: true,
+      });
+    }
 
     return res.json({
       existeNoSistema: consulta.ok,
-      cadastradoNaPlataforma: Boolean(local),
+      cadastradoNaPlataforma: false,
     });
   } catch (error) {
     console.error("[auth/verificar-cpf]", error.message);

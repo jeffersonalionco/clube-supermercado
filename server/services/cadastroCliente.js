@@ -25,7 +25,7 @@ const FIXOS = {
   foneComercial: process.env.CADASTRO_FONE_COMERCIAL || "45465468",
   classe: process.env.CADASTRO_CLASSE || "564",
   cnpj: "",
-  rg: process.env.CADASTRO_RG || "5654654",
+  rg: process.env.CADASTRO_RG ?? "",
   ie: "",
   orgaoExpRG: process.env.CADASTRO_ORGAO_EXP_RG || "SESPR",
   ufExpRG: process.env.CADASTRO_UF || "PR",
@@ -42,7 +42,7 @@ const FIXOS = {
   endereco: {
     uf: process.env.CADASTRO_UF || "PR",
     cep: process.env.CADASTRO_CEP || "85845001",
-    cidade: Number(process.env.CADASTRO_CIDADE || 5),
+    cidade: Number(process.env.CADASTRO_CIDADE || 5884),
     endereco: process.env.CADASTRO_ENDERECO || "Rua 2 Exemplo",
     bairro: "",
     numero: "",

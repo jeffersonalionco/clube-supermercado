@@ -54,6 +54,10 @@ A participação no Clube Superama+ **não caracteriza** concurso, sorteio, dist
 
 **I.3.4.** Os descontos serão concedidos automaticamente quando o produto fizer parte de uma oferta vigente do Clube Superama+.
 
+**I.3.5.** Os descontos do clube **não se aplicam** a compras pagas em **cheque pré-datado** nem em **convênio (crediário)**, ainda que o produto participe de oferta vigente.
+
+**I.3.6.** Nas compras pagas em cheque pré-datado ou em convênio (crediário) serão praticados os **preços normais de venda**, sem os descontos do Clube Superama+.
+
 ## I.4. Dos descontos
 
 **I.4.1.** Os descontos poderão variar conforme:
@@ -88,6 +92,8 @@ Os descontos não serão aplicados em situações como:
 
 - compras realizadas sem identificação do CPF;
 - vendas para CNPJ;
+- pagamentos em **cheque pré-datado**;
+- pagamentos em **convênio (crediário)**;
 - produtos cuja legislação impeça descontos;
 - serviços terceirizados;
 - produtos expressamente excluídos das campanhas.
@@ -479,8 +485,8 @@ function mapRowPublico(row) {
 }
 
 const MARCADOR_PRIVACIDADE_VERSAO = "00.289.167/0001-14";
-const MARCADOR_REGULAMENTO_DESCONTOS =
-  "PARTE II — PROGRAMA DE PONTOS E PRÊMIOS (ANTECIPAÇÃO)";
+/** Trecho presente apenas na versão vigente do regulamento (usado para sincronizar). */
+const MARCADOR_REGULAMENTO_DESCONTOS = "cheque pré-datado";
 
 export async function seedConteudoLegal() {
   const db = getPool();

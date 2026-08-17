@@ -18,6 +18,8 @@ export function navegarAdminComQuery(tab, params = {}) {
         ? "admin/brindes"
         : tab === "usuarios"
           ? "admin/usuarios"
+          : tab === "relatorio"
+            ? "admin/relatorio"
           : tab === "admins"
             ? "admin/admins"
             : tab === "legal"

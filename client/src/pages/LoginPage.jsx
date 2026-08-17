@@ -6,6 +6,11 @@ import LegalPage from "./LegalPage.jsx";
 import RecuperarSenhaFlow from "./RecuperarSenhaFlow.jsx";
 import { cpfSomenteValido, formatarCpf } from "../utils/cpf.js";
 import { apiUrl, parseApiResponse } from "../utils/api.js";
+import {
+  emailValido,
+  formatarTelefone,
+  telefoneValido,
+} from "../utils/format.js";
 import { mensagemParaUsuario } from "../utils/mensagensUsuario.js";
 import { saveSession } from "../utils/session.js";
 import AceiteLegal from "../components/AceiteLegal.jsx";
@@ -49,6 +54,10 @@ export default function LoginPage({ onLogin }) {
   const [aposCadastro, setAposCadastro] = useState(false);
   const [cpfError, setCpfError] = useState("");
   const [senhaError, setSenhaError] = useState("");
+  const [email, setEmail] = useState("");
+  const [telefone, setTelefone] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [telefoneError, setTelefoneError] = useState("");
 
   useEffect(() => {
     if (hashEhRecuperacaoSenha()) {
@@ -106,6 +115,8 @@ export default function LoginPage({ onLogin }) {
     setSuccess("");
     setErroAceite(false);
     setSenhaError("");
+    setEmailError("");
+    setTelefoneError("");
 
     if (!senha.trim()) {
       setSenhaError(
@@ -123,7 +134,23 @@ export default function LoginPage({ onLogin }) {
       return;
     }
 
-    if (precisaAceite && !aceiteLegal) {
+    if (precisaAceite && !aposCadastro) {
+      let temErro = false;
+      if (!telefoneValido(telefone)) {
+        setTelefoneError("Informe um celular válido com DDD");
+        temErro = true;
+      }
+      if (!emailValido(email)) {
+        setEmailError("Informe um e-mail válido");
+        temErro = true;
+      }
+      if (temErro) {
+        setError("Corrija o campo destacado em vermelho para continuar.");
+        return;
+      }
+    }
+
+    if (precisaAceite && !aposCadastro && !aceiteLegal) {
       setErroAceite(true);
       setError("Aceite o Regulamento e a Política de Privacidade para continuar");
       return;
@@ -132,14 +159,21 @@ export default function LoginPage({ onLogin }) {
     setLoading(true);
 
     try {
+      const body = {
+        cpf,
+        senha,
+        aceiteLegal: precisaAceite ? aceiteLegal : undefined,
+      };
+
+      if (precisaAceite) {
+        body.email = email.trim().toLowerCase();
+        body.celular = telefone.replace(/\D/g, "");
+      }
+
       const response = await fetch(apiUrl("/api/auth/login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          cpf,
-          senha,
-          aceiteLegal: precisaAceite ? aceiteLegal : undefined,
-        }),
+        body: JSON.stringify(body),
       });
 
       const { data } = await parseApiResponse(response);
@@ -180,20 +214,30 @@ export default function LoginPage({ onLogin }) {
     setTela("login");
     setEtapa("cpf");
     setSenha("");
+    setEmail("");
+    setTelefone("");
     setError("");
     setSuccess("");
     setCpfError("");
     setSenhaError("");
+    setEmailError("");
+    setTelefoneError("");
     setAposCadastro(false);
     setPrecisaAceite(false);
   }
 
-  function handleCadastroConcluido({ cpf: cpfDigits }) {
+  function handleCadastroConcluido({
+    cpf: cpfDigits,
+    email: emailCadastro,
+    telefone: telefoneCadastro,
+  }) {
     setTela("login");
     setCpf(formatarCpf(cpfDigits || ""));
     setSenha("");
+    setEmail(String(emailCadastro || "").trim().toLowerCase());
+    setTelefone(formatarTelefone(String(telefoneCadastro || "")));
     setShowSenha(false);
-    setAceiteLegal(false);
+    setAceiteLegal(true);
     setErroAceite(false);
     setPrecisaAceite(true);
     setAposCadastro(true);
@@ -201,12 +245,16 @@ export default function LoginPage({ onLogin }) {
     setError("");
     setCpfError("");
     setSenhaError("");
-    setSuccess("Cadastro concluído! Agora crie sua senha para entrar.");
+    setEmailError("");
+    setTelefoneError("");
+    setSuccess("Cadastro concluído! Agora crie sua senha de acesso.");
   }
 
   function voltarParaCpf() {
     setEtapa("cpf");
     setSenha("");
+    setEmail("");
+    setTelefone("");
     setAceiteLegal(false);
     setErroAceite(false);
     setPrecisaAceite(false);
@@ -214,6 +262,8 @@ export default function LoginPage({ onLogin }) {
     setError("");
     setSuccess("");
     setSenhaError("");
+    setEmailError("");
+    setTelefoneError("");
   }
 
   const step = etapa === "cpf" ? 1 : 2;
@@ -277,7 +327,9 @@ export default function LoginPage({ onLogin }) {
           etapa === "cpf"
             ? "Bem-vindo ao Clube Superama+"
             : criandoSenha
-              ? "Crie sua senha"
+              ? aposCadastro
+                ? "Crie sua senha"
+                : "Ativar acesso ao clube"
               : "Sua senha"
         }
         description={
@@ -286,7 +338,9 @@ export default function LoginPage({ onLogin }) {
               ? "Acumule pontos a cada compra e troque por prêmios exclusivos na loja."
               : "Aproveite descontos em produtos selecionados e benefícios exclusivos do Clube Superama+."
             : criandoSenha
-              ? "Você ainda não tem senha. Crie uma agora para acessar o clube."
+              ? aposCadastro
+                ? "Seu cadastro já foi criado. Falta somente definir sua senha de acesso."
+                : "Confirme celular e e-mail, crie sua senha e ative o desconto do clube no caixa."
               : "Informe a senha vinculada ao seu CPF."
         }
         onBack={etapa === "senha" ? voltarParaCpf : undefined}
@@ -312,10 +366,14 @@ export default function LoginPage({ onLogin }) {
                 <Btn loading={loading} type="submit" form="form-senha">
                   {loading
                     ? criandoSenha
-                      ? "Criando senha"
+                      ? aposCadastro
+                        ? "Criando senha"
+                        : "Ativando"
                       : "Entrando"
                     : criandoSenha
-                      ? "Criar senha e entrar"
+                      ? aposCadastro
+                        ? "Criar senha e entrar"
+                        : "Ativar e entrar"
                       : "Entrar"}
                 </Btn>
                 <Btn variant="ghost" onClick={voltarParaCpf} disabled={loading}>
@@ -363,7 +421,11 @@ export default function LoginPage({ onLogin }) {
         ) : (
           <form id="form-senha" onSubmit={handleLogin} noValidate>
             <h2 className="auth-form-title">
-              {criandoSenha ? "Criar senha de acesso" : "Senha de acesso"}
+              {criandoSenha
+                ? aposCadastro
+                  ? "Criar senha de acesso"
+                  : "Ativar acesso"
+                : "Senha de acesso"}
             </h2>
             <p className="auth-form-sub">
               CPF: <strong>{cpf}</strong>
@@ -378,12 +440,22 @@ export default function LoginPage({ onLogin }) {
               >
                 <strong>
                   {aposCadastro
-                    ? "Cadastro concluído — falta criar a senha"
-                    : "Você ainda não tem senha"}
+                    ? "Cadastro concluído — falta somente a senha"
+                    : "Confirme seus dados de contato"}
                 </strong>
                 <p>
-                  Digite uma senha nova com pelo menos <strong>8 caracteres</strong>.
-                  Essa será a senha do seu CPF no Clube Superama+.
+                  {aposCadastro ? (
+                    <>
+                      Crie uma senha com pelo menos <strong>8 caracteres</strong>{" "}
+                      para entrar no Clube Superama+.
+                    </>
+                  ) : (
+                    <>
+                      Informe celular e e-mail atualizados e crie uma senha com
+                      pelo menos <strong>8 caracteres</strong>. Isso ativa o tipo
+                      de cliente do clube no caixa.
+                    </>
+                  )}
                 </p>
               </div>
             )}
@@ -395,6 +467,59 @@ export default function LoginPage({ onLogin }) {
                 </span>
                 <span>{success}</span>
               </div>
+            )}
+
+            {criandoSenha && !aposCadastro && (
+              <>
+                <Field
+                  label="Celular *"
+                  id="celular-ativacao"
+                  error={telefoneError}
+                  hint="Com DDD. Usado para contato e atualização no caixa."
+                >
+                  <input
+                    id="celular-ativacao"
+                    type="tel"
+                    inputMode="numeric"
+                    autoComplete="tel"
+                    placeholder="(45) 99999-9999"
+                    maxLength={15}
+                    value={telefone}
+                    onChange={(e) => {
+                      setTelefone(formatarTelefone(e.target.value));
+                      setTelefoneError("");
+                      setError("");
+                    }}
+                    disabled={loading}
+                    required
+                    aria-invalid={Boolean(telefoneError)}
+                  />
+                </Field>
+
+                <Field
+                  label="E-mail *"
+                  id="email-ativacao"
+                  error={emailError}
+                  hint="Usaremos para avisos e recuperação de senha."
+                >
+                  <input
+                    id="email-ativacao"
+                    type="email"
+                    autoComplete="email"
+                    inputMode="email"
+                    placeholder="seu@email.com"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setEmailError("");
+                      setError("");
+                    }}
+                    disabled={loading}
+                    required
+                    aria-invalid={Boolean(emailError)}
+                  />
+                </Field>
+              </>
             )}
 
             <Field
@@ -423,7 +548,7 @@ export default function LoginPage({ onLogin }) {
                   disabled={loading}
                   required
                   minLength={precisaAceite ? 8 : 4}
-                  autoFocus
+                  autoFocus={!criandoSenha || aposCadastro}
                   aria-invalid={Boolean(senhaError)}
                 />
                 <button
@@ -472,7 +597,7 @@ export default function LoginPage({ onLogin }) {
               </p>
             )}
 
-            {precisaAceite && (
+            {precisaAceite && !aposCadastro && (
               <>
                 <AceiteLegal
                   checked={aceiteLegal}

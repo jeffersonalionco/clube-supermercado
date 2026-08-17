@@ -20,6 +20,9 @@ function getTransporter() {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
+      connectionTimeout: 15_000,
+      greetingTimeout: 15_000,
+      socketTimeout: 25_000,
     });
   }
 
@@ -37,7 +40,7 @@ export function emailMascarado(email) {
   return `${inicio}***@${dominio}`;
 }
 
-export async function enviarEmail({ para, assunto, texto, html }) {
+export async function enviarEmail({ para, assunto, texto, html, headers }) {
   const from =
     process.env.SMTP_FROM ||
     `"Clube Superama+" <${process.env.SMTP_USER}>`;
@@ -48,6 +51,7 @@ export async function enviarEmail({ para, assunto, texto, html }) {
     subject: assunto,
     text: texto,
     html,
+    headers: headers || undefined,
   });
 
   return info;

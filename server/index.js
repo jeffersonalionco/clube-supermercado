@@ -14,8 +14,11 @@ import adminRoutes from "./routes/admin.js";
 import adminBrindesRoutes from "./routes/adminBrindes.js";
 import adminLegalRoutes from "./routes/adminLegal.js";
 import adminNovidadesRoutes from "./routes/adminNovidades.js";
+import adminMarketingRoutes from "./routes/adminMarketing.js";
+import marketingPublicoRoutes from "./routes/marketingPublico.js";
 import legalRoutes from "./routes/legal.js";
 import { mensagemParaCliente } from "./utils/mensagemCliente.js";
+import { retomarEnviosPendentesNoBoot } from "./services/marketing/emailEnvioService.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -54,6 +57,7 @@ app.use("/api", (_req, res, next) => {
 });
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/legal", legalRoutes);
@@ -62,6 +66,8 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/admin/brindes", adminBrindesRoutes);
 app.use("/api/admin/legal", adminLegalRoutes);
 app.use("/api/admin/novidades", adminNovidadesRoutes);
+app.use("/api/admin/marketing", adminMarketingRoutes);
+app.use("/api/marketing", marketingPublicoRoutes);
 
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true });
@@ -113,6 +119,9 @@ async function start() {
       console.log("Rede local (API):");
       network.forEach((url) => console.log(`  ${url}`));
     }
+    retomarEnviosPendentesNoBoot().catch((err) => {
+      console.error("[marketing/boot]", err.message);
+    });
   });
 }
 

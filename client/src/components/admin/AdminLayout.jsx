@@ -22,6 +22,18 @@ const NAV = [
     icon: "◎",
   },
   {
+    id: "relatorio",
+    label: "Relatórios",
+    desc: "Painéis, insights e impressões do clube",
+    icon: "▦",
+  },
+  {
+    id: "marketing",
+    label: "Marketing",
+    desc: "E-mails e campanhas para o clube",
+    icon: "✉",
+  },
+  {
     id: "brindes",
     label: "Brindes",
     desc: "Cadastro, estoque e pontuação",
