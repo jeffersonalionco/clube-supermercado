@@ -8,6 +8,8 @@ import {
   ShoppingCart,
   DollarSign,
   Receipt,
+  UserPlus,
+  AlertCircle,
 } from "lucide-react";
 import AdminLayout from "../../components/admin/AdminLayout.jsx";
 import { fetchAdmin } from "../../utils/adminSession.js";
@@ -272,6 +274,48 @@ export default function AdminVendasPdvPage({ tab, onTabChange, onLogout, admin, 
               </p>
             )}
           </div>
+
+          {/* Não membros */}
+          {dados.naoMembros && dados.naoMembros.total > 0 && (
+            <div className="pdv-nao-membros">
+              <div className="pdv-nao-membros__header">
+                <AlertCircle size={20} />
+                <div>
+                  <h3>Clientes com CPF que NÃO são do clube</h3>
+                  <p>
+                    {dados.naoMembros.total} clientes informaram CPF no caixa mas não estão cadastrados no programa.
+                    {" "}Eles geraram <strong>{dados.naoMembros.cupons} cupons</strong> totalizando <strong>{formatarMoeda(dados.naoMembros.valorTotal)}</strong> no período.
+                  </p>
+                </div>
+              </div>
+              <div className="pdv-table-wrap">
+                <table className="pdv-table">
+                  <thead>
+                    <tr>
+                      <th>Nome</th>
+                      <th>CPF</th>
+                      <th style={{ textAlign: "right" }}>Cupons</th>
+                      <th style={{ textAlign: "right" }}>Total gasto</th>
+                      <th>Caixas</th>
+                      <th>Última compra</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {dados.naoMembros.clientes.map((c) => (
+                      <tr key={c.cpf}>
+                        <td>{c.nome}</td>
+                        <td className="mono">{formatarCpfCnpj(c.cpf)}</td>
+                        <td style={{ textAlign: "right" }}>{c.cupons}</td>
+                        <td style={{ textAlign: "right" }}>{formatarMoeda(c.totalGasto)}</td>
+                        <td>{c.pdvs.join(", ")}</td>
+                        <td>{formatarDataHora(c.ultimaCompra)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </>
       )}
     </AdminLayout>

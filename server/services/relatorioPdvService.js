@@ -144,6 +144,39 @@ export async function obterRelatorioPdv({
   const nomesMapa = await buscarNomesUsuarios(cpfsUnicos);
 
   const cuponsClube = cuponsRaw.filter((c) => membrosSet.has(c.cpf));
+  const cuponsForaClube = cuponsRaw.filter((c) => !membrosSet.has(c.cpf));
+
+  const naoMembrosMap = new Map();
+  for (const c of cuponsForaClube) {
+    if (!naoMembrosMap.has(c.cpf)) {
+      naoMembrosMap.set(c.cpf, {
+        cpf: c.cpf,
+        nome: c.nomeERP || c.cpf,
+        totalGasto: 0,
+        cupons: 0,
+        pdvs: new Set(),
+        ultimaCompra: null,
+      });
+    }
+    const agg = naoMembrosMap.get(c.cpf);
+    agg.totalGasto += c.valor;
+    agg.cupons += 1;
+    agg.pdvs.add(c.pdv);
+    if (!agg.ultimaCompra || new Date(c.dataHora) > new Date(agg.ultimaCompra)) {
+      agg.ultimaCompra = c.dataHora;
+    }
+  }
+
+  const naoMembros = [...naoMembrosMap.values()]
+    .map((c) => ({
+      cpf: c.cpf,
+      nome: c.nome,
+      totalGasto: Math.round(c.totalGasto * 100) / 100,
+      cupons: c.cupons,
+      pdvs: [...c.pdvs].sort(),
+      ultimaCompra: c.ultimaCompra,
+    }))
+    .sort((a, b) => b.totalGasto - a.totalGasto);
 
   const pdvMap = new Map();
 
@@ -219,5 +252,13 @@ export async function obterRelatorioPdv({
     ticketMedioGeral:
       cuponsGeral > 0 ? Math.round((totalGeral / cuponsGeral) * 100) / 100 : 0,
     pdvs: resumoPdvs,
+    naoMembros: {
+      total: naoMembros.length,
+      cupons: cuponsForaClube.length,
+      valorTotal: Math.round(
+        cuponsForaClube.reduce((s, c) => s + c.valor, 0) * 100
+      ) / 100,
+      clientes: naoMembros,
+    },
   };
 }
