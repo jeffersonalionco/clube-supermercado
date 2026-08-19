@@ -19,6 +19,7 @@ import AdminFunilNovosMembrosPage from "../pages/admin/AdminFunilNovosMembrosPag
 import AdminRelatorioClubePage from "../pages/admin/AdminRelatorioClubePage.jsx";
 import AdminMarketingHubPage from "../pages/admin/AdminMarketingHubPage.jsx";
 import AdminMarketingEmailPage from "../pages/admin/AdminMarketingEmailPage.jsx";
+import AdminDashboardPage from "../pages/admin/AdminDashboardPage.jsx";
 import { clearAdminSession, loadAdminSession } from "../utils/adminSession.js";
 import "../styles/admin.css";
 
@@ -65,7 +66,10 @@ function adminTabFromHash() {
   if (path === "admin/usuarios" || path.startsWith("admin/usuarios/")) {
     return "usuarios";
   }
-  return "pontos";
+  if (path === "admin/pontos" || path.startsWith("admin/pontos/")) {
+    return "pontos";
+  }
+  return "dashboard";
 }
 
 function marketingSubFromHash() {
@@ -121,7 +125,8 @@ function hashForAdminTab(tab, sub) {
   if (tab === "conteudo") return "#/admin/conteudo";
   if (tab === "novidades") return "#/admin/novidades";
   if (tab === "clube-descontos") return "#/admin/clube-descontos";
-  return "#/admin/pontos";
+  if (tab === "pontos") return "#/admin/pontos";
+  return "#/admin/dashboard";
 }
 
 export default function AdminApp() {
@@ -190,6 +195,10 @@ export default function AdminApp() {
     onLogout: handleLogout,
     admin: session.admin,
   };
+
+  if (tab === "dashboard") {
+    return <AdminDashboardPage {...layoutProps} />;
+  }
 
   if (tab === "brindes") {
     return <AdminBrindesPage {...layoutProps} />;
