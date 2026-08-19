@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup — Painel Admin Clube Superama+</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0a1f4d;--blue:#1b4fa0;--blue-soft:#eef3fb;--blue-light:#d6e4f7;
+  --red:#e31c23;--green:#16a34a;--bg:#eef2f6;--surface:#fff;
+  --text:#14202b;--muted:#5c6b78;--border:#d4dde6;--radius:14px;
+  --sidebar-w:260px;--topbar-h:54px;
+}
+html{font-family:'DM Sans',system-ui,sans-serif;font-size:15px;color:var(--text);background:var(--bg)}
+body{min-height:100vh;display:flex;flex-direction:column}
+
+/* ── Topbar ── */
+.topbar{height:var(--topbar-h);display:flex;align-items:center;justify-content:space-between;padding:0 1.4rem;background:var(--navy);color:#fff;position:sticky;top:0;z-index:50}
+.topbar__brand{font-size:1.15rem;font-weight:700;letter-spacing:-.02em}
+.topbar__brand span{color:#e31c23}
+.topbar__center{font-size:.92rem;font-weight:600;opacity:.85}
+.topbar__right{display:flex;align-items:center;gap:.75rem}
+.topbar__user{font-size:.82rem;opacity:.7}
+.topbar__avatar{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.15);display:grid;place-items:center;font-size:.75rem;font-weight:700}
+.btn-sair{padding:.35rem .85rem;border:1px solid rgba(255,255,255,.25);border-radius:8px;background:transparent;color:#fff;font:inherit;font-size:.78rem;cursor:pointer}
+.btn-sair:hover{background:rgba(255,255,255,.1)}
+
+/* ── Shell ── */
+.shell{flex:1;display:grid;grid-template-columns:var(--sidebar-w) 1fr}
+
+/* ── Sidebar ── */
+.sidebar{height:calc(100vh - var(--topbar-h));position:sticky;top:var(--topbar-h);background:var(--surface);border-right:1px solid var(--border);padding:1rem .85rem;overflow-y:auto;display:flex;flex-direction:column}
+.sidebar__section{margin-bottom:.35rem}
+.sidebar__label{padding:.55rem .55rem .35rem;font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.nav-item{display:flex;align-items:center;gap:.7rem;width:100%;padding:.65rem .7rem;border:1.5px solid transparent;border-radius:12px;background:transparent;text-align:left;cursor:pointer;font:inherit;color:inherit;transition:all .15s}
+.nav-item:hover{background:#f8fafc;border-color:var(--border)}
+.nav-item.active{background:var(--blue-soft);border-color:var(--blue-light)}
+.nav-icon{flex-shrink:0;width:34px;height:34px;display:grid;place-items:center;border-radius:10px;background:#f1f5f9;font-size:.95rem;color:var(--blue)}
+.nav-item.active .nav-icon{background:var(--blue);color:#fff}
+.nav-text{display:flex;flex-direction:column;gap:.1rem;min-width:0}
+.nav-text strong{font-size:.84rem;line-height:1.25}
+.nav-text small{font-size:.68rem;color:var(--muted);line-height:1.3}
+.sidebar__footer{margin-top:auto;padding-top:1rem;text-align:center;font-size:.65rem;color:var(--muted)}
+
+/* ── Content ── */
+.content{padding:1.4rem 1.75rem 2.5rem;min-width:0}
+
+/* Welcome */
+.welcome{display:flex;align-items:center;gap:1rem;padding:1rem 1.25rem;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);margin-bottom:1.25rem}
+.welcome__icon{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#1b4fa0,#3b82f6);display:grid;place-items:center;font-size:1.5rem;color:#fff}
+.welcome__text h2{font-size:1.1rem;font-weight:700}
+.welcome__text p{font-size:.82rem;color:var(--muted);margin-top:.15rem}
+
+/* KPI row */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.25rem}
+.kpi{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:1rem 1.15rem;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:4px 0 0 4px}
+.kpi.blue::before{background:var(--blue)}
+.kpi.green::before{background:var(--green)}
+.kpi.red::before{background:var(--red)}
+.kpi.orange::before{background:#f59e0b}
+.kpi__header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.55rem}
+.kpi__label{font-size:.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.kpi__icon{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;font-size:1rem}
+.kpi.blue .kpi__icon{background:#eef3fb;color:var(--blue)}
+.kpi.green .kpi__icon{background:#ecfdf5;color:var(--green)}
+.kpi.red .kpi__icon{background:#fef2f2;color:var(--red)}
+.kpi.orange .kpi__icon{background:#fefce8;color:#f59e0b}
+.kpi__value{font-size:1.65rem;font-weight:700;line-height:1.1}
+.kpi__sub{font-size:.72rem;margin-top:.35rem;color:var(--muted)}
+.kpi__sub .up{color:var(--green);font-weight:600}
+
+/* Two columns */
+.two-cols{display:grid;grid-template-columns:1fr 320px;gap:1rem;margin-bottom:1.25rem}
+
+/* Card */
+.card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:1.15rem 1.25rem}
+.card__title{font-size:.92rem;font-weight:700;margin-bottom:.15rem}
+.card__subtitle{font-size:.72rem;color:var(--muted);margin-bottom:1rem}
+
+/* Chart (fake bars) */
+.chart{display:flex;align-items:flex-end;gap:6px;height:140px;padding-top:.5rem}
+.chart__bar{flex:1;border-radius:5px 5px 0 0;background:linear-gradient(180deg,#3b82f6,#1b4fa0);min-width:0;position:relative;transition:opacity .2s}
+.chart__bar:hover{opacity:.8}
+.chart__labels{display:flex;gap:6px;margin-top:.35rem}
+.chart__labels span{flex:1;text-align:center;font-size:.58rem;color:var(--muted)}
+
+/* Quick actions */
+.actions{display:flex;flex-direction:column;gap:.65rem}
+.action-btn{display:flex;align-items:center;gap:.65rem;padding:.75rem 1rem;border-radius:12px;border:1.5px solid var(--border);background:var(--surface);font:inherit;font-size:.84rem;font-weight:600;cursor:pointer;transition:all .15s;color:var(--text)}
+.action-btn:hover{border-color:var(--blue);background:var(--blue-soft)}
+.action-btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.action-btn.primary:hover{background:#164590}
+.action-icon{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:1.05rem}
+.action-btn.primary .action-icon{background:rgba(255,255,255,.2)}
+.action-btn:not(.primary) .action-icon{background:#f1f5f9;color:var(--blue)}
+
+/* Table */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th{text-align:left;padding:.65rem .5rem;font-weight:600;color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;border-bottom:2px solid var(--border)}
+td{padding:.7rem .5rem;border-bottom:1px solid #f1f5f9}
+tr:hover td{background:#fafbfc}
+.op-icon{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:8px;font-size:.75rem;margin-right:.4rem}
+.op-icon.mail{background:#eef3fb;color:var(--blue)}
+.op-icon.star{background:#fefce8;color:#f59e0b}
+.op-icon.user{background:#ecfdf5;color:var(--green)}
+.op-icon.tag{background:#fef2f2;color:var(--red)}
+
+@media(max-width:1100px){
+  .kpi-row{grid-template-columns:repeat(2,1fr)}
+  .two-cols{grid-template-columns:1fr}
+}
+@media(max-width:800px){
+  .shell{grid-template-columns:1fr}
+  .sidebar{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ════ TOPBAR ════ -->
+<header class="topbar">
+  <div class="topbar__brand">Superama<span>+</span></div>
+  <div class="topbar__center">Visão Geral</div>
+  <div class="topbar__right">
+    <span class="topbar__user">admin</span>
+    <div class="topbar__avatar">A</div>
+    <button class="btn-sair">Sair</button>
+  </div>
+</header>
+
+<div class="shell">
+
+<!-- ════ SIDEBAR ════ -->
+<aside class="sidebar">
+
+  <div class="sidebar__section">
+    <div class="sidebar__label">Principal</div>
+    <button class="nav-item active">
+      <div class="nav-icon">▦</div>
+      <div class="nav-text"><strong>Dashboard</strong><small>Visão geral do programa</small></div>
+    </button>
+    <button class="nav-item">
+      <div class="nav-icon">◉</div>
+      <div class="nav-text"><strong>Clientes</strong><small>Compras, segmentos e ficha 360°</small></div>
+    </button>
+    <button class="nav-item">
+      <div class="nav-icon">📊</div>
+      <div class="nav-text"><strong>Relatórios</strong><small>Painéis, insights e indicadores</small></div>
+    </button>
+  </div>
+
+  <div class="sidebar__section">
+    <div class="sidebar__label">Operação</div>
+    <button class="nav-item">
+      <div class="nav-icon">★</div>
+      <div class="nav-text"><strong>Baixa de pontos</strong><small>Resgate de prêmios</small></div>
+    </button>
+    <button class="nav-item">
+      <div class="nav-icon">🎁</div>
+      <div class="nav-text"><strong>Brindes</strong><small>Cadastro e estoque</small></div>
+    </button>
+    <button class="nav-item">
+      <div class="nav-icon">◇</div>
+      <div class="nav-text"><strong>Clube de descontos</strong><small>Preços exclusivos ERP</small></div>
+    </button>
+    <button class="nav-item">
+      <div class="nav-icon">◎</div>
+      <div class="nav-text"><strong>Usuários</strong><small>Cadastros e senhas</small></div>
+    </button>
+  </div>
+
+  <div class="sidebar__section">
+    <div class="sidebar__label">Comunicação</div>
+    <button class="nav-item">
+      <div class="nav-icon">✉</div>
+      <div class="nav-text"><strong>Marketing</strong><small>E-mails e campanhas</small></div>
+    </button>
+    <button class="nav-item">
+      <div class="nav-icon">✎</div>
+      <div class="nav-text"><strong>Novidades</strong><small>Avisos e dicas no app</small></div>
+    </button>
+    <button class="nav-item">
+      <div class="nav-icon">▶</div>
+      <div class="nav-text"><strong>Conteúdo</strong><small>Vídeo e destaques</small></div>
+    </button>
+  </div>
+
+  <div class="sidebar__section">
+    <div class="sidebar__label">Configuração</div>
+    <button class="nav-item">
+      <div class="nav-icon">⚙</div>
+      <div class="nav-text"><strong>Programa</strong><small>Ativar/desativar pontos</small></div>
+    </button>
+    <button class="nav-item">
+      <div class="nav-icon">◆</div>
+      <div class="nav-text"><strong>Administradores</strong><small>Perfis e permissões</small></div>
+    </button>
+    <button class="nav-item">
+      <div class="nav-icon">§</div>
+      <div class="nav-text"><strong>Regulamento</strong><small>Textos legais</small></div>
+    </button>
+    <button class="nav-item">
+      <div class="nav-icon">?</div>
+      <div class="nav-text"><strong>Manual</strong><small>Regras e operação</small></div>
+    </button>
+  </div>
+
+  <div class="sidebar__footer">v0.39.7 · Metaji</div>
+</aside>
+
+<!-- ════ CONTEÚDO PRINCIPAL ════ -->
+<main class="content">
+
+  <!-- Saudação -->
+  <div class="welcome">
+    <div class="welcome__icon">☀</div>
+    <div class="welcome__text">
+      <h2>Bom dia, admin</h2>
+      <p>Terça-feira, 19 de agosto de 2026</p>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-row">
+    <div class="kpi blue">
+      <div class="kpi__header">
+        <span class="kpi__label">Membros</span>
+        <div class="kpi__icon">👥</div>
+      </div>
+      <div class="kpi__value">137</div>
+      <div class="kpi__sub"><span class="up">↑ +11 esta semana</span></div>
+    </div>
+    <div class="kpi green">
+      <div class="kpi__header">
+        <span class="kpi__label">Vendas clube (30d)</span>
+        <div class="kpi__icon">💰</div>
+      </div>
+      <div class="kpi__value">R$ 28.450</div>
+      <div class="kpi__sub"><span class="up">↑ 18%</span> vs mês anterior</div>
+    </div>
+    <div class="kpi orange">
+      <div class="kpi__header">
+        <span class="kpi__label">Ticket médio</span>
+        <div class="kpi__icon">🛒</div>
+      </div>
+      <div class="kpi__value">R$ 122,30</div>
+      <div class="kpi__sub">Média por compra</div>
+    </div>
+    <div class="kpi red">
+      <div class="kpi__header">
+        <span class="kpi__label">Campanhas enviadas</span>
+        <div class="kpi__icon">📨</div>
+      </div>
+      <div class="kpi__value">6</div>
+      <div class="kpi__sub">Última: 14/08</div>
+    </div>
+  </div>
+
+  <!-- Duas colunas -->
+  <div class="two-cols">
+
+    <!-- Gráfico de cadastros -->
+    <div class="card">
+      <div class="card__title">Cadastros recentes</div>
+      <div class="card__subtitle">Novos membros por dia — últimos 14 dias</div>
+      <div class="chart">
+        <div class="chart__bar" style="height:28%"></div>
+        <div class="chart__bar" style="height:35%"></div>
+        <div class="chart__bar" style="height:22%"></div>
+        <div class="chart__bar" style="height:45%"></div>
+        <div class="chart__bar" style="height:52%"></div>
+        <div class="chart__bar" style="height:38%"></div>
+        <div class="chart__bar" style="height:60%"></div>
+        <div class="chart__bar" style="height:48%"></div>
+        <div class="chart__bar" style="height:72%"></div>
+        <div class="chart__bar" style="height:65%"></div>
+        <div class="chart__bar" style="height:85%"></div>
+        <div class="chart__bar" style="height:78%"></div>
+        <div class="chart__bar" style="height:100%"></div>
+        <div class="chart__bar" style="height:90%"></div>
+      </div>
+      <div class="chart__labels">
+        <span>06</span><span>07</span><span>08</span><span>09</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span><span>15</span><span>16</span><span>17</span><span>18</span><span>19</span>
+      </div>
+    </div>
+
+    <!-- Ações rápidas -->
+    <div class="card">
+      <div class="card__title">Ações rápidas</div>
+      <div class="card__subtitle">Atalhos para tarefas frequentes</div>
+      <div class="actions">
+        <button class="action-btn primary">
+          <div class="action-icon">✉</div>
+          Nova campanha de e-mail
+        </button>
+        <button class="action-btn">
+          <div class="action-icon">🔍</div>
+          Consultar cliente por CPF
+        </button>
+        <button class="action-btn">
+          <div class="action-icon">📊</div>
+          Ver relatório do clube
+        </button>
+        <button class="action-btn">
+          <div class="action-icon">🎁</div>
+          Cadastrar novo brinde
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Últimas operações -->
+  <div class="card">
+    <div class="card__title">Últimas operações</div>
+    <div class="card__subtitle">Atividade recente no painel</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Data</th><th>Ação</th><th>Detalhes</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>19/08 09:32</td>
+            <td><span class="op-icon mail">✉</span>Campanha enviada</td>
+            <td>Campanha "Ofertas da Semana" enviada para 127 clientes</td>
+          </tr>
+          <tr>
+            <td>18/08 16:45</td>
+            <td><span class="op-icon star">★</span>Resgate de pontos</td>
+            <td>CPF 123.456.789-00 resgatou 2.000 pts por Caneca Térmica</td>
+          </tr>
+          <tr>
+            <td>18/08 11:20</td>
+            <td><span class="op-icon user">◎</span>Novo cadastro</td>
+            <td>CPF 987.654.321-00 cadastrado no programa</td>
+          </tr>
+          <tr>
+            <td>17/08 14:08</td>
+            <td><span class="op-icon tag">◇</span>Clube de descontos</td>
+            <td>12 novos produtos com preço clube atualizados</td>
+          </tr>
+          <tr>
+            <td>16/08 10:15</td>
+            <td><span class="op-icon mail">✉</span>Campanha enviada</td>
+            <td>Campanha "Aniversariantes" enviada para 43 clientes</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+</div>
+
+</body>
+</html>
