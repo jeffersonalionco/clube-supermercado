@@ -113,6 +113,39 @@ function montarHtmlRelatorioPdv(relatorio, adminUsuario) {
         .join("")
     : `<tr><td colspan="11">Sem dados de PDV no período selecionado.</td></tr>`;
 
+  const pdvsForaClube = (relatorio?.pdvsForaClube || pdvs.filter(
+    (p) => (p.resumoForaClube?.totalVendido || 0) > 0
+  )).sort(
+    (a, b) =>
+      (b.resumoForaClube?.totalVendido || 0) - (a.resumoForaClube?.totalVendido || 0)
+  );
+  const totalForaClube = Number(relatorio?.naoMembros?.valorTotal) || 0;
+
+  const linhasResumoForaClube = pdvsForaClube.length
+    ? pdvsForaClube
+        .map((pdv) => {
+          const f = pdv.resumoForaClube || {};
+          return `<tr>
+            <td><strong>${escaparHtml(pdv.pdv)}</strong></td>
+            <td class="num">${escaparHtml(formatarMoeda(f.totalVendido || 0))}</td>
+            <td class="num">${escaparHtml(f.quantidadeCupons || 0)}</td>
+            <td class="num">${escaparHtml(f.clientesUnicos || 0)}</td>
+            <td class="num">${escaparHtml(formatarMoeda(f.ticketMedio || 0))}</td>
+            <td class="num">${escaparHtml(Number(f.pctDoTotalFora || 0).toFixed(1))}%</td>
+            <td class="num">${escaparHtml(formatarMoeda(f.valorConvenio || 0))}</td>
+            <td class="num">${escaparHtml(Number(f.pctConvenio || 0).toFixed(1))}%</td>
+          </tr>`;
+        })
+        .join("")
+    : `<tr><td colspan="8">Nenhuma venda com CPF fora do clube no período.</td></tr>`;
+
+  const totalConvenioFora = pdvsForaClube.reduce(
+    (s, pdv) => s + (Number(pdv.resumoForaClube?.valorConvenio) || 0),
+    0
+  );
+  const pctConvenioFora =
+    totalForaClube > 0 ? ((totalConvenioFora / totalForaClube) * 100).toFixed(1) : "0.0";
+
   const topForaClube = [...naoMembros]
     .sort((a, b) => (Number(b.totalGasto) || 0) - (Number(a.totalGasto) || 0))
     .slice(0, 5);
@@ -204,6 +237,31 @@ function montarHtmlRelatorioPdv(relatorio, adminUsuario) {
       <tbody>${linhasResumoPdvs}</tbody>
     </table>
     <p class="nota">Membros = clientes cadastrados no clube. Fora clube = informaram CPF mas não estão no programa.</p>
+  </section>
+
+  <section class="bloco">
+    <h2>Resumo por caixa / PDV — clientes FORA do clube</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>PDV</th>
+          <th class="num">Vendido</th>
+          <th class="num">Cupons</th>
+          <th class="num">Clientes</th>
+          <th class="num">Ticket</th>
+          <th class="num">% total</th>
+          <th class="num">R$ crediário</th>
+          <th class="num">% cred.</th>
+        </tr>
+      </thead>
+      <tbody>${linhasResumoForaClube}</tbody>
+    </table>
+    <p class="nota">
+      Total fora do clube: ${escaparHtml(formatarMoeda(totalForaClube))}
+      · ${escaparHtml(relatorio?.naoMembros?.cupons || 0)} cupons
+      · ${escaparHtml(relatorio?.naoMembros?.total || 0)} clientes
+      · Crediário: ${escaparHtml(formatarMoeda(totalConvenioFora))} (${escaparHtml(pctConvenioFora)}%)
+    </p>
   </section>
 
   <section class="bloco">

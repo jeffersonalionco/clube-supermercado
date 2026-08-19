@@ -224,6 +224,11 @@ export async function obterRelatorioPdv({
         clientes: new Map(),
         naoMembros: new Map(),
         cupons: [],
+        foraClube: {
+          totalVendido: 0,
+          quantidadeCupons: 0,
+          valorConvenio: 0,
+        },
       });
     }
     return pdvMap.get(pdv);
@@ -261,6 +266,10 @@ export async function obterRelatorioPdv({
 
   for (const c of cuponsForaClube) {
     const agg = garantirPdv(c.pdv);
+    agg.foraClube.totalVendido += c.valor;
+    agg.foraClube.quantidadeCupons += 1;
+    if (c.convenio) agg.foraClube.valorConvenio += c.valor;
+
     if (!agg.naoMembros.has(c.cpf)) {
       agg.naoMembros.set(c.cpf, {
         cpf: c.cpf,
@@ -283,8 +292,33 @@ export async function obterRelatorioPdv({
     }
   }
 
+  const valorTotalForaClube =
+    Math.round(
+      cuponsForaClube.reduce((s, c) => s + c.valor, 0) * 100
+    ) / 100;
+
   const resumoPdvs = [...pdvMap.values()]
-    .map((p) => ({
+    .map((p) => {
+      const fora = {
+        totalVendido: Math.round(p.foraClube.totalVendido * 100) / 100,
+        quantidadeCupons: p.foraClube.quantidadeCupons,
+        clientesUnicos: p.naoMembros.size,
+        valorConvenio: Math.round(p.foraClube.valorConvenio * 100) / 100,
+      };
+      fora.ticketMedio =
+        fora.quantidadeCupons > 0
+          ? Math.round((fora.totalVendido / fora.quantidadeCupons) * 100) / 100
+          : 0;
+      fora.pctDoTotalFora =
+        valorTotalForaClube > 0
+          ? Math.round((fora.totalVendido / valorTotalForaClube) * 1000) / 10
+          : 0;
+      fora.pctConvenio =
+        fora.totalVendido > 0
+          ? Math.round((fora.valorConvenio / fora.totalVendido) * 1000) / 10
+          : 0;
+
+      return {
       pdv: p.pdv,
       totalVendido: Math.round(p.totalVendido * 100) / 100,
       quantidadeCupons: p.quantidadeCupons,
@@ -293,6 +327,7 @@ export async function obterRelatorioPdv({
         p.quantidadeCupons > 0
           ? Math.round((p.totalVendido / p.quantidadeCupons) * 100) / 100
           : 0,
+      resumoForaClube: fora,
       clientes: [...p.clientes.values()]
         .map((c) => ({
           ...c,
@@ -308,8 +343,15 @@ export async function obterRelatorioPdv({
       cupons: p.cupons.sort(
         (a, b) => new Date(b.dataHora) - new Date(a.dataHora)
       ),
-    }))
+    };
+    })
     .sort((a, b) => b.totalVendido - a.totalVendido);
+
+  const pdvsForaClube = [...resumoPdvs]
+    .filter((p) => p.resumoForaClube.totalVendido > 0)
+    .sort(
+      (a, b) => b.resumoForaClube.totalVendido - a.resumoForaClube.totalVendido
+    );
 
   const totalGeral = resumoPdvs.reduce((s, p) => s + p.totalVendido, 0);
   const cuponsGeral = resumoPdvs.reduce((s, p) => s + p.quantidadeCupons, 0);
@@ -326,12 +368,11 @@ export async function obterRelatorioPdv({
     ticketMedioGeral:
       cuponsGeral > 0 ? Math.round((totalGeral / cuponsGeral) * 100) / 100 : 0,
     pdvs: resumoPdvs,
+    pdvsForaClube,
     naoMembros: {
       total: naoMembros.length,
       cupons: cuponsForaClube.length,
-      valorTotal: Math.round(
-        cuponsForaClube.reduce((s, c) => s + c.valor, 0) * 100
-      ) / 100,
+      valorTotal: valorTotalForaClube,
       clientes: naoMembros,
     },
   };
