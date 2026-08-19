@@ -14,6 +14,7 @@ import AdminLayout from "../../components/admin/AdminLayout.jsx";
 import { fetchAdmin } from "../../utils/adminSession.js";
 import { formatarCpfCnpj } from "../../utils/cpf.js";
 import { mensagemParaUsuario } from "../../utils/mensagensUsuario.js";
+import { imprimirHtmlComprovante } from "../../utils/comprovanteResgate.js";
 
 function dataLocalInput(data) {
   const ano = data.getFullYear();
@@ -54,6 +55,148 @@ function formatarDataHora(valor) {
       hour: "2-digit", minute: "2-digit",
     });
   } catch { return String(valor); }
+}
+
+function escaparHtml(valor) {
+  return String(valor ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function montarHtmlRelatorioPdv(relatorio, adminUsuario) {
+  const pdvs = relatorio?.pdvs || [];
+  const naoMembros = relatorio?.naoMembros?.clientes || [];
+  const periodo = relatorio?.periodo || {};
+  const geradoEm = formatarDataHora(relatorio?.geradoEm);
+
+  const blocosPdvs = pdvs.length
+    ? pdvs
+        .map((pdv) => {
+          const linhasClientes = (pdv.clientes || []).length
+            ? pdv.clientes
+                .map(
+                  (c) => `<tr>
+                    <td>${escaparHtml(c.nome)}</td>
+                    <td>${escaparHtml(formatarCpfCnpj(c.cpf))}</td>
+                    <td class="num">${escaparHtml(c.cupons)}</td>
+                    <td class="num">${escaparHtml(formatarMoeda(c.totalGasto))}</td>
+                  </tr>`
+                )
+                .join("")
+            : `<tr><td colspan="4">Sem clientes membros neste caixa.</td></tr>`;
+
+          const linhasNaoMembros = (pdv.naoMembros || []).length
+            ? pdv.naoMembros
+                .map(
+                  (c) => `<tr>
+                    <td>${escaparHtml(c.nome)}</td>
+                    <td>${escaparHtml(formatarCpfCnpj(c.cpf))}</td>
+                    <td class="num">${escaparHtml(c.cupons)}</td>
+                    <td class="num">${escaparHtml(formatarMoeda(c.totalGasto))}</td>
+                  </tr>`
+                )
+                .join("")
+            : `<tr><td colspan="4">Nenhum cliente fora do clube neste caixa.</td></tr>`;
+
+          return `
+            <section class="bloco">
+              <h2>Caixa / PDV ${escaparHtml(pdv.pdv)}</h2>
+              <div class="kpis">
+                <div class="kpi"><span>Valor vendido</span><strong>${escaparHtml(formatarMoeda(pdv.totalVendido))}</strong></div>
+                <div class="kpi"><span>Cupons</span><strong>${escaparHtml(pdv.quantidadeCupons)}</strong></div>
+                <div class="kpi"><span>Clientes únicos</span><strong>${escaparHtml(pdv.clientesUnicos)}</strong></div>
+                <div class="kpi"><span>Ticket médio</span><strong>${escaparHtml(formatarMoeda(pdv.ticketMedio))}</strong></div>
+              </div>
+
+              <h3>Clientes do clube</h3>
+              <table>
+                <thead><tr><th>Nome</th><th>CPF</th><th class="num">Cupons</th><th class="num">Total gasto</th></tr></thead>
+                <tbody>${linhasClientes}</tbody>
+              </table>
+
+              <h3>Clientes com CPF fora do clube</h3>
+              <table>
+                <thead><tr><th>Nome</th><th>CPF</th><th class="num">Cupons</th><th class="num">Total gasto</th></tr></thead>
+                <tbody>${linhasNaoMembros}</tbody>
+              </table>
+            </section>
+          `;
+        })
+        .join("")
+    : `<p>Sem dados de PDV no período selecionado.</p>`;
+
+  const linhasNaoMembrosGeral = naoMembros.length
+    ? naoMembros
+        .map(
+          (c) => `<tr>
+            <td>${escaparHtml(c.nome)}</td>
+            <td>${escaparHtml(formatarCpfCnpj(c.cpf))}</td>
+            <td class="num">${escaparHtml(c.cupons)}</td>
+            <td class="num">${escaparHtml(formatarMoeda(c.totalGasto))}</td>
+            <td>${escaparHtml((c.pdvs || []).join(", "))}</td>
+          </tr>`
+        )
+        .join("")
+    : `<tr><td colspan="5">Sem clientes fora do clube no período.</td></tr>`;
+
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Relatório PDV Clube Superama+</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; color: #12263a; margin: 22px; font-size: 12px; }
+    h1 { margin: 0 0 4px; font-size: 20px; color: #1b4fa0; }
+    h2 { margin: 16px 0 6px; font-size: 14px; color: #1b4fa0; border-bottom: 1px solid #d7e0ea; padding-bottom: 4px; }
+    h3 { margin: 12px 0 6px; font-size: 12px; color: #1f3552; }
+    .meta { color: #5b6b7c; margin-bottom: 14px; }
+    .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 10px 0; }
+    .kpi { border: 1px solid #d7e0ea; border-radius: 7px; padding: 8px; }
+    .kpi strong { display: block; font-size: 15px; margin-top: 3px; }
+    .kpi span { color: #5b6b7c; font-size: 11px; }
+    .bloco { margin: 14px 0 22px; break-inside: avoid; }
+    table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+    th, td { border: 1px solid #d7e0ea; padding: 5px 7px; text-align: left; }
+    th { background: #f3f7fb; font-size: 11px; }
+    .num { text-align: right; }
+    .rodape { margin-top: 16px; color: #5b6b7c; font-size: 11px; }
+    @media print {
+      body { margin: 10mm; }
+      .bloco { page-break-inside: avoid; }
+      table { break-inside: auto; }
+      tr { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Relatório de Vendas por PDV / Caixa</h1>
+  <p class="meta">
+    Período: <strong>${escaparHtml(periodo.dataInicio)} a ${escaparHtml(periodo.dataFim)}</strong><br/>
+    Gerado em ${escaparHtml(geradoEm)}${adminUsuario ? ` · por ${escaparHtml(adminUsuario)}` : ""}
+  </p>
+
+  <div class="kpis">
+    <div class="kpi"><span>Total vendido</span><strong>${escaparHtml(formatarMoeda(relatorio?.totalGeral || 0))}</strong></div>
+    <div class="kpi"><span>Cupons</span><strong>${escaparHtml(relatorio?.cuponsGeral || 0)}</strong></div>
+    <div class="kpi"><span>PDVs ativos</span><strong>${escaparHtml(relatorio?.pdvsAtivos || 0)}</strong></div>
+    <div class="kpi"><span>Ticket médio geral</span><strong>${escaparHtml(formatarMoeda(relatorio?.ticketMedioGeral || 0))}</strong></div>
+  </div>
+
+  ${blocosPdvs}
+
+  <section class="bloco">
+    <h2>Clientes com CPF fora do clube (consolidado)</h2>
+    <table>
+      <thead><tr><th>Nome</th><th>CPF</th><th class="num">Cupons</th><th class="num">Total gasto</th><th>PDVs</th></tr></thead>
+      <tbody>${linhasNaoMembrosGeral}</tbody>
+    </table>
+  </section>
+
+  <p class="rodape">Relatório operacional estilo RP — sem gráficos, foco em dados de decisão por caixa.</p>
+</body>
+</html>`;
 }
 
 function calcularInsightsPdv(pdv) {
@@ -290,6 +433,10 @@ export default function AdminVendasPdvPage({ tab, onTabChange, onLogout, admin, 
   }));
   const topPdvs = [...pdvs].slice(0, 5);
   const maxTopPdv = topPdvs[0]?.totalVendido || 0;
+  const handleImprimirRelatorio = () => {
+    if (!dados) return;
+    imprimirHtmlComprovante(montarHtmlRelatorioPdv(dados, admin?.usuario || admin?.nome));
+  };
 
   return (
     <AdminLayout tab={tab} onTabChange={onTabChange} onLogout={onLogout} admin={admin}>
@@ -304,6 +451,13 @@ export default function AdminVendasPdvPage({ tab, onTabChange, onLogout, admin, 
         </button>
         <h1>Vendas por PDV / Caixa</h1>
         <p>Quanto cada caixa vendeu no clube, cupons e clientes atendidos</p>
+        {dados && (
+          <div style={{ marginTop: "0.6rem" }}>
+            <button type="button" className="admin-btn admin-btn--primary" onClick={handleImprimirRelatorio}>
+              Imprimir relatório RP
+            </button>
+          </div>
+        )}
       </header>
 
       {/* Filtros */}
