@@ -65,72 +65,63 @@ function escaparHtml(valor) {
     .replace(/"/g, "&quot;");
 }
 
+function resumoFinanceiroPdv(pdv, totalGeral = 0) {
+  const cupons = pdv?.cupons || [];
+  const valorConvenio = cupons
+    .filter((c) => c.convenio)
+    .reduce((s, c) => s + (Number(c.valor) || 0), 0);
+  const valorForaClube = (pdv?.naoMembros || []).reduce(
+    (s, c) => s + (Number(c.totalGasto) || 0),
+    0
+  );
+
+  return {
+    pctTotal: totalGeral > 0 ? ((pdv.totalVendido / totalGeral) * 100).toFixed(1) : "0.0",
+    membros: (pdv?.clientes || []).length,
+    foraClube: (pdv?.naoMembros || []).length,
+    valorForaClube,
+    valorConvenio,
+    pctConvenio: pdv.totalVendido > 0 ? ((valorConvenio / pdv.totalVendido) * 100).toFixed(1) : "0.0",
+  };
+}
+
 function montarHtmlRelatorioPdv(relatorio, adminUsuario) {
   const pdvs = relatorio?.pdvs || [];
   const naoMembros = relatorio?.naoMembros?.clientes || [];
   const periodo = relatorio?.periodo || {};
   const geradoEm = formatarDataHora(relatorio?.geradoEm);
+  const totalGeral = Number(relatorio?.totalGeral) || 0;
 
-  const blocosPdvs = pdvs.length
+  const linhasResumoPdvs = pdvs.length
     ? pdvs
         .map((pdv) => {
-          const linhasClientes = (pdv.clientes || []).length
-            ? pdv.clientes
-                .map(
-                  (c) => `<tr>
-                    <td>${escaparHtml(c.nome)}</td>
-                    <td>${escaparHtml(formatarCpfCnpj(c.cpf))}</td>
-                    <td class="num">${escaparHtml(c.cupons)}</td>
-                    <td class="num">${escaparHtml(formatarMoeda(c.totalGasto))}</td>
-                  </tr>`
-                )
-                .join("")
-            : `<tr><td colspan="4">Sem clientes membros neste caixa.</td></tr>`;
-
-          const linhasNaoMembros = (pdv.naoMembros || []).length
-            ? pdv.naoMembros
-                .map(
-                  (c) => `<tr>
-                    <td>${escaparHtml(c.nome)}</td>
-                    <td>${escaparHtml(formatarCpfCnpj(c.cpf))}</td>
-                    <td class="num">${escaparHtml(c.cupons)}</td>
-                    <td class="num">${escaparHtml(formatarMoeda(c.totalGasto))}</td>
-                  </tr>`
-                )
-                .join("")
-            : `<tr><td colspan="4">Nenhum cliente fora do clube neste caixa.</td></tr>`;
-
-          return `
-            <section class="bloco">
-              <h2>Caixa / PDV ${escaparHtml(pdv.pdv)}</h2>
-              <div class="kpis">
-                <div class="kpi"><span>Valor vendido</span><strong>${escaparHtml(formatarMoeda(pdv.totalVendido))}</strong></div>
-                <div class="kpi"><span>Cupons</span><strong>${escaparHtml(pdv.quantidadeCupons)}</strong></div>
-                <div class="kpi"><span>Clientes únicos</span><strong>${escaparHtml(pdv.clientesUnicos)}</strong></div>
-                <div class="kpi"><span>Ticket médio</span><strong>${escaparHtml(formatarMoeda(pdv.ticketMedio))}</strong></div>
-              </div>
-
-              <h3>Clientes do clube</h3>
-              <table>
-                <thead><tr><th>Nome</th><th>CPF</th><th class="num">Cupons</th><th class="num">Total gasto</th></tr></thead>
-                <tbody>${linhasClientes}</tbody>
-              </table>
-
-              <h3>Clientes com CPF fora do clube</h3>
-              <table>
-                <thead><tr><th>Nome</th><th>CPF</th><th class="num">Cupons</th><th class="num">Total gasto</th></tr></thead>
-                <tbody>${linhasNaoMembros}</tbody>
-              </table>
-            </section>
-          `;
+          const r = resumoFinanceiroPdv(pdv, totalGeral);
+          return `<tr>
+            <td><strong>${escaparHtml(pdv.pdv)}</strong></td>
+            <td class="num">${escaparHtml(formatarMoeda(pdv.totalVendido))}</td>
+            <td class="num">${escaparHtml(pdv.quantidadeCupons)}</td>
+            <td class="num">${escaparHtml(pdv.clientesUnicos)}</td>
+            <td class="num">${escaparHtml(formatarMoeda(pdv.ticketMedio))}</td>
+            <td class="num">${escaparHtml(r.pctTotal)}%</td>
+            <td class="num">${escaparHtml(r.membros)}</td>
+            <td class="num">${escaparHtml(r.foraClube)}</td>
+            <td class="num">${escaparHtml(formatarMoeda(r.valorForaClube))}</td>
+            <td class="num">${escaparHtml(formatarMoeda(r.valorConvenio))}</td>
+            <td class="num">${escaparHtml(r.pctConvenio)}%</td>
+          </tr>`;
         })
         .join("")
-    : `<p>Sem dados de PDV no período selecionado.</p>`;
+    : `<tr><td colspan="11">Sem dados de PDV no período selecionado.</td></tr>`;
 
-  const linhasNaoMembrosGeral = naoMembros.length
-    ? naoMembros
+  const topForaClube = [...naoMembros]
+    .sort((a, b) => (Number(b.totalGasto) || 0) - (Number(a.totalGasto) || 0))
+    .slice(0, 5);
+
+  const linhasTopForaClube = topForaClube.length
+    ? topForaClube
         .map(
-          (c) => `<tr>
+          (c, i) => `<tr>
+            <td>${i + 1}</td>
             <td>${escaparHtml(c.nome)}</td>
             <td>${escaparHtml(formatarCpfCnpj(c.cpf))}</td>
             <td class="num">${escaparHtml(c.cupons)}</td>
@@ -139,62 +130,94 @@ function montarHtmlRelatorioPdv(relatorio, adminUsuario) {
           </tr>`
         )
         .join("")
-    : `<tr><td colspan="5">Sem clientes fora do clube no período.</td></tr>`;
+    : `<tr><td colspan="6">Nenhum cliente fora do clube no período.</td></tr>`;
+
+  const totalConvenio = pdvs.reduce((s, pdv) => {
+    const r = resumoFinanceiroPdv(pdv, totalGeral);
+    return s + r.valorConvenio;
+  }, 0);
+  const pctConvenioGeral = totalGeral > 0 ? ((totalConvenio / totalGeral) * 100).toFixed(1) : "0.0";
 
   return `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <title>Relatório PDV Clube Superama+</title>
+  <title>Resumo PDV Clube Superama+</title>
   <style>
-    body { font-family: Arial, Helvetica, sans-serif; color: #12263a; margin: 22px; font-size: 12px; }
-    h1 { margin: 0 0 4px; font-size: 20px; color: #1b4fa0; }
-    h2 { margin: 16px 0 6px; font-size: 14px; color: #1b4fa0; border-bottom: 1px solid #d7e0ea; padding-bottom: 4px; }
-    h3 { margin: 12px 0 6px; font-size: 12px; color: #1f3552; }
-    .meta { color: #5b6b7c; margin-bottom: 14px; }
-    .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 10px 0; }
-    .kpi { border: 1px solid #d7e0ea; border-radius: 7px; padding: 8px; }
-    .kpi strong { display: block; font-size: 15px; margin-top: 3px; }
-    .kpi span { color: #5b6b7c; font-size: 11px; }
-    .bloco { margin: 14px 0 22px; break-inside: avoid; }
+    body { font-family: Arial, Helvetica, sans-serif; color: #12263a; margin: 18px; font-size: 11px; }
+    h1 { margin: 0 0 4px; font-size: 18px; color: #1b4fa0; }
+    h2 { margin: 14px 0 6px; font-size: 13px; color: #1b4fa0; border-bottom: 1px solid #d7e0ea; padding-bottom: 3px; }
+    .meta { color: #5b6b7c; margin-bottom: 10px; line-height: 1.45; }
+    .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin: 8px 0 12px; }
+    .kpi { border: 1px solid #d7e0ea; border-radius: 6px; padding: 7px; }
+    .kpi strong { display: block; font-size: 14px; margin-top: 2px; }
+    .kpi span { color: #5b6b7c; font-size: 10px; }
+    .bloco { margin: 10px 0 14px; break-inside: avoid; }
     table { width: 100%; border-collapse: collapse; margin-top: 4px; }
-    th, td { border: 1px solid #d7e0ea; padding: 5px 7px; text-align: left; }
-    th { background: #f3f7fb; font-size: 11px; }
+    th, td { border: 1px solid #d7e0ea; padding: 4px 6px; text-align: left; font-size: 10.5px; }
+    th { background: #f3f7fb; font-size: 10px; }
     .num { text-align: right; }
-    .rodape { margin-top: 16px; color: #5b6b7c; font-size: 11px; }
+    .nota { margin: 8px 0 0; color: #5b6b7c; font-size: 10px; line-height: 1.4; }
+    .rodape { margin-top: 12px; color: #5b6b7c; font-size: 10px; }
     @media print {
-      body { margin: 10mm; }
+      body { margin: 8mm; font-size: 10px; }
       .bloco { page-break-inside: avoid; }
-      table { break-inside: auto; }
       tr { break-inside: avoid; }
     }
   </style>
 </head>
 <body>
-  <h1>Relatório de Vendas por PDV / Caixa</h1>
+  <h1>Resumo de Vendas por PDV / Caixa</h1>
   <p class="meta">
     Período: <strong>${escaparHtml(periodo.dataInicio)} a ${escaparHtml(periodo.dataFim)}</strong><br/>
-    Gerado em ${escaparHtml(geradoEm)}${adminUsuario ? ` · por ${escaparHtml(adminUsuario)}` : ""}
+    Gerado em ${escaparHtml(geradoEm)}${adminUsuario ? ` · por ${escaparHtml(adminUsuario)}` : ""}<br/>
+    Formato resumido para impressão (1–2 folhas). Detalhes completos disponíveis na tela do painel.
   </p>
 
   <div class="kpis">
-    <div class="kpi"><span>Total vendido</span><strong>${escaparHtml(formatarMoeda(relatorio?.totalGeral || 0))}</strong></div>
-    <div class="kpi"><span>Cupons</span><strong>${escaparHtml(relatorio?.cuponsGeral || 0)}</strong></div>
-    <div class="kpi"><span>PDVs ativos</span><strong>${escaparHtml(relatorio?.pdvsAtivos || 0)}</strong></div>
+    <div class="kpi"><span>Total vendido (clube)</span><strong>${escaparHtml(formatarMoeda(totalGeral))}</strong></div>
+    <div class="kpi"><span>Cupons · PDVs ativos</span><strong>${escaparHtml(relatorio?.cuponsGeral || 0)} · ${escaparHtml(relatorio?.pdvsAtivos || 0)}</strong></div>
     <div class="kpi"><span>Ticket médio geral</span><strong>${escaparHtml(formatarMoeda(relatorio?.ticketMedioGeral || 0))}</strong></div>
+    <div class="kpi"><span>Fora do clube (clientes)</span><strong>${escaparHtml(relatorio?.naoMembros?.total || 0)}</strong></div>
+    <div class="kpi"><span>Valor fora do clube</span><strong>${escaparHtml(formatarMoeda(relatorio?.naoMembros?.valorTotal || 0))}</strong></div>
+    <div class="kpi"><span>Crediário (valor · %)</span><strong>${escaparHtml(formatarMoeda(totalConvenio))} · ${escaparHtml(pctConvenioGeral)}%</strong></div>
   </div>
 
-  ${blocosPdvs}
-
   <section class="bloco">
-    <h2>Clientes com CPF fora do clube (consolidado)</h2>
+    <h2>Resumo por caixa / PDV</h2>
     <table>
-      <thead><tr><th>Nome</th><th>CPF</th><th class="num">Cupons</th><th class="num">Total gasto</th><th>PDVs</th></tr></thead>
-      <tbody>${linhasNaoMembrosGeral}</tbody>
+      <thead>
+        <tr>
+          <th>PDV</th>
+          <th class="num">Vendido</th>
+          <th class="num">Cupons</th>
+          <th class="num">Clientes</th>
+          <th class="num">Ticket</th>
+          <th class="num">% total</th>
+          <th class="num">Membros</th>
+          <th class="num">Fora clube</th>
+          <th class="num">R$ fora</th>
+          <th class="num">R$ crediário</th>
+          <th class="num">% cred.</th>
+        </tr>
+      </thead>
+      <tbody>${linhasResumoPdvs}</tbody>
     </table>
+    <p class="nota">Membros = clientes cadastrados no clube. Fora clube = informaram CPF mas não estão no programa.</p>
   </section>
 
-  <p class="rodape">Relatório operacional estilo RP — sem gráficos, foco em dados de decisão por caixa.</p>
+  <section class="bloco">
+    <h2>Top 5 oportunidades — CPF fora do clube (por valor)</h2>
+    <table>
+      <thead>
+        <tr><th>#</th><th>Nome</th><th>CPF</th><th class="num">Cupons</th><th class="num">Total gasto</th><th>PDVs</th></tr>
+      </thead>
+      <tbody>${linhasTopForaClube}</tbody>
+    </table>
+    ${naoMembros.length > 5 ? `<p class="nota">+ ${naoMembros.length - 5} cliente(s) fora do clube não listados. Consulte o painel para detalhes.</p>` : ""}
+  </section>
+
+  <p class="rodape">Clube Superama+ · Relatório operacional resumido</p>
 </body>
 </html>`;
 }
@@ -454,7 +477,7 @@ export default function AdminVendasPdvPage({ tab, onTabChange, onLogout, admin, 
         {dados && (
           <div style={{ marginTop: "0.6rem" }}>
             <button type="button" className="admin-btn admin-btn--primary" onClick={handleImprimirRelatorio}>
-              Imprimir relatório RP
+              Imprimir resumo RP
             </button>
           </div>
         )}
