@@ -88,6 +88,7 @@ function PdvCard({ pdv, aberto, onToggle }) {
                     <th>CPF</th>
                     <th style={{ textAlign: "right" }}>Cupons</th>
                     <th style={{ textAlign: "right" }}>Total gasto</th>
+                    <th>Pagamento</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -97,6 +98,7 @@ function PdvCard({ pdv, aberto, onToggle }) {
                       <td className="mono">{formatarCpfCnpj(c.cpf)}</td>
                       <td style={{ textAlign: "right" }}>{c.cupons}</td>
                       <td style={{ textAlign: "right" }}>{formatarMoeda(c.totalGasto)}</td>
+                      <td>{c.cuponsConvenio > 0 && <span className="pdv-tag pdv-tag--convenio">Crediário ({c.cuponsConvenio})</span>}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -116,6 +118,7 @@ function PdvCard({ pdv, aberto, onToggle }) {
                       <th>CPF</th>
                       <th style={{ textAlign: "right" }}>Cupons</th>
                       <th style={{ textAlign: "right" }}>Total gasto</th>
+                      <th>Pagamento</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -125,6 +128,7 @@ function PdvCard({ pdv, aberto, onToggle }) {
                         <td className="mono">{formatarCpfCnpj(c.cpf)}</td>
                         <td style={{ textAlign: "right" }}>{c.cupons}</td>
                         <td style={{ textAlign: "right" }}>{formatarMoeda(c.totalGasto)}</td>
+                        <td>{c.cuponsConvenio > 0 && <span className="pdv-tag pdv-tag--convenio">Crediário ({c.cuponsConvenio})</span>}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -143,6 +147,7 @@ function PdvCard({ pdv, aberto, onToggle }) {
                     <th>Data/hora</th>
                     <th>Cliente</th>
                     <th style={{ textAlign: "right" }}>Valor</th>
+                    <th>Pagamento</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -152,6 +157,12 @@ function PdvCard({ pdv, aberto, onToggle }) {
                       <td>{formatarDataHora(c.dataHora)}</td>
                       <td>{c.nome}</td>
                       <td style={{ textAlign: "right" }}>{formatarMoeda(c.valor)}</td>
+                      <td>
+                        {c.convenio
+                          ? <span className="pdv-tag pdv-tag--convenio">Crediário</span>
+                          : <span className="pdv-tag pdv-tag--normal">{c.forma || "—"}</span>
+                        }
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -325,6 +336,7 @@ export default function AdminVendasPdvPage({ tab, onTabChange, onLogout, admin, 
                       <th>CPF</th>
                       <th style={{ textAlign: "right" }}>Cupons</th>
                       <th style={{ textAlign: "right" }}>Total gasto</th>
+                      <th>Pagamento</th>
                       <th>Caixas</th>
                       <th>Última compra</th>
                     </tr>
@@ -336,6 +348,7 @@ export default function AdminVendasPdvPage({ tab, onTabChange, onLogout, admin, 
                         <td className="mono">{formatarCpfCnpj(c.cpf)}</td>
                         <td style={{ textAlign: "right" }}>{c.cupons}</td>
                         <td style={{ textAlign: "right" }}>{formatarMoeda(c.totalGasto)}</td>
+                        <td>{c.cuponsConvenio > 0 && <span className="pdv-tag pdv-tag--convenio">Crediário ({c.cuponsConvenio})</span>}</td>
                         <td>{c.pdvs.join(", ")}</td>
                         <td>{formatarDataHora(c.ultimaCompra)}</td>
                       </tr>

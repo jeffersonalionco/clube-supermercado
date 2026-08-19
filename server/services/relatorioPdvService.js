@@ -1,7 +1,7 @@
 import { getWrpdvPool } from "../db/wrpdv.js";
 import { getPool } from "../db.js";
 import { parseDataBR, formatarDataBR } from "../utils/periodoVendas.js";
-import { parseFinn } from "./wrpdvParser.js";
+import { parseFinn, isFormaConvenio } from "./wrpdvParser.js";
 import { buscarClientePorCpfCnpj } from "./apiClient.js";
 
 function nomeTabelaVenda(date) {
@@ -149,6 +149,8 @@ export async function obterRelatorioPdv({
         valor: Number(finn.valor) || 0,
         cpf,
         nomeERP: String(finn.nomeCliente || "").trim(),
+        forma: finn.forma || null,
+        convenio: isFormaConvenio(finn.forma),
       });
     }
   }
@@ -177,6 +179,7 @@ export async function obterRelatorioPdv({
         nome: c.nomeERP || c.cpf,
         totalGasto: 0,
         cupons: 0,
+        cuponsConvenio: 0,
         pdvs: new Set(),
         ultimaCompra: null,
       });
@@ -184,6 +187,7 @@ export async function obterRelatorioPdv({
     const agg = naoMembrosMap.get(c.cpf);
     agg.totalGasto += c.valor;
     agg.cupons += 1;
+    if (c.convenio) agg.cuponsConvenio += 1;
     agg.pdvs.add(c.pdv);
     if (!agg.ultimaCompra || new Date(c.dataHora) > new Date(agg.ultimaCompra)) {
       agg.ultimaCompra = c.dataHora;
@@ -203,6 +207,7 @@ export async function obterRelatorioPdv({
       nome: c.nome,
       totalGasto: Math.round(c.totalGasto * 100) / 100,
       cupons: c.cupons,
+      cuponsConvenio: c.cuponsConvenio,
       pdvs: [...c.pdvs].sort(),
       ultimaCompra: c.ultimaCompra,
     }))
@@ -235,11 +240,13 @@ export async function obterRelatorioPdv({
         nome: nomesMapa.get(c.cpf) || c.nomeERP || c.cpf,
         totalGasto: 0,
         cupons: 0,
+        cuponsConvenio: 0,
       });
     }
     const cli = agg.clientes.get(c.cpf);
     cli.totalGasto += c.valor;
     cli.cupons += 1;
+    if (c.convenio) cli.cuponsConvenio += 1;
 
     agg.cupons.push({
       cupom: c.cupom,
@@ -247,6 +254,8 @@ export async function obterRelatorioPdv({
       cpf: c.cpf,
       nome: nomesMapa.get(c.cpf) || c.nomeERP || c.cpf,
       valor: Math.round(c.valor * 100) / 100,
+      forma: c.forma,
+      convenio: c.convenio,
     });
   }
 
@@ -258,11 +267,13 @@ export async function obterRelatorioPdv({
         nome: c.nomeERP || c.cpf,
         totalGasto: 0,
         cupons: 0,
+        cuponsConvenio: 0,
       });
     }
     const cli = agg.naoMembros.get(c.cpf);
     cli.totalGasto += c.valor;
     cli.cupons += 1;
+    if (c.convenio) cli.cuponsConvenio += 1;
   }
 
   for (const [cpf, nome] of nomesERP) {

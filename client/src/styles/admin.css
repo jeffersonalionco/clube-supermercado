@@ -5828,6 +5828,27 @@
   color: var(--admin-muted);
 }
 
+.pdv-tag {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.pdv-tag--convenio {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.pdv-tag--normal {
+  background: #f1f5f9;
+  color: var(--admin-muted);
+  font-weight: 500;
+}
+
 .pdv-section--alerta {
   background: #fffbeb;
   border: 1px solid #fbbf24;
