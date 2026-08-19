@@ -42,6 +42,14 @@ const PAINEIS = [
     status: "ativo",
     cta: "Abrir",
   },
+  {
+    id: "vendas-pdv",
+    titulo: "Vendas por PDV / Caixa",
+    descricao:
+      "Quanto cada caixa vendeu no clube, cupons, ticket médio e clientes que passaram em cada PDV.",
+    status: "ativo",
+    cta: "Abrir",
+  },
 ];
 
 const ICONE = {
@@ -50,6 +58,7 @@ const ICONE = {
   "niveis-fidelidade": "◆",
   "funil-novos-membros": "▷",
   clube: "▦",
+  "vendas-pdv": "▥",
 };
 
 export default function AdminRelatoriosHubPage({

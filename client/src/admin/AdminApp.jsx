@@ -19,6 +19,7 @@ import AdminFunilNovosMembrosPage from "../pages/admin/AdminFunilNovosMembrosPag
 import AdminRelatorioClubePage from "../pages/admin/AdminRelatorioClubePage.jsx";
 import AdminMarketingHubPage from "../pages/admin/AdminMarketingHubPage.jsx";
 import AdminMarketingEmailPage from "../pages/admin/AdminMarketingEmailPage.jsx";
+import AdminVendasPdvPage from "../pages/admin/AdminVendasPdvPage.jsx";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage.jsx";
 import { clearAdminSession, loadAdminSession } from "../utils/adminSession.js";
 import "../styles/admin.css";
@@ -96,6 +97,9 @@ function relatorioSubFromHash() {
   ) {
     return "clube";
   }
+  if (path.startsWith("admin/relatorio/vendas-pdv")) {
+    return "vendas-pdv";
+  }
   return "hub";
 }
 
@@ -113,6 +117,7 @@ function hashForAdminTab(tab, sub) {
       return "#/admin/relatorio/funil-novos-membros";
     }
     if (sub === "clube") return "#/admin/relatorio/clube";
+    if (sub === "vendas-pdv") return "#/admin/relatorio/vendas-pdv";
     return "#/admin/relatorio";
   }
   if (tab === "marketing") {
@@ -248,6 +253,14 @@ export default function AdminApp() {
     if (relatorioSub === "clube") {
       return (
         <AdminRelatorioClubePage
+          {...layoutProps}
+          onVoltarHub={voltarRelatoriosHub}
+        />
+      );
+    }
+    if (relatorioSub === "vendas-pdv") {
+      return (
+        <AdminVendasPdvPage
           {...layoutProps}
           onVoltarHub={voltarRelatoriosHub}
         />

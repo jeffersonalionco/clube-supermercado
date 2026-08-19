@@ -61,6 +61,7 @@ import { obterRadarCompras } from "../services/radarComprasService.js";
 import { obterSegmentacaoRfm } from "../services/rfmSegmentacaoService.js";
 import { obterRelatorioNiveisFidelidade } from "../services/niveisFidelidadeRelatorioService.js";
 import { obterFunilNovosMembros } from "../services/funilNovosMembrosService.js";
+import { obterRelatorioPdv } from "../services/relatorioPdvService.js";
 
 const router = Router();
 
@@ -307,6 +308,25 @@ router.get("/relatorio/funil-novos-membros", async (req, res) => {
     return res.json(dados);
   } catch (error) {
     console.error("[admin/relatorio/funil-novos-membros]", error.message);
+    const status = /data|período|periodo|ultrapassar/i.test(error.message)
+      ? 400
+      : 500;
+    return res.status(status).json({
+      error: mensagemParaCliente(error.message),
+    });
+  }
+});
+
+router.get("/relatorio/vendas-pdv", async (req, res) => {
+  try {
+    const dados = await obterRelatorioPdv({
+      dataInicio: String(req.query.dataInicio || "").trim(),
+      dataFim: String(req.query.dataFim || "").trim(),
+      dias: Number(req.query.dias) || 7,
+    });
+    return res.json(dados);
+  } catch (error) {
+    console.error("[admin/relatorio/vendas-pdv]", error.message);
     const status = /data|período|periodo|ultrapassar/i.test(error.message)
       ? 400
       : 500;

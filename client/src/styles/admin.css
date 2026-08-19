@@ -5673,6 +5673,162 @@
 }
 
 /* ══════════════════════════════════════════
+   Vendas por PDV
+   ══════════════════════════════════════════ */
+
+.pdv-resumo {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.pdv-resumo__item {
+  background: var(--admin-surface);
+  border-radius: var(--admin-radius);
+  border: 1px solid var(--admin-border);
+  padding: 1rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.pdv-resumo__label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--admin-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.pdv-resumo__value {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.pdv-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.pdv-card {
+  background: var(--admin-surface);
+  border-radius: var(--admin-radius);
+  border: 1px solid var(--admin-border);
+  overflow: hidden;
+}
+
+.pdv-card__header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 0.85rem 1.15rem;
+  border: none;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  transition: background 0.15s;
+}
+
+.pdv-card__header:hover {
+  background: #f8fafc;
+}
+
+.pdv-card__id {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 120px;
+  flex-shrink: 0;
+}
+
+.pdv-card__id strong {
+  font-size: 0.95rem;
+}
+
+.pdv-card__kpis {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.pdv-kpi {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.82rem;
+  color: var(--admin-muted);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.pdv-card__pct {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--admin-primary);
+  min-width: 50px;
+  text-align: right;
+}
+
+.pdv-card__body {
+  border-top: 1px solid var(--admin-border);
+  padding: 1rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.pdv-section h4 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: var(--admin-primary-dark);
+}
+
+.pdv-table-wrap {
+  overflow-x: auto;
+}
+
+.pdv-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.pdv-table th {
+  text-align: left;
+  padding: 0.55rem 0.5rem;
+  font-weight: 600;
+  color: var(--admin-muted);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 2px solid var(--admin-border);
+}
+
+.pdv-table td {
+  padding: 0.55rem 0.5rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.pdv-table tr:hover td {
+  background: #fafbfc;
+}
+
+.pdv-table .mono {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.78rem;
+  color: var(--admin-muted);
+}
+
+/* ══════════════════════════════════════════
    Mobile responsivo
    ══════════════════════════════════════════ */
 
@@ -5684,6 +5840,9 @@
     grid-template-columns: repeat(2, 1fr);
   }
   .dash-resumo-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .pdv-resumo {
     grid-template-columns: repeat(2, 1fr);
   }
 }
@@ -5733,6 +5892,17 @@
   }
   .dash-resumo-grid {
     grid-template-columns: 1fr 1fr;
+  }
+  .pdv-resumo {
+    grid-template-columns: 1fr;
+  }
+  .pdv-card__kpis {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+  }
+  .pdv-card__header {
+    flex-wrap: wrap;
   }
   .dash-welcome {
     padding: 0.85rem 1rem;
