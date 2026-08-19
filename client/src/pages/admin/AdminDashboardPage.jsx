@@ -69,7 +69,7 @@ export default function AdminDashboardPage(props) {
 
   const carregar = useCallback(async () => {
     try {
-      const data = await fetchAdmin("/relatorio-clube?dias=30");
+      const data = await fetchAdmin("/api/admin/relatorio-clube?dias=30");
       setDados(data);
       salvarCache(data);
     } catch {
