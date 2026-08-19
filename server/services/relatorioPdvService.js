@@ -2,6 +2,7 @@ import { getWrpdvPool } from "../db/wrpdv.js";
 import { getPool } from "../db.js";
 import { parseDataBR, formatarDataBR } from "../utils/periodoVendas.js";
 import { parseFinn } from "./wrpdvParser.js";
+import { buscarClientePorCpfCnpj } from "./apiClient.js";
 
 function nomeTabelaVenda(date) {
   const mes = String(date.getMonth() + 1).padStart(2, "0");
@@ -60,6 +61,28 @@ async function buscarNomesUsuarios(cpfs) {
   for (const r of rows) {
     const nome = String(r.nome || "").trim();
     if (nome) mapa.set(r.cpf, nome);
+  }
+  return mapa;
+}
+
+async function buscarNomesERP(cpfs) {
+  const mapa = new Map();
+  const MAX_PARALELO = 5;
+
+  for (let i = 0; i < cpfs.length; i += MAX_PARALELO) {
+    const lote = cpfs.slice(i, i + MAX_PARALELO);
+    const resultados = await Promise.allSettled(
+      lote.map((cpf) => buscarClientePorCpfCnpj(cpf))
+    );
+    for (let j = 0; j < lote.length; j++) {
+      const r = resultados[j];
+      if (r.status === "fulfilled" && r.value?.ok && r.value.cliente) {
+        const nome = String(
+          r.value.cliente.nome || r.value.cliente.razao_social || ""
+        ).trim();
+        if (nome) mapa.set(lote[j], nome);
+      }
+    }
   }
   return mapa;
 }
@@ -167,6 +190,13 @@ export async function obterRelatorioPdv({
     }
   }
 
+  const nomesERP = await buscarNomesERP([...naoMembrosMap.keys()]);
+
+  for (const [cpf, nome] of nomesERP) {
+    const agg = naoMembrosMap.get(cpf);
+    if (agg && nome) agg.nome = nome;
+  }
+
   const naoMembros = [...naoMembrosMap.values()]
     .map((c) => ({
       cpf: c.cpf,
@@ -233,6 +263,13 @@ export async function obterRelatorioPdv({
     const cli = agg.naoMembros.get(c.cpf);
     cli.totalGasto += c.valor;
     cli.cupons += 1;
+  }
+
+  for (const [cpf, nome] of nomesERP) {
+    for (const pdvData of pdvMap.values()) {
+      const cli = pdvData.naoMembros.get(cpf);
+      if (cli && nome) cli.nome = nome;
+    }
   }
 
   const resumoPdvs = [...pdvMap.values()]
