@@ -14,7 +14,7 @@ import {
   Moon,
 } from "lucide-react";
 import AdminLayout from "../../components/admin/AdminLayout.jsx";
-import { adminFetch } from "../../utils/adminSession.js";
+import { fetchAdmin } from "../../utils/adminSession.js";
 
 const CACHE_KEY = "admin_dash_cache";
 const CACHE_TTL = 5 * 60_000;
@@ -69,7 +69,7 @@ export default function AdminDashboardPage(props) {
 
   const carregar = useCallback(async () => {
     try {
-      const res = await adminFetch("/api/admin/relatorio-clube?dias=30");
+      const res = await fetchAdmin("/relatorio-clube?dias=30");
       if (res.ok) {
         const json = await res.json();
         setDados(json);
