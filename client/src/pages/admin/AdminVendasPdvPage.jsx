@@ -8,7 +8,6 @@ import {
   ShoppingCart,
   DollarSign,
   Receipt,
-  UserPlus,
   AlertCircle,
 } from "lucide-react";
 import AdminLayout from "../../components/admin/AdminLayout.jsx";
@@ -57,8 +56,46 @@ function formatarDataHora(valor) {
   } catch { return String(valor); }
 }
 
+function calcularInsightsPdv(pdv) {
+  const cupons = pdv?.cupons || [];
+  const total = cupons.reduce((s, c) => s + (Number(c.valor) || 0), 0);
+  const valorConvenio = cupons
+    .filter((c) => c.convenio)
+    .reduce((s, c) => s + (Number(c.valor) || 0), 0);
+  const valorNormal = Math.max(0, total - valorConvenio);
+  const pctConvenioValor = total > 0 ? (valorConvenio / total) * 100 : 0;
+
+  const faixas = { manha: 0, tarde: 0, noite: 0, madrugada: 0 };
+  for (const cupom of cupons) {
+    const d = new Date(cupom.dataHora);
+    if (Number.isNaN(d.getTime())) continue;
+    const h = d.getHours();
+    const v = Number(cupom.valor) || 0;
+    if (h >= 6 && h < 12) faixas.manha += v;
+    else if (h >= 12 && h < 18) faixas.tarde += v;
+    else if (h >= 18 && h < 24) faixas.noite += v;
+    else faixas.madrugada += v;
+  }
+  const picoEntrada = Object.entries(faixas).sort((a, b) => b[1] - a[1])[0];
+  const labels = {
+    manha: "Manhã",
+    tarde: "Tarde",
+    noite: "Noite",
+    madrugada: "Madrugada",
+  };
+
+  return {
+    valorConvenio,
+    valorNormal,
+    pctConvenioValor,
+    faixaPico: picoEntrada ? labels[picoEntrada[0]] : "—",
+    valorFaixaPico: picoEntrada ? picoEntrada[1] : 0,
+  };
+}
+
 function PdvCard({ pdv, aberto, onToggle }) {
   const pct = pdv._pctTotal ?? 0;
+  const insights = calcularInsightsPdv(pdv);
   return (
     <div className="pdv-card">
       <button type="button" className="pdv-card__header" onClick={onToggle}>
@@ -72,12 +109,34 @@ function PdvCard({ pdv, aberto, onToggle }) {
           <span className="pdv-kpi"><Users size={14} /> {pdv.clientesUnicos} clientes</span>
           <span className="pdv-kpi"><ShoppingCart size={14} /> TM {formatarMoeda(pdv.ticketMedio)}</span>
         </div>
+        <div className="pdv-mini-mix" title={`Crediário em valor: ${formatarMoeda(insights.valorConvenio)}`}>
+          <small>Crediário (R$)</small>
+          <div className="pdv-mini-mix__bar">
+            <span style={{ width: `${Math.min(100, insights.pctConvenioValor)}%` }} />
+          </div>
+          <strong>{insights.pctConvenioValor.toFixed(1)}%</strong>
+        </div>
         <div className="pdv-card__pct">{pct.toFixed(1)}%</div>
         {aberto ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
       </button>
 
       {aberto && (
         <div className="pdv-card__body">
+          <div className="pdv-insights">
+            <div className="pdv-insight">
+              <span className="pdv-insight__label">Valor no crediário</span>
+              <strong>{formatarMoeda(insights.valorConvenio)}</strong>
+            </div>
+            <div className="pdv-insight">
+              <span className="pdv-insight__label">Valor em outros meios</span>
+              <strong>{formatarMoeda(insights.valorNormal)}</strong>
+            </div>
+            <div className="pdv-insight">
+              <span className="pdv-insight__label">Faixa de pico (R$)</span>
+              <strong>{insights.faixaPico} · {formatarMoeda(insights.valorFaixaPico)}</strong>
+            </div>
+          </div>
+
           <div className="pdv-section">
             <h4>Clientes ({pdv.clientes.length})</h4>
             <div className="pdv-table-wrap">
@@ -229,6 +288,8 @@ export default function AdminVendasPdvPage({ tab, onTabChange, onLogout, admin, 
     ...p,
     _pctTotal: dados.totalGeral > 0 ? (p.totalVendido / dados.totalGeral) * 100 : 0,
   }));
+  const topPdvs = [...pdvs].slice(0, 5);
+  const maxTopPdv = topPdvs[0]?.totalVendido || 0;
 
   return (
     <AdminLayout tab={tab} onTabChange={onTabChange} onLogout={onLogout} admin={admin}>
@@ -297,6 +358,26 @@ export default function AdminVendasPdvPage({ tab, onTabChange, onLogout, admin, 
           <p style={{ fontSize: "0.75rem", color: "var(--admin-muted)", margin: "0.75rem 0 0.25rem" }}>
             Período: {dados.periodo.dataInicio} a {dados.periodo.dataFim}
           </p>
+
+          {topPdvs.length > 0 && (
+            <div className="pdv-top-chart">
+              <h3>Top caixas por valor vendido</h3>
+              <div className="pdv-top-chart__list">
+                {topPdvs.map((p) => {
+                  const width = maxTopPdv > 0 ? (p.totalVendido / maxTopPdv) * 100 : 0;
+                  return (
+                    <div key={`top-${p.pdv}`} className="pdv-top-chart__row">
+                      <span className="pdv-top-chart__label">PDV {p.pdv}</span>
+                      <div className="pdv-top-chart__bar">
+                        <span style={{ width: `${Math.max(8, width)}%` }} />
+                      </div>
+                      <strong>{formatarMoeda(p.totalVendido)}</strong>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Cards por PDV */}
           <div className="pdv-list">
