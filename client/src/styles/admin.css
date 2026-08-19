@@ -5828,6 +5828,26 @@
   color: var(--admin-muted);
 }
 
+.pdv-section--alerta {
+  background: #fffbeb;
+  border: 1px solid #fbbf24;
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+}
+
+.pdv-section--alerta h4 {
+  color: #92400e;
+  display: flex;
+  align-items: center;
+}
+
+.pdv-section__hint {
+  font-size: 0.75rem;
+  color: #92400e;
+  margin: 0.15rem 0 0.65rem;
+  opacity: 0.8;
+}
+
 .pdv-nao-membros {
   background: var(--admin-surface);
   border-radius: var(--admin-radius);

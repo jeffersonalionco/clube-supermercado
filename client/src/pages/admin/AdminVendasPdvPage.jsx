@@ -104,6 +104,35 @@ function PdvCard({ pdv, aberto, onToggle }) {
             </div>
           </div>
 
+          {pdv.naoMembros && pdv.naoMembros.length > 0 && (
+            <div className="pdv-section pdv-section--alerta">
+              <h4><AlertCircle size={15} style={{ marginRight: 4, color: "#92400e" }} /> Fora do clube ({pdv.naoMembros.length})</h4>
+              <p className="pdv-section__hint">Informaram CPF neste caixa mas não são membros do clube</p>
+              <div className="pdv-table-wrap">
+                <table className="pdv-table">
+                  <thead>
+                    <tr>
+                      <th>Nome</th>
+                      <th>CPF</th>
+                      <th style={{ textAlign: "right" }}>Cupons</th>
+                      <th style={{ textAlign: "right" }}>Total gasto</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pdv.naoMembros.map((c) => (
+                      <tr key={c.cpf}>
+                        <td>{c.nome}</td>
+                        <td className="mono">{formatarCpfCnpj(c.cpf)}</td>
+                        <td style={{ textAlign: "right" }}>{c.cupons}</td>
+                        <td style={{ textAlign: "right" }}>{formatarMoeda(c.totalGasto)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
           <div className="pdv-section">
             <h4>Últimos cupons ({pdv.cupons.length})</h4>
             <div className="pdv-table-wrap">

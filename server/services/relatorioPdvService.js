@@ -180,17 +180,22 @@ export async function obterRelatorioPdv({
 
   const pdvMap = new Map();
 
-  for (const c of cuponsClube) {
-    if (!pdvMap.has(c.pdv)) {
-      pdvMap.set(c.pdv, {
-        pdv: c.pdv,
+  function garantirPdv(pdv) {
+    if (!pdvMap.has(pdv)) {
+      pdvMap.set(pdv, {
+        pdv,
         totalVendido: 0,
         quantidadeCupons: 0,
         clientes: new Map(),
+        naoMembros: new Map(),
         cupons: [],
       });
     }
-    const agg = pdvMap.get(c.pdv);
+    return pdvMap.get(pdv);
+  }
+
+  for (const c of cuponsClube) {
+    const agg = garantirPdv(c.pdv);
     agg.totalVendido += c.valor;
     agg.quantidadeCupons += 1;
 
@@ -215,6 +220,21 @@ export async function obterRelatorioPdv({
     });
   }
 
+  for (const c of cuponsForaClube) {
+    const agg = garantirPdv(c.pdv);
+    if (!agg.naoMembros.has(c.cpf)) {
+      agg.naoMembros.set(c.cpf, {
+        cpf: c.cpf,
+        nome: c.nomeERP || c.cpf,
+        totalGasto: 0,
+        cupons: 0,
+      });
+    }
+    const cli = agg.naoMembros.get(c.cpf);
+    cli.totalGasto += c.valor;
+    cli.cupons += 1;
+  }
+
   const resumoPdvs = [...pdvMap.values()]
     .map((p) => ({
       pdv: p.pdv,
@@ -226,6 +246,12 @@ export async function obterRelatorioPdv({
           ? Math.round((p.totalVendido / p.quantidadeCupons) * 100) / 100
           : 0,
       clientes: [...p.clientes.values()]
+        .map((c) => ({
+          ...c,
+          totalGasto: Math.round(c.totalGasto * 100) / 100,
+        }))
+        .sort((a, b) => b.totalGasto - a.totalGasto),
+      naoMembros: [...p.naoMembros.values()]
         .map((c) => ({
           ...c,
           totalGasto: Math.round(c.totalGasto * 100) / 100,
