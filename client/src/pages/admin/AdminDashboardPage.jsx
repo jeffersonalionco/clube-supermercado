@@ -69,12 +69,9 @@ export default function AdminDashboardPage(props) {
 
   const carregar = useCallback(async () => {
     try {
-      const res = await fetchAdmin("/relatorio-clube?dias=30");
-      if (res.ok) {
-        const json = await res.json();
-        setDados(json);
-        salvarCache(json);
-      }
+      const data = await fetchAdmin("/relatorio-clube?dias=30");
+      setDados(data);
+      salvarCache(data);
     } catch {
       /* silencia — dashboard mostra dados quando disponíveis */
     }
