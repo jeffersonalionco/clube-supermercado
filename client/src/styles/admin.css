@@ -12,6 +12,9 @@
   --admin-sidebar-w: 260px;
   --admin-green: #16a34a;
   --admin-orange: #f59e0b;
+  --admin-scrollbar-track: #eef2f6;
+  --admin-scrollbar-thumb: #b8c9d8;
+  --admin-scrollbar-thumb-hover: #1b4fa0;
 
   min-height: 100dvh;
   display: flex;
@@ -19,6 +22,74 @@
   background: var(--admin-bg);
   color: var(--admin-text);
   font-family: "DM Sans", system-ui, sans-serif;
+}
+
+/* —— Scrollbar personalizada (padrão Superama+) —— */
+.admin-sidebar,
+.admin-content,
+.admin-table-wrap--scroll,
+.admin-table-wrap,
+.admin-mkt-modal__body,
+.admin-relatorio-listas,
+.pdv-table-wrap,
+.admin-nav {
+  scrollbar-width: thin;
+  scrollbar-color: var(--admin-scrollbar-thumb) var(--admin-scrollbar-track);
+}
+
+.admin-sidebar::-webkit-scrollbar,
+.admin-content::-webkit-scrollbar,
+.admin-table-wrap--scroll::-webkit-scrollbar,
+.admin-table-wrap::-webkit-scrollbar,
+.admin-mkt-modal__body::-webkit-scrollbar,
+.admin-relatorio-listas::-webkit-scrollbar,
+.pdv-table-wrap::-webkit-scrollbar,
+.admin-nav::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.admin-sidebar::-webkit-scrollbar-track,
+.admin-content::-webkit-scrollbar-track,
+.admin-table-wrap--scroll::-webkit-scrollbar-track,
+.admin-table-wrap::-webkit-scrollbar-track,
+.admin-mkt-modal__body::-webkit-scrollbar-track,
+.admin-relatorio-listas::-webkit-scrollbar-track,
+.pdv-table-wrap::-webkit-scrollbar-track,
+.admin-nav::-webkit-scrollbar-track {
+  background: var(--admin-scrollbar-track);
+  border-radius: 999px;
+}
+
+.admin-sidebar::-webkit-scrollbar-thumb,
+.admin-content::-webkit-scrollbar-thumb,
+.admin-table-wrap--scroll::-webkit-scrollbar-thumb,
+.admin-table-wrap::-webkit-scrollbar-thumb,
+.admin-mkt-modal__body::-webkit-scrollbar-thumb,
+.admin-relatorio-listas::-webkit-scrollbar-thumb,
+.pdv-table-wrap::-webkit-scrollbar-thumb,
+.admin-nav::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #9eb8dc 0%, var(--admin-scrollbar-thumb) 100%);
+  border-radius: 999px;
+  border: 2px solid var(--admin-scrollbar-track);
+}
+
+.admin-sidebar::-webkit-scrollbar-thumb:hover,
+.admin-content::-webkit-scrollbar-thumb:hover,
+.admin-table-wrap--scroll::-webkit-scrollbar-thumb:hover,
+.admin-table-wrap::-webkit-scrollbar-thumb:hover,
+.admin-mkt-modal__body::-webkit-scrollbar-thumb:hover,
+.admin-relatorio-listas::-webkit-scrollbar-thumb:hover,
+.pdv-table-wrap::-webkit-scrollbar-thumb:hover,
+.admin-nav::-webkit-scrollbar-thumb:hover {
+  background: var(--admin-scrollbar-thumb-hover);
+}
+
+.admin-sidebar::-webkit-scrollbar-corner,
+.admin-content::-webkit-scrollbar-corner,
+.admin-table-wrap--scroll::-webkit-scrollbar-corner,
+.admin-table-wrap::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 /* —— Topbar —— */
@@ -5859,6 +5930,39 @@
   color: var(--admin-primary);
   min-width: 50px;
   text-align: right;
+}
+
+.pdv-card__print {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--admin-border);
+  border-radius: 10px;
+  background: var(--admin-surface);
+  color: var(--admin-primary);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.pdv-card__print:hover {
+  background: var(--admin-primary-soft);
+  border-color: var(--admin-primary);
+  color: var(--admin-primary-dark);
+}
+
+.pdv-card__print-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.25rem;
+}
+
+.pdv-print-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
 }
 
 .pdv-card__body {

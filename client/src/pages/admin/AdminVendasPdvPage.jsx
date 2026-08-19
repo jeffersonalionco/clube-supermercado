@@ -9,6 +9,7 @@ import {
   DollarSign,
   Receipt,
   AlertCircle,
+  Printer,
 } from "lucide-react";
 import AdminLayout from "../../components/admin/AdminLayout.jsx";
 import { fetchAdmin } from "../../utils/adminSession.js";
@@ -280,6 +281,131 @@ function montarHtmlRelatorioPdv(relatorio, adminUsuario) {
 </html>`;
 }
 
+const ESTILOS_IMPRESSAO_PDV = `
+  body { font-family: Arial, Helvetica, sans-serif; color: #12263a; margin: 18px; font-size: 11px; }
+  h1 { margin: 0 0 4px; font-size: 18px; color: #1b4fa0; }
+  h2 { margin: 14px 0 6px; font-size: 13px; color: #1b4fa0; border-bottom: 1px solid #d7e0ea; padding-bottom: 3px; }
+  h3 { margin: 10px 0 5px; font-size: 11px; color: #1f3552; }
+  .meta { color: #5b6b7c; margin-bottom: 10px; line-height: 1.45; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin: 8px 0 10px; }
+  .kpi { border: 1px solid #d7e0ea; border-radius: 6px; padding: 7px; }
+  .kpi strong { display: block; font-size: 13px; margin-top: 2px; }
+  .kpi span { color: #5b6b7c; font-size: 10px; }
+  .bloco { margin: 10px 0 14px; break-inside: avoid; }
+  .bloco-pdv { page-break-after: always; }
+  .bloco-pdv:last-child { page-break-after: auto; }
+  table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+  th, td { border: 1px solid #d7e0ea; padding: 4px 6px; text-align: left; font-size: 10.5px; }
+  th { background: #f3f7fb; font-size: 10px; }
+  .num { text-align: right; }
+  .vazio { color: #5b6b7c; font-size: 10px; margin: 4px 0; }
+  .nota { margin: 6px 0 0; color: #5b6b7c; font-size: 10px; }
+  .rodape { margin-top: 12px; color: #5b6b7c; font-size: 10px; }
+  @media print {
+    body { margin: 8mm; font-size: 10px; }
+    .bloco { page-break-inside: avoid; }
+    tr { break-inside: avoid; }
+  }
+`;
+
+function metaImpressaoPdv(relatorio, adminUsuario) {
+  const periodo = relatorio?.periodo || {};
+  return `
+    Período: <strong>${escaparHtml(periodo.dataInicio)} a ${escaparHtml(periodo.dataFim)}</strong><br/>
+    Gerado em ${escaparHtml(formatarDataHora(relatorio?.geradoEm))}${adminUsuario ? ` · por ${escaparHtml(adminUsuario)}` : ""}
+  `;
+}
+
+function tabelaClientesImpressao(clientes, mensagemVazia) {
+  if (!clientes?.length) {
+    return `<p class="vazio">${escaparHtml(mensagemVazia)}</p>`;
+  }
+  const linhas = clientes
+    .map(
+      (c) => `<tr>
+        <td>${escaparHtml(c.nome)}</td>
+        <td>${escaparHtml(formatarCpfCnpj(c.cpf))}</td>
+        <td class="num">${escaparHtml(c.cupons)}</td>
+        <td class="num">${escaparHtml(formatarMoeda(c.totalGasto))}</td>
+        <td class="num">${c.cuponsConvenio > 0 ? escaparHtml(`${c.cuponsConvenio} cupom(ns)`) : "—"}</td>
+      </tr>`
+    )
+    .join("");
+  return `<table>
+    <thead>
+      <tr><th>Nome</th><th>CPF</th><th class="num">Cupons</th><th class="num">Total gasto</th><th class="num">Crediário</th></tr>
+    </thead>
+    <tbody>${linhas}</tbody>
+  </table>`;
+}
+
+function montarBlocoPdvDetalhe(pdv, { quebraPagina = false } = {}) {
+  const r = resumoFinanceiroPdv(pdv);
+  const fora = pdv.resumoForaClube || {};
+  const insights = calcularInsightsPdv(pdv);
+
+  return `
+    <section class="bloco bloco-pdv${quebraPagina ? "" : ""}">
+      <h2>Caixa / PDV ${escaparHtml(pdv.pdv)}</h2>
+      <div class="kpis">
+        <div class="kpi"><span>Clube — vendido</span><strong>${escaparHtml(formatarMoeda(pdv.totalVendido))}</strong></div>
+        <div class="kpi"><span>Clube — cupons · clientes</span><strong>${escaparHtml(pdv.quantidadeCupons)} · ${escaparHtml(pdv.clientesUnicos)}</strong></div>
+        <div class="kpi"><span>Fora clube — vendido</span><strong>${escaparHtml(formatarMoeda(fora.totalVendido || r.valorForaClube))}</strong></div>
+        <div class="kpi"><span>Fora clube — cupons · clientes</span><strong>${escaparHtml(fora.quantidadeCupons || 0)} · ${escaparHtml(fora.clientesUnicos || r.foraClube)}</strong></div>
+        <div class="kpi"><span>Ticket clube</span><strong>${escaparHtml(formatarMoeda(pdv.ticketMedio))}</strong></div>
+        <div class="kpi"><span>Crediário clube (R$ · %)</span><strong>${escaparHtml(formatarMoeda(r.valorConvenio))} · ${escaparHtml(r.pctConvenio)}%</strong></div>
+        <div class="kpi"><span>Crediário fora (R$ · %)</span><strong>${escaparHtml(formatarMoeda(fora.valorConvenio || 0))} · ${escaparHtml(Number(fora.pctConvenio || 0).toFixed(1))}%</strong></div>
+        <div class="kpi"><span>Faixa de pico (clube)</span><strong>${escaparHtml(insights.faixaPico)} · ${escaparHtml(formatarMoeda(insights.valorFaixaPico))}</strong></div>
+      </div>
+
+      <h3>Clientes do clube (${(pdv.clientes || []).length})</h3>
+      ${tabelaClientesImpressao(pdv.clientes, "Nenhum cliente do clube neste caixa.")}
+
+      <h3>Clientes com CPF fora do clube (${(pdv.naoMembros || []).length})</h3>
+      ${tabelaClientesImpressao(pdv.naoMembros, "Nenhum cliente fora do clube neste caixa.")}
+    </section>
+  `;
+}
+
+function montarHtmlRelatorioPdvDetalhe(pdv, relatorio, adminUsuario) {
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>PDV ${escaparHtml(pdv.pdv)} — Clube Superama+</title>
+  <style>${ESTILOS_IMPRESSAO_PDV}</style>
+</head>
+<body>
+  <h1>Relatório detalhado — Caixa ${escaparHtml(pdv.pdv)}</h1>
+  <p class="meta">${metaImpressaoPdv(relatorio, adminUsuario)}</p>
+  ${montarBlocoPdvDetalhe(pdv)}
+  <p class="rodape">Listagem completa por cliente · Clube Superama+</p>
+</body>
+</html>`;
+}
+
+function montarHtmlRelatorioPdvDetalheTodos(relatorio, adminUsuario) {
+  const pdvs = relatorio?.pdvs || [];
+  const blocos = pdvs.length
+    ? pdvs.map((pdv, i) => montarBlocoPdvDetalhe(pdv, { quebraPagina: i < pdvs.length - 1 })).join("")
+    : `<p class="vazio">Sem dados de PDV no período.</p>`;
+
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Relatório detalhado por PDV — Clube Superama+</title>
+  <style>${ESTILOS_IMPRESSAO_PDV}</style>
+</head>
+<body>
+  <h1>Relatório detalhado por caixa / PDV</h1>
+  <p class="meta">${metaImpressaoPdv(relatorio, adminUsuario)}<br/>Um bloco por caixa, com todos os clientes (clube e fora do clube).</p>
+  ${blocos}
+  <p class="rodape">Clube Superama+ · ${escaparHtml(pdvs.length)} caixa(s)</p>
+</body>
+</html>`;
+}
+
 function calcularInsightsPdv(pdv) {
   const cupons = pdv?.cupons || [];
   const total = cupons.reduce((s, c) => s + (Number(c.valor) || 0), 0);
@@ -317,7 +443,7 @@ function calcularInsightsPdv(pdv) {
   };
 }
 
-function PdvCard({ pdv, aberto, onToggle }) {
+function PdvCard({ pdv, aberto, onToggle, onImprimir }) {
   const pct = pdv._pctTotal ?? 0;
   const insights = calcularInsightsPdv(pdv);
   return (
@@ -341,11 +467,33 @@ function PdvCard({ pdv, aberto, onToggle }) {
           <strong>{insights.pctConvenioValor.toFixed(1)}%</strong>
         </div>
         <div className="pdv-card__pct">{pct.toFixed(1)}%</div>
+        <button
+          type="button"
+          className="pdv-card__print"
+          title={`Imprimir caixa ${pdv.pdv}`}
+          aria-label={`Imprimir caixa ${pdv.pdv}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onImprimir?.(pdv);
+          }}
+        >
+          <Printer size={16} />
+        </button>
         {aberto ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
       </button>
 
       {aberto && (
         <div className="pdv-card__body">
+          <div className="pdv-card__print-bar">
+            <button
+              type="button"
+              className="admin-btn admin-btn--ghost admin-btn--sm"
+              onClick={() => onImprimir?.(pdv)}
+            >
+              <Printer size={14} style={{ marginRight: 4 }} />
+              Imprimir este caixa (todos os clientes)
+            </button>
+          </div>
           <div className="pdv-insights">
             <div className="pdv-insight">
               <span className="pdv-insight__label">Valor no crediário</span>
@@ -518,6 +666,18 @@ export default function AdminVendasPdvPage({ tab, onTabChange, onLogout, admin, 
     if (!dados) return;
     imprimirHtmlComprovante(montarHtmlRelatorioPdv(dados, admin?.usuario || admin?.nome));
   };
+  const handleImprimirPdv = (pdv) => {
+    if (!dados || !pdv) return;
+    imprimirHtmlComprovante(
+      montarHtmlRelatorioPdvDetalhe(pdv, dados, admin?.usuario || admin?.nome)
+    );
+  };
+  const handleImprimirTodosDetalhado = () => {
+    if (!dados) return;
+    imprimirHtmlComprovante(
+      montarHtmlRelatorioPdvDetalheTodos(dados, admin?.usuario || admin?.nome)
+    );
+  };
 
   return (
     <AdminLayout tab={tab} onTabChange={onTabChange} onLogout={onLogout} admin={admin}>
@@ -533,9 +693,12 @@ export default function AdminVendasPdvPage({ tab, onTabChange, onLogout, admin, 
         <h1>Vendas por PDV / Caixa</h1>
         <p>Quanto cada caixa vendeu no clube, cupons e clientes atendidos</p>
         {dados && (
-          <div style={{ marginTop: "0.6rem" }}>
-            <button type="button" className="admin-btn admin-btn--primary" onClick={handleImprimirRelatorio}>
+          <div className="pdv-print-actions">
+            <button type="button" className="admin-btn admin-btn--primary admin-btn--sm" onClick={handleImprimirRelatorio}>
               Imprimir resumo RP
+            </button>
+            <button type="button" className="admin-btn admin-btn--ghost admin-btn--sm" onClick={handleImprimirTodosDetalhado}>
+              Imprimir todos os caixas (detalhado)
             </button>
           </div>
         )}
@@ -622,6 +785,7 @@ export default function AdminVendasPdvPage({ tab, onTabChange, onLogout, admin, 
                 pdv={p}
                 aberto={abertos.has(p.pdv)}
                 onToggle={() => togglePdv(p.pdv)}
+                onImprimir={handleImprimirPdv}
               />
             ))}
             {pdvs.length === 0 && (
