@@ -14,6 +14,16 @@ const DOCS = [
     label: "Política de Privacidade",
     hint: "Como tratamos os dados pessoais dos participantes (LGPD).",
   },
+  {
+    slug: "termos",
+    label: "Termos de Uso",
+    hint: "Condições de uso da plataforma digital do clube.",
+  },
+  {
+    slug: "exclusao",
+    label: "Exclusão de conta",
+    hint: "Como o cliente solicita a exclusão da conta e dos dados.",
+  },
 ];
 
 function formatarData(iso) {

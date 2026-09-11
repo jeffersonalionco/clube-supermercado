@@ -14,6 +14,7 @@ import {
 import { mensagemParaUsuario } from "../utils/mensagensUsuario.js";
 import { saveSession } from "../utils/session.js";
 import AceiteLegal from "../components/AceiteLegal.jsx";
+import WhatsAppOfertasCta from "../components/WhatsAppOfertasCta.jsx";
 import { useProgramaPublico } from "../hooks/useProgramaPublico.js";
 import "../styles/auth-mobile.css";
 import "../styles/legal.css";
@@ -284,6 +285,7 @@ export default function LoginPage({ onLogin }) {
           onCadastroConcluido={handleCadastroConcluido}
           onAbrirRegulamento={() => setLegalSlug("regulamento")}
           onAbrirPrivacidade={() => setLegalSlug("privacidade")}
+          onAbrirTermos={() => setLegalSlug("termos")}
         />
         {overlayLegal}
       </>
@@ -608,11 +610,12 @@ export default function LoginPage({ onLogin }) {
                   }}
                   onAbrirRegulamento={() => setLegalSlug("regulamento")}
                   onAbrirPrivacidade={() => setLegalSlug("privacidade")}
+                  onAbrirTermos={() => setLegalSlug("termos")}
                   erro={erroAceite}
                 />
                 {erroAceite && (
                   <small className="auth-field__error auth-field__error--aceite">
-                    Aceite o Regulamento e a Política de Privacidade
+                    Aceite o Regulamento, os Termos de Uso e a Política de Privacidade
                   </small>
                 )}
               </>
@@ -621,7 +624,13 @@ export default function LoginPage({ onLogin }) {
         )}
 
         {etapa === "cpf" && (
-          <nav className="auth-legal-links" aria-label="Ajuda e documentos">
+          <>
+            <WhatsAppOfertasCta
+              variant="compact"
+              showQr={false}
+              className="auth-wa-ofertas"
+            />
+            <nav className="auth-legal-links" aria-label="Ajuda e documentos">
             <button
               type="button"
               onClick={() => {
@@ -635,10 +644,17 @@ export default function LoginPage({ onLogin }) {
             <button type="button" onClick={() => setLegalSlug("regulamento")}>
               Regulamento
             </button>
+            <button type="button" onClick={() => setLegalSlug("termos")}>
+              Termos
+            </button>
             <button type="button" onClick={() => setLegalSlug("privacidade")}>
               Privacidade
             </button>
+            <button type="button" onClick={() => setLegalSlug("exclusao")}>
+              Exclusão
+            </button>
           </nav>
+          </>
         )}
       </AuthShell>
       {overlayLegal}

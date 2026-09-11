@@ -10,11 +10,14 @@ import {
   pagamentosDasLinhas,
   parseFinn,
   parseVitn,
+  resolverValorCupom,
+  VALOR_FINN_AUDITAR,
+  RAZAO_FINN_VS_ITENS,
 } from "./wrpdvParser.js";
 
 const tabelasExistentes = new Map();
 
-function cupomAposDataMinima(dataHora, dataMinima) {
+export function cupomAposDataMinima(dataHora, dataMinima) {
   if (!dataMinima) return true;
   const venda = new Date(dataHora);
   if (Number.isNaN(venda.getTime())) return false;
@@ -278,9 +281,6 @@ export async function somarGastoClienteWrpdv(cpfCnpj, dataini, datafim) {
  * Se o valor FINN do cupom estiver absurdo vs. os itens (VIT), usa a soma dos itens.
  * Ex.: operação de convênio gravou R$ 117 mil no pagamento com só ~R$ 473 em produtos.
  */
-const VALOR_FINN_AUDITAR = 2000;
-const RAZAO_FINN_VS_ITENS = 2.5;
-
 async function somarItensCupomWrpdv(tabela, cupom, pdv, unidade, dataHora) {
   const dataCupom = formatarDataHoraPg(new Date(dataHora));
   const { rows } = await getWrpdvPool().query(
@@ -301,7 +301,7 @@ async function somarItensCupomWrpdv(tabela, cupom, pdv, unidade, dataHora) {
   return Math.round(total * 100) / 100;
 }
 
-async function valorCupomConfiavel(tabela, row, finnValor) {
+export async function valorCupomConfiavel(tabela, row, finnValor) {
   const valor = Number(finnValor) || 0;
   if (valor < VALOR_FINN_AUDITAR) return valor;
 
@@ -602,13 +602,11 @@ function montarVenda(cabecalho, linhas, { cancelada = false, convenio = false } 
     totalLiquido,
   } = aplicarDescontosDstn(produtosBrutos, descontos);
 
-  const valorTotalCupom =
-    finn?.valor > 0
-      ? Math.round(Number(finn.valor) * 100) / 100
-      : totalLiquido;
+  const valorTotalCupom = resolverValorCupom(finn?.valor, totalLiquido);
 
   return {
     data: formatarDataBR(new Date(dataHora)),
+    dataHora,
     numeroDcto: cupom,
     pdv,
     chaveCupom: `${pdv}-${cupom}`,

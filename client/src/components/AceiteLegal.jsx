@@ -3,6 +3,7 @@ export default function AceiteLegal({
   onChange,
   onAbrirRegulamento,
   onAbrirPrivacidade,
+  onAbrirTermos,
   erro = false,
 }) {
   return (
@@ -23,6 +24,17 @@ export default function AceiteLegal({
           }}
         >
           Regulamento do Clube
+        </button>
+        , os{" "}
+        <button
+          type="button"
+          className="auth-aceite__link"
+          onClick={(e) => {
+            e.preventDefault();
+            onAbrirTermos?.();
+          }}
+        >
+          Termos de Uso
         </button>{" "}
         e a{" "}
         <button

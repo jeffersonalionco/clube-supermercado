@@ -11,6 +11,8 @@ import "../styles/legal.css";
 const LABELS = {
   regulamento: "Regulamento",
   privacidade: "Privacidade",
+  termos: "Termos de Uso",
+  exclusao: "Exclusão de conta",
 };
 
 function formatarData(iso) {
@@ -91,7 +93,14 @@ export default function LegalPage({ slug, onVoltar }) {
 
   const tituloPagina = dados?.titulo || LABELS[slug] || "Documento";
 
-  useSeo(slug === "privacidade" || slug === "regulamento" ? slug : "login", {
+  useSeo(
+    slug === "privacidade" ||
+      slug === "regulamento" ||
+      slug === "termos" ||
+      slug === "exclusao"
+      ? slug
+      : "login",
+    {
     title: dados?.titulo
       ? `${dados.titulo} | ${SITE.name}`
       : undefined,

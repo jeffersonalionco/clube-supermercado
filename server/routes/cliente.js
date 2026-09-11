@@ -14,7 +14,12 @@ import {
 } from "../utils/vendasPlataforma.js";
 import { montarPayloadAtualizacao } from "../services/cadastroCliente.js";
 import { apresentarCliente } from "../services/clientePresenter.js";
-import { atualizarDadosUsuario } from "../services/usuarioService.js";
+import {
+  atualizarDadosUsuario,
+  definirWhatsappInfoLiberado,
+  resumirWhatsappInfo,
+  telefoneUsuarioDosDados,
+} from "../services/usuarioService.js";
 import { listarProdutosClubeDescontos } from "../services/produtosClubeDescontosService.js";
 import {
   nivelFidelidadeFallback,
@@ -180,6 +185,8 @@ router.get("/me", async (req, res) => {
       clube,
     });
 
+    const whatsappInfo = resumirWhatsappInfo(req.usuario);
+
     return res.json({
       usuario: {
         id: req.usuario.id,
@@ -188,9 +195,68 @@ router.get("/me", async (req, res) => {
         clienteCodigo: req.usuario.cliente_codigo,
       },
       ...dados,
+      perfil: {
+        ...dados.perfil,
+        whatsappInfo,
+      },
+      whatsappInfo,
     });
   } catch (error) {
     console.error("[cliente/me]", error.message);
+    return res.status(500).json({
+      error: mensagemParaCliente(error.message),
+    });
+  }
+});
+
+/**
+ * Liga/desliga informações do Clube no WhatsApp (confirma o celular do cadastro).
+ * POST { liberado: true|false }
+ */
+router.post("/whatsapp-info", async (req, res) => {
+  try {
+    const liberado = Boolean(req.body?.liberado);
+    const telCadastro = telefoneUsuarioDosDados(req.usuario);
+
+    if (liberado && !telCadastro) {
+      return res.status(400).json({
+        error:
+          "Atualize seu celular em Editar dados antes de liberar o WhatsApp.",
+      });
+    }
+
+    const result = await definirWhatsappInfoLiberado(req.usuario.id, {
+      liberado,
+      telefoneWa: telCadastro,
+    });
+
+    if (!result.ok) {
+      return res.status(400).json({ error: result.error || "Não foi possível salvar" });
+    }
+
+    // Atualiza objeto em memória da request
+    if (result.usuario) {
+      req.usuario.whatsapp_info_liberado_em = result.usuario.whatsapp_info_liberado_em;
+      req.usuario.whatsapp_info_telefone = result.usuario.whatsapp_info_telefone;
+    } else if (!liberado) {
+      req.usuario.whatsapp_info_liberado_em = null;
+      req.usuario.whatsapp_info_telefone = null;
+    }
+
+    return res.json({
+      ok: true,
+      whatsappInfo: resumirWhatsappInfo({
+        ...req.usuario,
+        whatsapp_info_liberado_em: liberado
+          ? result.usuario?.whatsapp_info_liberado_em
+          : null,
+        whatsapp_info_telefone: liberado
+          ? result.usuario?.whatsapp_info_telefone
+          : null,
+      }),
+    });
+  } catch (error) {
+    console.error("[cliente/whatsapp-info]", error.message);
     return res.status(500).json({
       error: mensagemParaCliente(error.message),
     });

@@ -1,6 +1,8 @@
 User-agent: *
 Allow: /
 Allow: /#/privacidade
+Allow: /#/termos
+Allow: /#/exclusao
 Allow: /#/regulamento
 Disallow: /#/admin
 Disallow: /admin

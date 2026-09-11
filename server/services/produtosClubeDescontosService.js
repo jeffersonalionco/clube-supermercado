@@ -1,3 +1,6 @@
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import {
   buscarProdutoUnidadePorCodigo,
   listarProdutosUnidadePagina,
@@ -5,10 +8,51 @@ import {
 
 const CACHE_TTL_MS = 30 * 60 * 1000;
 const MAX_PAGINAS = 600;
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const DISK_CACHE_DIR = path.resolve(__dirname, "../.cache");
 
 const cachePorUnidade = new Map();
 const syncEmAndamento = new Map();
 const syncStatusPorUnidade = new Map();
+
+function arquivoCacheDisco(chave) {
+  const safe = String(chave).replace(/[^a-zA-Z0-9._-]/g, "_");
+  return path.join(DISK_CACHE_DIR, `clube-descontos-${safe}.json`);
+}
+
+function salvarCacheDisco(chave, emCache) {
+  try {
+    fs.mkdirSync(DISK_CACHE_DIR, { recursive: true });
+    const payload = {
+      ...emCache,
+      gravadoEm: new Date().toISOString(),
+    };
+    fs.writeFileSync(arquivoCacheDisco(chave), JSON.stringify(payload));
+  } catch (err) {
+    console.warn("[produtosClubeDescontos] disco:", err.message);
+  }
+}
+
+function carregarCacheDisco(chave) {
+  try {
+    const file = arquivoCacheDisco(chave);
+    if (!fs.existsSync(file)) return null;
+    const raw = JSON.parse(fs.readFileSync(file, "utf8"));
+    if (!raw?.produtos?.length || !raw.expiresAt) return null;
+    if (Number(raw.expiresAt) <= Date.now()) return null;
+    return raw;
+  } catch {
+    return null;
+  }
+}
+
+function setCacheMemoria(chave, emCache, { persistir = true } = {}) {
+  cachePorUnidade.set(chave, emCache);
+  if (persistir && emCache?.produtos?.length) {
+    // Só grava snapshot “útil”; parcial também ajuda após restart
+    salvarCacheDisco(chave, emCache);
+  }
+}
 
 function arredondarMoeda(valor) {
   return Math.round(Number(valor) * 100) / 100;
@@ -104,7 +148,12 @@ function obterProgresso(unidade) {
 function iniciarSincronizacaoBackground(unidade, { forcar = false } = {}) {
   const chave = chaveCache(unidade);
   const emCache = cachePorUnidade.get(chave);
-  if (!forcar && cacheValido(emCache)) return;
+  // Parcial / poucas ofertas: continua sync em background
+  const cacheCompleto =
+    cacheValido(emCache) &&
+    !emCache.parcial &&
+    (emCache.produtos?.length || 0) >= 8;
+  if (!forcar && cacheCompleto) return;
   if (syncEmAndamento.has(chave)) return;
 
   if (forcar) {
@@ -127,9 +176,26 @@ function iniciarSincronizacaoBackground(unidade, { forcar = false } = {}) {
   const promise = (async () => {
     try {
       const candidatos = new Set();
+      const provisoriPorCodigo = new Map();
       let cursor = 0;
       let totalCatalogo = 0;
       let paginas = 0;
+
+      const publicarParcial = () => {
+        const produtos = [...provisoriPorCodigo.values()];
+        if (!produtos.length) return;
+        setCacheMemoria(chave, {
+          unidade,
+          apenasAtivos,
+          produtos,
+          totalClube: produtos.length,
+          totalCatalogo,
+          paginas,
+          sincronizadoEm: null,
+          expiresAt: Date.now() + CACHE_TTL_MS,
+          parcial: true,
+        });
+      };
 
       for (let i = 0; i < MAX_PAGINAS; i++) {
         const resultado = await listarProdutosUnidadePagina(cursor, unidade, {
@@ -151,24 +217,36 @@ function iniciarSincronizacaoBackground(unidade, { forcar = false } = {}) {
           if (apenasAtivos && produto.Ativo === false) continue;
           if (!temPrecoClube(produto)) continue;
           const codigo = String(produto.Codigo ?? produto.SKU ?? "").trim();
-          if (codigo) candidatos.add(codigo);
+          if (!codigo) continue;
+          candidatos.add(codigo);
+          // Já publica preço 2 da listagem (rápido p/ WhatsApp); confirmação refina depois
+          const item = normalizarProduto(produto, unidade);
+          if (item.preco2 > 0) {
+            provisoriPorCodigo.set(codigo, item);
+          }
         }
 
         syncStatusPorUnidade.set(chave, {
           sincronizando: true,
           paginas,
           totalCatalogo,
-          totalClube: candidatos.size,
+          totalClube: provisoriPorCodigo.size || candidatos.size,
           candidatos: candidatos.size,
           confirmados: 0,
           erro: null,
           iniciadoEm: syncStatusPorUnidade.get(chave)?.iniciadoEm,
         });
 
+        if (paginas === 1 || paginas % 2 === 0 || provisoriPorCodigo.size >= 8) {
+          publicarParcial();
+        }
+
         const ultimoCodigo = Number(pagina[pagina.length - 1]?.Codigo) || 0;
         if (!ultimoCodigo || ultimoCodigo === cursor) break;
         cursor = ultimoCodigo;
       }
+
+      publicarParcial();
 
       const produtosClube = [];
       const codigos = [...candidatos];
@@ -176,7 +254,12 @@ function iniciarSincronizacaoBackground(unidade, { forcar = false } = {}) {
       for (let i = 0; i < codigos.length; i++) {
         const codigo = codigos[i];
         const resultado = await buscarProdutoUnidadePorCodigo(codigo, unidade);
-        if (!resultado.ok) continue;
+        if (!resultado.ok) {
+          // mantém provisório da listagem se existir
+          const prev = provisoriPorCodigo.get(codigo);
+          if (prev) produtosClube.push(prev);
+          continue;
+        }
 
         const produto = resultado.produto;
         if (apenasAtivos && produto.Ativo === false) continue;
@@ -184,6 +267,7 @@ function iniciarSincronizacaoBackground(unidade, { forcar = false } = {}) {
         const item = normalizarProduto(produto, unidade);
         if (item.preco2 > 0) {
           produtosClube.push(item);
+          provisoriPorCodigo.set(codigo, item);
         }
 
         syncStatusPorUnidade.set(chave, {
@@ -197,28 +281,36 @@ function iniciarSincronizacaoBackground(unidade, { forcar = false } = {}) {
           iniciadoEm: syncStatusPorUnidade.get(chave)?.iniciadoEm,
         });
 
-        cachePorUnidade.set(chave, {
-          unidade,
-          apenasAtivos,
-          produtos: [...produtosClube],
-          totalClube: produtosClube.length,
-          totalCatalogo,
-          paginas,
-          sincronizadoEm: null,
-          expiresAt: Date.now() + CACHE_TTL_MS,
-          parcial: true,
-        });
+        if (i === 0 || (i + 1) % 10 === 0) {
+          setCacheMemoria(chave, {
+            unidade,
+            apenasAtivos,
+            produtos: [...provisoriPorCodigo.values()],
+            totalClube: provisoriPorCodigo.size,
+            totalCatalogo,
+            paginas,
+            sincronizadoEm: null,
+            expiresAt: Date.now() + CACHE_TTL_MS,
+            parcial: true,
+          });
+        }
       }
 
-      produtosClube.sort((a, b) =>
+      // Se a confirmação individual falhou para muitos, usa o mapa provisório
+      const finais =
+        produtosClube.length >= Math.min(5, provisoriPorCodigo.size)
+          ? produtosClube
+          : [...provisoriPorCodigo.values()];
+
+      finais.sort((a, b) =>
         String(a.descricao).localeCompare(String(b.descricao), "pt-BR")
       );
 
-      cachePorUnidade.set(chave, {
+      setCacheMemoria(chave, {
         unidade,
         apenasAtivos,
-        produtos: produtosClube,
-        totalClube: produtosClube.length,
+        produtos: finais,
+        totalClube: finais.length,
         totalCatalogo,
         paginas,
         sincronizadoEm: new Date().toISOString(),
@@ -230,7 +322,7 @@ function iniciarSincronizacaoBackground(unidade, { forcar = false } = {}) {
         sincronizando: false,
         paginas,
         totalCatalogo,
-        totalClube: produtosClube.length,
+        totalClube: finais.length,
         erro: null,
         concluidoEm: new Date().toISOString(),
       });
@@ -308,7 +400,14 @@ export async function listarProdutosClubeDescontos({
   const codUnidade = String(unidade ?? unidadePadrao()).trim();
   const chave = chaveCache(codUnidade);
   const forcar = Boolean(atualizar);
-  const emCache = cachePorUnidade.get(chave);
+  let emCache = cachePorUnidade.get(chave);
+  if (!emCache || !cacheValido(emCache)) {
+    const disco = carregarCacheDisco(chave);
+    if (disco) {
+      cachePorUnidade.set(chave, disco);
+      emCache = disco;
+    }
+  }
   const progresso = obterProgresso(chave);
   const sincronizando =
     syncEmAndamento.has(chave) || progresso?.sincronizando === true;
@@ -322,7 +421,8 @@ export async function listarProdutosClubeDescontos({
     iniciarSincronizacaoBackground(codUnidade, { forcar });
   }
 
-  if (emCache?.produtos) {
+  // Serve parcial/disco imediatamente enquanto sync roda (WhatsApp não fica no vazio)
+  if (emCache?.produtos?.length) {
     return montarResposta(emCache, {
       busca,
       pagina,
@@ -369,4 +469,19 @@ export async function listarProdutosClubeDescontos({
     progresso: status,
     erroSync: null,
   };
+}
+
+/** Dispara sync em background para deixar o cache quente (WhatsApp / vitrine). */
+export function aquecerCacheClubeDescontos(unidade) {
+  const codUnidade = String(unidade ?? unidadePadrao()).trim();
+  const chave = chaveCache(codUnidade);
+  const disco = carregarCacheDisco(chave);
+  if (disco?.produtos?.length) {
+    cachePorUnidade.set(chave, disco);
+    console.log(
+      `[clube-descontos] cache disco carregado (${disco.produtos.length} itens)`
+    );
+  }
+  iniciarSincronizacaoBackground(codUnidade, { forcar: false });
+  return { ok: true, unidade: codUnidade, doDisco: Boolean(disco?.produtos?.length) };
 }

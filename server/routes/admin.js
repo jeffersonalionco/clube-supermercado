@@ -44,6 +44,7 @@ import { listarOperacoesRecentes } from "../services/adminOperacoesService.js";
 import {
   listarSegmentosClientes,
   obterFichaClienteAdmin,
+  buscarClientesAdmin,
 } from "../services/adminClientesService.js";
 import {
   apresentarProgramaCliente,
@@ -61,7 +62,10 @@ import { obterRadarCompras } from "../services/radarComprasService.js";
 import { obterSegmentacaoRfm } from "../services/rfmSegmentacaoService.js";
 import { obterRelatorioNiveisFidelidade } from "../services/niveisFidelidadeRelatorioService.js";
 import { obterFunilNovosMembros } from "../services/funilNovosMembrosService.js";
-import { obterRelatorioPdv } from "../services/relatorioPdvService.js";
+import {
+  obterRelatorioPdv,
+  obterCuponsDetalheClientePdv,
+} from "../services/relatorioPdvService.js";
 
 const router = Router();
 
@@ -317,6 +321,27 @@ router.get("/relatorio/funil-novos-membros", async (req, res) => {
   }
 });
 
+router.get("/relatorio/vendas-pdv/cliente-cupons", async (req, res) => {
+  try {
+    const dados = await obterCuponsDetalheClientePdv({
+      cpf: String(req.query.cpf || "").trim(),
+      pdv: String(req.query.pdv || "").trim(),
+      dataInicio: String(req.query.dataInicio || "").trim(),
+      dataFim: String(req.query.dataFim || "").trim(),
+      dias: Number(req.query.dias) || 7,
+    });
+    return res.json(dados);
+  } catch (error) {
+    console.error("[admin/relatorio/vendas-pdv/cliente-cupons]", error.message);
+    const status = /cpf|cnpj|inválid|data|período|periodo/i.test(error.message)
+      ? 400
+      : 500;
+    return res.status(status).json({
+      error: mensagemParaCliente(error.message),
+    });
+  }
+});
+
 router.get("/relatorio/vendas-pdv", async (req, res) => {
   try {
     const dados = await obterRelatorioPdv({
@@ -357,6 +382,20 @@ router.get("/clientes/segmentos", async (req, res) => {
     return res.json(dados);
   } catch (error) {
     console.error("[admin/clientes/segmentos]", error.message);
+    return res.status(500).json({
+      error: mensagemParaCliente(error.message),
+    });
+  }
+});
+
+router.get("/clientes/busca", async (req, res) => {
+  try {
+    const q = String(req.query.q || "").trim();
+    const limite = Number(req.query.limite) || 15;
+    const resultado = await buscarClientesAdmin(q, { limite });
+    return res.json(resultado);
+  } catch (error) {
+    console.error("[admin/clientes/busca]", error.message);
     return res.status(500).json({
       error: mensagemParaCliente(error.message),
     });

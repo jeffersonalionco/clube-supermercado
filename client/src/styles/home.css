@@ -1028,6 +1028,30 @@
   }
 }
 
+.home-wa-ofertas {
+  margin: 0.85rem 0 1rem;
+}
+
+.ofertas-wa-cta {
+  margin: 0.75rem 0 1rem;
+}
+
+.auth-wa-ofertas {
+  margin-bottom: 0.85rem;
+}
+
+.home-desk-aside-card--wa {
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.home-desk-aside-card--wa .wa-ofertas-cta {
+  margin: 0;
+}
+
 .home-legal-footer {
   display: flex;
   flex-direction: column;

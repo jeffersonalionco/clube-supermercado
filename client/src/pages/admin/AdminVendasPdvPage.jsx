@@ -10,6 +10,8 @@ import {
   Receipt,
   AlertCircle,
   Printer,
+  X,
+  Loader2,
 } from "lucide-react";
 import AdminLayout from "../../components/admin/AdminLayout.jsx";
 import { fetchAdmin } from "../../utils/adminSession.js";
@@ -443,7 +445,221 @@ function calcularInsightsPdv(pdv) {
   };
 }
 
-function PdvCard({ pdv, aberto, onToggle, onImprimir }) {
+function CelulaClienteClicavel({ cliente, pdv, onVerCliente }) {
+  const abrir = () =>
+    onVerCliente?.({
+      cpf: cliente.cpf,
+      nome: cliente.nome,
+      pdv: pdv ?? null,
+    });
+
+  return (
+    <>
+      <td>
+        <button type="button" className="pdv-cliente-link" onClick={abrir} title="Ver cupons e itens">
+          {cliente.nome}
+        </button>
+      </td>
+      <td className="mono">
+        <button
+          type="button"
+          className="pdv-cliente-link pdv-cliente-link--mono"
+          onClick={abrir}
+          title="Ver cupons e itens"
+        >
+          {formatarCpfCnpj(cliente.cpf)}
+        </button>
+      </td>
+    </>
+  );
+}
+
+function PdvClienteCuponsModal({ aberto, cliente, periodo, onFechar }) {
+  const [dados, setDados] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [erro, setErro] = useState(null);
+
+  useEffect(() => {
+    if (!aberto || !cliente?.cpf || !periodo) return undefined;
+
+    let cancelado = false;
+    (async () => {
+      setLoading(true);
+      setErro(null);
+      setDados(null);
+      try {
+        const params = new URLSearchParams({
+          cpf: cliente.cpf,
+          dataInicio: periodo.dataInicio,
+          dataFim: periodo.dataFim,
+        });
+        if (cliente.pdv) params.set("pdv", cliente.pdv);
+        const res = await fetchAdmin(
+          `/api/admin/relatorio/vendas-pdv/cliente-cupons?${params}`
+        );
+        if (!cancelado) setDados(res);
+      } catch (err) {
+        if (!cancelado) setErro(mensagemParaUsuario(err.message));
+      } finally {
+        if (!cancelado) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelado = true;
+    };
+  }, [aberto, cliente?.cpf, cliente?.pdv, periodo?.dataInicio, periodo?.dataFim]);
+
+  if (!aberto || !cliente) return null;
+
+  const tituloPdv = cliente.pdv ? ` · Caixa ${cliente.pdv}` : "";
+
+  return (
+    <div className="admin-mkt-modal pdv-modal" role="dialog" aria-modal="true" aria-label="Cupons do cliente">
+      <div className="admin-mkt-modal__backdrop" onClick={onFechar} />
+      <div className="admin-mkt-modal__panel pdv-modal__panel">
+        <header className="admin-mkt-modal__head pdv-modal__head">
+          <div>
+            <h3>{cliente.nome || dados?.nome || "Cliente"}</h3>
+            <p className="pdv-modal__sub">
+              {formatarCpfCnpj(cliente.cpf)}
+              {tituloPdv}
+              {periodo && (
+                <>
+                  {" · "}
+                  {periodo.dataInicio} a {periodo.dataFim}
+                </>
+              )}
+            </p>
+          </div>
+          <button type="button" className="pdv-modal__close" onClick={onFechar} aria-label="Fechar">
+            <X size={18} />
+          </button>
+        </header>
+
+        <div className="admin-mkt-modal__body pdv-modal__body">
+          {loading && (
+            <p className="pdv-modal__status">
+              <Loader2 size={16} className="pdv-modal__spin" /> Carregando cupons…
+            </p>
+          )}
+          {erro && <p className="pdv-modal__erro">{erro}</p>}
+
+          {dados && !loading && (
+            <>
+              <div className="pdv-modal__resumo">
+                <div>
+                  <span>Status</span>
+                  <strong>
+                    {dados.membroClube ? (
+                      <span className="pdv-tag pdv-tag--normal">Membro do clube</span>
+                    ) : (
+                      <span className="pdv-tag pdv-tag--convenio">Fora do clube</span>
+                    )}
+                  </strong>
+                </div>
+                <div>
+                  <span>Cupons</span>
+                  <strong>{dados.totais.quantidadeCupons}</strong>
+                </div>
+                <div>
+                  <span>Itens</span>
+                  <strong>{dados.totais.quantidadeItens}</strong>
+                </div>
+                <div>
+                  <span>Total</span>
+                  <strong>{formatarMoeda(dados.totais.valorTotal)}</strong>
+                </div>
+              </div>
+
+              {dados.cupons.length === 0 ? (
+                <p className="pdv-modal__vazio">Nenhum cupom encontrado no período{dados.pdv ? ` no caixa ${dados.pdv}` : ""}.</p>
+              ) : (
+                <div className="pdv-cupons-list">
+                  {dados.cupons.map((cupom) => (
+                    <article key={cupom.chaveCupom} className="pdv-cupom-card">
+                      <header className="pdv-cupom-card__head">
+                        <div>
+                          <strong>Cupom {cupom.numeroDcto}</strong>
+                          <span className="pdv-cupom-card__meta">
+                            Caixa {cupom.pdv} · {cupom.data}
+                            {cupom.cancelada && (
+                              <span className="pdv-tag pdv-tag--cancelado">Cancelado</span>
+                            )}
+                          </span>
+                        </div>
+                        <div className="pdv-cupom-card__valor">
+                          <strong>{formatarMoeda(cupom.valorTotalCupom)}</strong>
+                          {cupom.convenio ? (
+                            <span className="pdv-tag pdv-tag--convenio">Crediário</span>
+                          ) : (
+                            <span className="pdv-tag pdv-tag--normal">{cupom.formaPagamento || "—"}</span>
+                          )}
+                        </div>
+                      </header>
+
+                      {(cupom.produtos || []).length > 0 ? (
+                        <div className="pdv-table-wrap">
+                          <table className="pdv-table pdv-table--compact">
+                            <thead>
+                              <tr>
+                                <th>Código</th>
+                                <th>Produto</th>
+                                <th style={{ textAlign: "right" }}>Qtd</th>
+                                <th style={{ textAlign: "right" }}>Valor</th>
+                                <th style={{ textAlign: "right" }}>Desc.</th>
+                                <th style={{ textAlign: "right" }}>Líquido</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {cupom.produtos.map((item, idx) => (
+                                <tr key={`${cupom.chaveCupom}-${idx}`}>
+                                  <td className="mono">{item.codigoProduto || item.codigoBarras || "—"}</td>
+                                  <td>
+                                    {item.descricao || "—"}
+                                    {item.oferta === "SIM" && (
+                                      <span className="pdv-tag pdv-tag--oferta">Oferta</span>
+                                    )}
+                                  </td>
+                                  <td style={{ textAlign: "right" }}>{item.quantidadeUnitaria ?? "—"}</td>
+                                  <td style={{ textAlign: "right" }}>{formatarMoeda(item.valorBruto ?? item.valorTotal)}</td>
+                                  <td style={{ textAlign: "right" }}>
+                                    {(item.valorDesconto || 0) > 0 ? formatarMoeda(item.valorDesconto) : "—"}
+                                  </td>
+                                  <td style={{ textAlign: "right" }}>{formatarMoeda(item.valorLiquido ?? item.valorTotal)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                            <tfoot>
+                              <tr>
+                                <td colSpan={3} />
+                                <td style={{ textAlign: "right" }}>{formatarMoeda(cupom.subtotalItens)}</td>
+                                <td style={{ textAlign: "right" }}>
+                                  {(cupom.totalDesconto || 0) > 0 ? formatarMoeda(cupom.totalDesconto) : "—"}
+                                </td>
+                                <td style={{ textAlign: "right" }}>
+                                  <strong>{formatarMoeda(cupom.valorTotalCupom)}</strong>
+                                </td>
+                              </tr>
+                            </tfoot>
+                          </table>
+                        </div>
+                      ) : (
+                        <p className="pdv-cupom-card__sem-itens">Sem itens registrados neste cupom.</p>
+                      )}
+                    </article>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PdvCard({ pdv, aberto, onToggle, onImprimir, onVerCliente }) {
   const pct = pdv._pctTotal ?? 0;
   const insights = calcularInsightsPdv(pdv);
   return (
@@ -525,8 +741,7 @@ function PdvCard({ pdv, aberto, onToggle, onImprimir }) {
                 <tbody>
                   {pdv.clientes.map((c) => (
                     <tr key={c.cpf}>
-                      <td>{c.nome}</td>
-                      <td className="mono">{formatarCpfCnpj(c.cpf)}</td>
+                      <CelulaClienteClicavel cliente={c} pdv={pdv.pdv} onVerCliente={onVerCliente} />
                       <td style={{ textAlign: "right" }}>{c.cupons}</td>
                       <td style={{ textAlign: "right" }}>{formatarMoeda(c.totalGasto)}</td>
                       <td>{c.cuponsConvenio > 0 && <span className="pdv-tag pdv-tag--convenio">Crediário ({c.cuponsConvenio})</span>}</td>
@@ -555,8 +770,7 @@ function PdvCard({ pdv, aberto, onToggle, onImprimir }) {
                   <tbody>
                     {pdv.naoMembros.map((c) => (
                       <tr key={c.cpf}>
-                        <td>{c.nome}</td>
-                        <td className="mono">{formatarCpfCnpj(c.cpf)}</td>
+                        <CelulaClienteClicavel cliente={c} pdv={pdv.pdv} onVerCliente={onVerCliente} />
                         <td style={{ textAlign: "right" }}>{c.cupons}</td>
                         <td style={{ textAlign: "right" }}>{formatarMoeda(c.totalGasto)}</td>
                         <td>{c.cuponsConvenio > 0 && <span className="pdv-tag pdv-tag--convenio">Crediário ({c.cuponsConvenio})</span>}</td>
@@ -586,7 +800,26 @@ function PdvCard({ pdv, aberto, onToggle, onImprimir }) {
                     <tr key={`${c.cupom}-${i}`}>
                       <td className="mono">{c.cupom}</td>
                       <td>{formatarDataHora(c.dataHora)}</td>
-                      <td>{c.nome}</td>
+                      <td>
+                        {c.cpf ? (
+                          <button
+                            type="button"
+                            className="pdv-cliente-link"
+                            onClick={() =>
+                              onVerCliente?.({
+                                cpf: c.cpf,
+                                nome: c.nome,
+                                pdv: pdv.pdv,
+                              })
+                            }
+                            title="Ver cupons e itens"
+                          >
+                            {c.nome}
+                          </button>
+                        ) : (
+                          c.nome
+                        )}
+                      </td>
                       <td style={{ textAlign: "right" }}>{formatarMoeda(c.valor)}</td>
                       <td>
                         {c.convenio
@@ -614,6 +847,15 @@ export default function AdminVendasPdvPage({ tab, onTabChange, onLogout, admin, 
   const [customInicio, setCustomInicio] = useState("");
   const [customFim, setCustomFim] = useState("");
   const [abertos, setAbertos] = useState(new Set());
+  const [clienteModal, setClienteModal] = useState(null);
+
+  const abrirClienteModal = useCallback((cliente) => {
+    setClienteModal(cliente);
+  }, []);
+
+  const fecharClienteModal = useCallback(() => {
+    setClienteModal(null);
+  }, []);
 
   const carregar = useCallback(async () => {
     setLoading(true);
@@ -756,6 +998,9 @@ export default function AdminVendasPdvPage({ tab, onTabChange, onLogout, admin, 
           <p style={{ fontSize: "0.75rem", color: "var(--admin-muted)", margin: "0.75rem 0 0.25rem" }}>
             Período: {dados.periodo.dataInicio} a {dados.periodo.dataFim}
           </p>
+          <p style={{ fontSize: "0.72rem", color: "var(--admin-muted)", margin: "0 0 0.75rem", lineHeight: 1.4 }}>
+            Membros: vendas contabilizadas a partir do cadastro no clube. Fora do clube: CPF informado no caixa sem cadastro.
+          </p>
 
           {topPdvs.length > 0 && (
             <div className="pdv-top-chart">
@@ -786,6 +1031,7 @@ export default function AdminVendasPdvPage({ tab, onTabChange, onLogout, admin, 
                 aberto={abertos.has(p.pdv)}
                 onToggle={() => togglePdv(p.pdv)}
                 onImprimir={handleImprimirPdv}
+                onVerCliente={abrirClienteModal}
               />
             ))}
             {pdvs.length === 0 && (
@@ -824,8 +1070,26 @@ export default function AdminVendasPdvPage({ tab, onTabChange, onLogout, admin, 
                   <tbody>
                     {dados.naoMembros.clientes.map((c) => (
                       <tr key={c.cpf}>
-                        <td>{c.nome}</td>
-                        <td className="mono">{formatarCpfCnpj(c.cpf)}</td>
+                        <td>
+                          <button
+                            type="button"
+                            className="pdv-cliente-link"
+                            onClick={() => abrirClienteModal({ cpf: c.cpf, nome: c.nome, pdv: null })}
+                            title="Ver cupons e itens (todos os caixas)"
+                          >
+                            {c.nome}
+                          </button>
+                        </td>
+                        <td className="mono">
+                          <button
+                            type="button"
+                            className="pdv-cliente-link pdv-cliente-link--mono"
+                            onClick={() => abrirClienteModal({ cpf: c.cpf, nome: c.nome, pdv: null })}
+                            title="Ver cupons e itens (todos os caixas)"
+                          >
+                            {formatarCpfCnpj(c.cpf)}
+                          </button>
+                        </td>
                         <td style={{ textAlign: "right" }}>{c.cupons}</td>
                         <td style={{ textAlign: "right" }}>{formatarMoeda(c.totalGasto)}</td>
                         <td>{c.cuponsConvenio > 0 && <span className="pdv-tag pdv-tag--convenio">Crediário ({c.cuponsConvenio})</span>}</td>
@@ -840,6 +1104,13 @@ export default function AdminVendasPdvPage({ tab, onTabChange, onLogout, admin, 
           )}
         </>
       )}
+
+      <PdvClienteCuponsModal
+        aberto={Boolean(clienteModal)}
+        cliente={clienteModal}
+        periodo={dados?.periodo}
+        onFechar={fecharClienteModal}
+      />
     </AdminLayout>
   );
 }

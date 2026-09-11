@@ -32,6 +32,8 @@ export function navegarAdminComQuery(tab, params = {}) {
                     ? "admin/conteudo"
                   : tab === "clube-descontos"
                     ? "admin/clube-descontos"
+                    : tab === "padaria"
+                      ? "admin/padaria"
                     : "admin/pontos";
 
   const qs = new URLSearchParams(params).toString();

@@ -1,6 +1,7 @@
 import { getPool } from "../../db.js";
 import { buscarClientePorCpfCnpj } from "../apiClient.js";
-import { emailValido } from "../../utils/validacaoCadastro.js";
+import { emailValido, telefoneValido } from "../../utils/validacaoCadastro.js";
+import { normalizarTelefoneWa } from "./whatsappCloudService.js";
 
 function extrairEmailCliente(cliente, raw) {
   const fontes = [cliente, raw, raw?.cliente, raw?.response?.cliente].filter(
@@ -11,6 +12,30 @@ function extrairEmailCliente(cliente, raw) {
     const email = fonte.email ?? fonte.eMail ?? fonte.mail;
     if (email && String(email).includes("@")) {
       return String(email).trim().toLowerCase();
+    }
+  }
+  return null;
+}
+
+function extrairTelefoneCliente(cliente, raw) {
+  const fontes = [cliente, raw, raw?.cliente, raw?.response?.cliente].filter(
+    Boolean
+  );
+  for (const fonte of fontes) {
+    if (typeof fonte !== "object") continue;
+    const candidatos = [
+      fonte.foneCel,
+      fonte.celular,
+      fonte.telefone,
+      fonte.fone,
+      fonte.foneCelular,
+      fonte.celularWhatsapp,
+    ];
+    for (const c of candidatos) {
+      const n = normalizarTelefoneWa(c);
+      if (!n) continue;
+      const local = n.startsWith("55") ? n.slice(2) : n;
+      if (telefoneValido(local)) return n;
     }
   }
   return null;
@@ -40,6 +65,23 @@ async function resolverEmailUsuario(usuario) {
     }
   } catch {
     /* ignora falha pontual do ERP */
+  }
+  return null;
+}
+
+async function resolverTelefoneUsuario(usuario) {
+  if (usuario?.dados_api) {
+    const doCache = extrairTelefoneCliente(null, usuario.dados_api);
+    if (doCache) return doCache;
+  }
+  try {
+    const consulta = await buscarClientePorCpfCnpj(usuario.cpf);
+    if (consulta.ok) {
+      const tel = extrairTelefoneCliente(consulta.cliente, consulta.raw);
+      if (tel) return tel;
+    }
+  } catch {
+    /* ignora */
   }
   return null;
 }
@@ -251,23 +293,187 @@ export async function listarClientesParaSelecaoMarketing({
   };
 }
 
+/**
+ * Destinatários elegíveis para campanha WhatsApp.
+ */
+export async function listarDestinatariosWhatsapp({
+  publico = "todos_elegiveis",
+  telefonesEspecificos = [],
+} = {}) {
+  const db = getPool();
+
+  if (publico === "telefones_especificos") {
+    const dest = [];
+    const visto = new Set();
+    let invalidos = 0;
+    for (const raw of telefonesEspecificos || []) {
+      const tel = normalizarTelefoneWa(raw);
+      if (!tel || visto.has(tel)) {
+        if (!tel) invalidos += 1;
+        continue;
+      }
+      visto.add(tel);
+      dest.push({
+        usuarioId: null,
+        cpf: null,
+        nome: null,
+        telefone: tel,
+      });
+    }
+    return {
+      destinatarios: dest,
+      resumo: {
+        elegiveis: dest.length,
+        semTelefone: 0,
+        optOut: 0,
+        especificosInvalidos: invalidos,
+      },
+    };
+  }
+
+  const { rows: usuarios } = await db.query(
+    `SELECT id, cpf, nome, dados_api, whatsapp_promocional_opt_out_em
+     FROM usuario
+     ORDER BY id ASC`
+  );
+
+  const destinatarios = [];
+  let semTelefone = 0;
+  let optOut = 0;
+
+  for (const u of usuarios) {
+    if (u.whatsapp_promocional_opt_out_em) {
+      optOut += 1;
+      continue;
+    }
+    const telefone = await resolverTelefoneUsuario(u);
+    if (!telefone) {
+      semTelefone += 1;
+      continue;
+    }
+    destinatarios.push({
+      usuarioId: u.id,
+      cpf: u.cpf,
+      nome: u.nome,
+      telefone,
+    });
+  }
+
+  return {
+    destinatarios,
+    resumo: {
+      elegiveis: destinatarios.length,
+      semTelefone,
+      optOut,
+      especificosInvalidos: 0,
+    },
+  };
+}
+
+export async function listarClientesParaSelecaoWhatsapp({
+  busca = "",
+  apenasElegiveis = false,
+} = {}) {
+  const db = getPool();
+  const { rows } = await db.query(
+    `SELECT id, cpf, nome, dados_api, whatsapp_promocional_opt_out_em
+     FROM usuario
+     ORDER BY COALESCE(NULLIF(trim(nome), ''), cpf) ASC`
+  );
+
+  const rawBusca = String(busca || "").trim().toLowerCase();
+  const digitsBusca = rawBusca.replace(/\D/g, "");
+  const buscaPorCpf =
+    digitsBusca.length >= 3 &&
+    /^[\d.\-\/\s]+$/.test(String(busca || "").trim());
+
+  const clientes = [];
+  let elegiveis = 0;
+  let semTelefone = 0;
+  let optOut = 0;
+
+  for (const u of rows) {
+    const telefone = u?.dados_api
+      ? extrairTelefoneCliente(null, u.dados_api)
+      : null;
+    const temOptOut = Boolean(u.whatsapp_promocional_opt_out_em);
+    const elegivel = Boolean(telefone) && !temOptOut;
+
+    if (!telefone) semTelefone += 1;
+    if (temOptOut) optOut += 1;
+    if (elegivel) elegiveis += 1;
+    if (apenasElegiveis && !elegivel) continue;
+
+    const nome = String(u.nome || "").trim() || "Sem nome";
+    const cpfDigits = String(u.cpf || "").replace(/\D/g, "");
+
+    if (rawBusca) {
+      if (buscaPorCpf) {
+        if (!cpfDigits.includes(digitsBusca)) continue;
+      } else {
+        const hay = `${nome} ${telefone || ""} ${cpfDigits}`.toLowerCase();
+        if (!hay.includes(rawBusca)) continue;
+      }
+    }
+
+    clientes.push({
+      id: u.id,
+      cpf: u.cpf,
+      nome,
+      telefone,
+      optOut: temOptOut,
+      elegivel,
+      motivo: temOptOut
+        ? "Opt-out WhatsApp"
+        : !telefone
+          ? "Sem celular no cadastro"
+          : null,
+    });
+  }
+
+  return {
+    clientes,
+    resumo: {
+      total: rows.length,
+      elegiveis,
+      semTelefone,
+      optOut,
+      filtrados: clientes.length,
+    },
+  };
+}
+
 export async function obterResumoMarketing() {
   const db = getPool();
-  const [selecao, campanhas, opt] = await Promise.all([
-    listarClientesParaSelecaoMarketing({ apenasElegiveis: false }),
-    db.query(
-      `SELECT COUNT(*)::int AS total,
-              COUNT(*) FILTER (WHERE status = 'concluida')::int AS concluidas,
-              MAX(enviado_em) AS ultimo_envio
-       FROM marketing_campanha
-       WHERE canal = 'email'`
-    ),
-    db.query(
-      `SELECT COUNT(*)::int AS total
-       FROM usuario
-       WHERE email_promocional_opt_out_em IS NOT NULL`
-    ),
-  ]);
+  const [selecao, selecaoWa, campanhas, campanhasWa, opt, optWa] =
+    await Promise.all([
+      listarClientesParaSelecaoMarketing({ apenasElegiveis: false }),
+      listarClientesParaSelecaoWhatsapp({ apenasElegiveis: false }),
+      db.query(
+        `SELECT COUNT(*)::int AS total,
+                COUNT(*) FILTER (WHERE status = 'concluida')::int AS concluidas,
+                MAX(enviado_em) AS ultimo_envio
+         FROM marketing_campanha
+         WHERE canal = 'email'`
+      ),
+      db.query(
+        `SELECT COUNT(*)::int AS total,
+                COUNT(*) FILTER (WHERE status = 'concluida')::int AS concluidas,
+                MAX(enviado_em) AS ultimo_envio
+         FROM marketing_campanha
+         WHERE canal = 'whatsapp'`
+      ),
+      db.query(
+        `SELECT COUNT(*)::int AS total
+         FROM usuario
+         WHERE email_promocional_opt_out_em IS NOT NULL`
+      ),
+      db.query(
+        `SELECT COUNT(*)::int AS total
+         FROM usuario
+         WHERE whatsapp_promocional_opt_out_em IS NOT NULL`
+      ),
+    ]);
 
   return {
     elegiveis: selecao.resumo.elegiveis,
@@ -276,6 +482,14 @@ export async function obterResumoMarketing() {
     campanhasEmail: campanhas.rows[0]?.total ?? 0,
     campanhasConcluidas: campanhas.rows[0]?.concluidas ?? 0,
     ultimoEnvio: campanhas.rows[0]?.ultimo_envio ?? null,
+    whatsapp: {
+      elegiveis: selecaoWa.resumo.elegiveis,
+      semTelefone: selecaoWa.resumo.semTelefone,
+      optOut: optWa.rows[0]?.total ?? 0,
+      campanhas: campanhasWa.rows[0]?.total ?? 0,
+      campanhasConcluidas: campanhasWa.rows[0]?.concluidas ?? 0,
+      ultimoEnvio: campanhasWa.rows[0]?.ultimo_envio ?? null,
+    },
     amostra: [],
   };
 }

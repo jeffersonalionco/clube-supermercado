@@ -3,6 +3,7 @@ import ClientTabHeader from "../components/ClientTabHeader.jsx";
 import EmptyState from "../components/EmptyState.jsx";
 import PullToRefresh from "../components/PullToRefresh.jsx";
 import RadioSuperamaFaixa from "../components/RadioSuperamaFaixa.jsx";
+import WhatsAppOfertasCta from "../components/WhatsAppOfertasCta.jsx";
 import { apiUrl } from "../utils/api.js";
 import { fetchAutenticado, loadSession } from "../utils/session.js";
 import { mensagemParaUsuario } from "../utils/mensagensUsuario.js";
@@ -206,6 +207,8 @@ export default function OfertasPage({ tabMode = false, onInicio }) {
       <PullToRefresh onRefresh={onRefresh}>
         <main className="ofertas-page__main">
           <RadioSuperamaFaixa />
+
+          <WhatsAppOfertasCta variant="banner" className="ofertas-wa-cta" />
 
           {loading ? (
             <p className="ofertas-page__status">Carregando ofertas…</p>

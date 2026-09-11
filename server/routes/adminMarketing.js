@@ -9,16 +9,19 @@ import { mensagemParaCliente } from "../utils/mensagemCliente.js";
 import { smtpDisponivel } from "../services/mailService.js";
 import {
   listarClientesParaSelecaoMarketing,
+  listarClientesParaSelecaoWhatsapp,
   obterResumoMarketing,
 } from "../services/marketing/destinatariosService.js";
 import {
   atualizarCampanhaEmail,
+  atualizarCampanhaWhatsapp,
   arquivarCampanha,
   buscarCampanha,
   criarCampanhaEmail,
+  criarCampanhaWhatsapp,
   desarquivarCampanha,
   estimarDestinatariosCampanha,
-  listarCampanhasEmail,
+  listarCampanhas,
 } from "../services/marketing/campanhaService.js";
 import {
   enviarTesteCampanha,
@@ -26,8 +29,21 @@ import {
   progressoCampanha,
   retomarEnvioCampanha,
 } from "../services/marketing/emailEnvioService.js";
+import {
+  enviarTesteWhatsapp,
+  iniciarEnvioWhatsapp,
+  retomarEnvioWhatsapp,
+} from "../services/marketing/whatsappEnvioService.js";
 import { montarEmailPromocional, criarTokenOptOut } from "../services/marketing/emailBuilder.js";
-
+import {
+  obterConfigWhatsappCloud,
+  whatsappCloudConfigurado,
+  listarTemplatesWhatsapp,
+} from "../services/marketing/whatsappCloudService.js";
+import {
+  midiaUrlAPartirDoCaminho,
+  prepararVideoWhatsapp,
+} from "../services/marketing/whatsappVideoPrepare.js";
 const router = Router();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -103,7 +119,7 @@ router.post("/upload", (req, res) => {
   });
 });
 
-function responderUpload(req, res) {
+async function responderUpload(req, res) {
   if (!req.file) {
     return res.status(400).json({ error: "Nenhum arquivo enviado" });
   }
@@ -130,23 +146,98 @@ function responderUpload(req, res) {
           : `Vídeo deve ter até ${mb} MB`,
     });
   }
+
+  let filename = req.file.filename;
+  let tamanho = req.file.size;
+  let convertido = false;
+
+  if (info.tipo === "video") {
+    try {
+      const prep = await prepararVideoWhatsapp(req.file.path);
+      if (!prep.ok) {
+        return res.status(400).json({ error: mensagemParaCliente(prep.error) });
+      }
+      if (prep.convertido && prep.caminho !== req.file.path) {
+        const rel = midiaUrlAPartirDoCaminho(prep.caminho);
+        filename = path.basename(prep.caminho);
+        tamanho = prep.bytes || fs.statSync(prep.caminho).size;
+        convertido = true;
+        if (!rel) {
+          return res.status(500).json({ error: "Falha ao localizar vídeo convertido" });
+        }
+      }
+    } catch (err) {
+      console.error("[admin/marketing/upload] ffmpeg", err.message);
+      return res.status(400).json({
+        error:
+          "Não foi possível preparar o vídeo para WhatsApp. Use MP4 H.264/AAC até 16 MB.",
+      });
+    }
+  }
+
   return res.status(201).json({
-    url: `/uploads/marketing/${req.file.filename}`,
+    url: `/uploads/marketing/${filename}`,
     tipo: info.tipo,
     nome: req.file.originalname,
-    tamanho: req.file.size,
+    tamanho,
+    convertido,
   });
 }
 
 router.get("/resumo", async (_req, res) => {
   try {
     const resumo = await obterResumoMarketing();
+    const wa = obterConfigWhatsappCloud();
     return res.json({
       ...resumo,
       smtpDisponivel: smtpDisponivel(),
+      whatsappDisponivel: whatsappCloudConfigurado(),
+      whatsappTemplatePadrao: wa.templatePadrao || null,
+      whatsappIdiomaPadrao: wa.idiomaPadrao || "pt_BR",
     });
   } catch (error) {
     console.error("[admin/marketing/resumo]", error.message);
+    return res.status(500).json({ error: mensagemParaCliente(error.message) });
+  }
+});
+
+router.get("/whatsapp/templates", async (req, res) => {
+  try {
+    if (!whatsappCloudConfigurado()) {
+      return res.status(400).json({
+        error:
+          "WhatsApp Cloud API não configurada (token e Phone Number ID)",
+      });
+    }
+    const todos =
+      String(req.query.todos || "").toLowerCase() === "1" ||
+      String(req.query.todos || "").toLowerCase() === "true";
+    const resultado = await listarTemplatesWhatsapp({
+      apenasAprovados: !todos,
+    });
+    if (!resultado.ok) {
+      return res.status(400).json({ error: resultado.error });
+    }
+    return res.json(resultado);
+  } catch (error) {
+    console.error("[admin/marketing/whatsapp/templates]", error.message);
+    return res.status(500).json({ error: mensagemParaCliente(error.message) });
+  }
+});
+
+router.get("/whatsapp/auto-reply/metricas", async (req, res) => {
+  try {
+    const { obterMetricasAutoReply } = await import(
+      "../services/marketing/whatsappMetricasService.js"
+    );
+    const dias = Number(req.query.dias || 7);
+    const data = await obterMetricasAutoReply({ dias });
+    return res.json(data);
+  } catch (error) {
+    console.error(
+      "[admin/marketing/whatsapp/auto-reply/metricas]",
+      error.message
+    );
     return res.status(500).json({ error: mensagemParaCliente(error.message) });
   }
 });
@@ -157,10 +248,11 @@ router.get("/clientes", async (req, res) => {
     const apenasElegiveis =
       String(req.query.apenasElegiveis || "").toLowerCase() === "1" ||
       String(req.query.apenasElegiveis || "").toLowerCase() === "true";
-    const resultado = await listarClientesParaSelecaoMarketing({
-      busca,
-      apenasElegiveis,
-    });
+    const canal = String(req.query.canal || "email").toLowerCase();
+    const resultado =
+      canal === "whatsapp"
+        ? await listarClientesParaSelecaoWhatsapp({ busca, apenasElegiveis })
+        : await listarClientesParaSelecaoMarketing({ busca, apenasElegiveis });
     return res.json(resultado);
   } catch (error) {
     console.error("[admin/marketing/clientes]", error.message);
@@ -173,8 +265,12 @@ router.get("/campanhas", async (req, res) => {
     const arquivadas =
       String(req.query.arquivadas || "").toLowerCase() === "1" ||
       String(req.query.arquivadas || "").toLowerCase() === "true";
-    const campanhas = await listarCampanhasEmail({ arquivadas });
-    return res.json({ campanhas, arquivadas });
+    const canal =
+      String(req.query.canal || "email").toLowerCase() === "whatsapp"
+        ? "whatsapp"
+        : "email";
+    const campanhas = await listarCampanhas({ arquivadas, canal });
+    return res.json({ campanhas, arquivadas, canal });
   } catch (error) {
     console.error("[admin/marketing/campanhas GET]", error.message);
     return res.status(500).json({ error: mensagemParaCliente(error.message) });
@@ -183,9 +279,18 @@ router.get("/campanhas", async (req, res) => {
 
 router.post("/campanhas", async (req, res) => {
   try {
-    const resultado = await criarCampanhaEmail(req.body || {}, {
-      adminUsuario: req.admin?.usuario || "admin",
-    });
+    const canal =
+      String(req.body?.canal || "email").toLowerCase() === "whatsapp"
+        ? "whatsapp"
+        : "email";
+    const resultado =
+      canal === "whatsapp"
+        ? await criarCampanhaWhatsapp(req.body || {}, {
+            adminUsuario: req.admin?.usuario || "admin",
+          })
+        : await criarCampanhaEmail(req.body || {}, {
+            adminUsuario: req.admin?.usuario || "admin",
+          });
     if (!resultado.ok) {
       return res.status(400).json({ error: resultado.error });
     }
@@ -215,10 +320,14 @@ router.get("/campanhas/:id", async (req, res) => {
 
 router.put("/campanhas/:id", async (req, res) => {
   try {
-    const resultado = await atualizarCampanhaEmail(
-      Number(req.params.id),
-      req.body || {}
-    );
+    const atual = await buscarCampanha(Number(req.params.id));
+    if (!atual) {
+      return res.status(404).json({ error: "Campanha não encontrada" });
+    }
+    const resultado =
+      atual.canal === "whatsapp"
+        ? await atualizarCampanhaWhatsapp(Number(req.params.id), req.body || {})
+        : await atualizarCampanhaEmail(Number(req.params.id), req.body || {});
     if (!resultado.ok) {
       return res.status(400).json({ error: resultado.error });
     }
@@ -234,6 +343,11 @@ router.post("/campanhas/:id/preview", async (req, res) => {
     const campanha = await buscarCampanha(Number(req.params.id));
     if (!campanha) {
       return res.status(404).json({ error: "Campanha não encontrada" });
+    }
+    if (campanha.canal === "whatsapp") {
+      return res.status(400).json({
+        error: "Preview HTML não se aplica a campanhas WhatsApp",
+      });
     }
     const token = criarTokenOptOut({
       cpf: null,
@@ -290,10 +404,17 @@ router.post("/campanhas/:id/desarquivar", async (req, res) => {
 
 router.post("/campanhas/:id/teste", async (req, res) => {
   try {
-    const resultado = await enviarTesteCampanha(
-      Number(req.params.id),
-      req.body?.email
-    );
+    const campanha = await buscarCampanha(Number(req.params.id));
+    if (!campanha) {
+      return res.status(404).json({ error: "Campanha não encontrada" });
+    }
+    const resultado =
+      campanha.canal === "whatsapp"
+        ? await enviarTesteWhatsapp(
+            Number(req.params.id),
+            req.body?.telefone || req.body?.phone
+          )
+        : await enviarTesteCampanha(Number(req.params.id), req.body?.email);
     if (!resultado.ok) {
       return res.status(400).json({ error: resultado.error });
     }
@@ -306,7 +427,14 @@ router.post("/campanhas/:id/teste", async (req, res) => {
 
 router.post("/campanhas/:id/enviar", async (req, res) => {
   try {
-    const resultado = await iniciarEnvioCampanha(Number(req.params.id));
+    const campanha = await buscarCampanha(Number(req.params.id));
+    if (!campanha) {
+      return res.status(404).json({ error: "Campanha não encontrada" });
+    }
+    const resultado =
+      campanha.canal === "whatsapp"
+        ? await iniciarEnvioWhatsapp(Number(req.params.id))
+        : await iniciarEnvioCampanha(Number(req.params.id));
     if (!resultado.ok) {
       return res.status(400).json({
         error: resultado.error,
@@ -322,7 +450,14 @@ router.post("/campanhas/:id/enviar", async (req, res) => {
 
 router.post("/campanhas/:id/retomar", async (req, res) => {
   try {
-    const resultado = await retomarEnvioCampanha(Number(req.params.id));
+    const campanha = await buscarCampanha(Number(req.params.id));
+    if (!campanha) {
+      return res.status(404).json({ error: "Campanha não encontrada" });
+    }
+    const resultado =
+      campanha.canal === "whatsapp"
+        ? await retomarEnvioWhatsapp(Number(req.params.id))
+        : await retomarEnvioCampanha(Number(req.params.id));
     if (!resultado.ok) {
       return res.status(400).json({ error: resultado.error });
     }

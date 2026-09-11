@@ -7,7 +7,7 @@ export const TAB_VIEWS = [
   "novidades",
 ];
 export const APP_VIEWS = [...TAB_VIEWS, "perfil", "contato", "editar"];
-export const PUBLIC_VIEWS = ["regulamento", "privacidade"];
+export const PUBLIC_VIEWS = ["regulamento", "privacidade", "termos", "exclusao"];
 export const ALL_VIEWS = [...APP_VIEWS, ...PUBLIC_VIEWS];
 
 const APP_HISTORY_KEY = "superama";

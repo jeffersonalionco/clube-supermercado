@@ -74,6 +74,26 @@ export const SEO_PAGES = {
     path: "/#/regulamento",
     type: "article",
   },
+  termos: {
+    title: "Termos de Uso | Clube Superama+",
+    description:
+      "Termos de Uso da plataforma digital do Clube Superama+: regras de acesso, conta e utilização do site do Mercado Superama.",
+    keywords:
+      "termos de uso Clube Superama, termos Superama, condições de uso clube",
+    robots: "index, follow",
+    path: "/#/termos",
+    type: "article",
+  },
+  exclusao: {
+    title: "Exclusão de conta | Clube Superama+",
+    description:
+      "Como solicitar a exclusão da conta no Clube Superama+ e o que acontece com seus dados (LGPD).",
+    keywords:
+      "excluir conta Clube Superama, exclusão de dados Superama, apagar cadastro clube",
+    robots: "index, follow",
+    path: "/#/exclusao",
+    type: "article",
+  },
   app: {
     title: "Área do cliente | Clube Superama+",
     description: "Área logada do Clube Superama+.",

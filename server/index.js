@@ -17,8 +17,12 @@ import adminNovidadesRoutes from "./routes/adminNovidades.js";
 import adminMarketingRoutes from "./routes/adminMarketing.js";
 import marketingPublicoRoutes from "./routes/marketingPublico.js";
 import legalRoutes from "./routes/legal.js";
+import padariaRoutes from "./routes/padaria.js";
+import whatsappWebhookRoutes from "./routes/whatsappWebhook.js";
 import { mensagemParaCliente } from "./utils/mensagemCliente.js";
 import { retomarEnviosPendentesNoBoot } from "./services/marketing/emailEnvioService.js";
+import { retomarEnviosWhatsappPendentesNoBoot } from "./services/marketing/whatsappEnvioService.js";
+import { limparEventosWebhookAntigos } from "./services/marketing/whatsappAutoReplyService.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -47,7 +51,16 @@ app.use(
   })
 );
 app.use(cors(corsOptions()));
-app.use(express.json({ limit: "128kb" }));
+app.use(
+  express.json({
+    limit: "1mb",
+    verify: (req, _res, buf) => {
+      if (req.originalUrl?.startsWith("/api/webhooks/whatsapp")) {
+        req.rawBody = buf;
+      }
+    },
+  })
+);
 
 app.use("/api", (_req, res, next) => {
   res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
@@ -56,7 +69,22 @@ app.use("/api", (_req, res, next) => {
   next();
 });
 
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use(
+  "/uploads",
+  (_req, res, next) => {
+    // Mídia precisa ser legível por clientes externos (Meta / WhatsApp)
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    next();
+  },
+  express.static(path.join(__dirname, "uploads"), {
+    setHeaders(res, filePath) {
+      if (/\.mp4$/i.test(filePath)) {
+        res.setHeader("Content-Type", "video/mp4");
+      }
+    },
+  })
+);
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/api/auth", authRoutes);
@@ -68,6 +96,8 @@ app.use("/api/admin/legal", adminLegalRoutes);
 app.use("/api/admin/novidades", adminNovidadesRoutes);
 app.use("/api/admin/marketing", adminMarketingRoutes);
 app.use("/api/marketing", marketingPublicoRoutes);
+app.use("/api/padaria", padariaRoutes);
+app.use("/api/webhooks/whatsapp", whatsappWebhookRoutes);
 
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true });
@@ -122,6 +152,23 @@ async function start() {
     retomarEnviosPendentesNoBoot().catch((err) => {
       console.error("[marketing/boot]", err.message);
     });
+    retomarEnviosWhatsappPendentesNoBoot().catch((err) => {
+      console.error("[marketing/whatsapp/boot]", err.message);
+    });
+    limparEventosWebhookAntigos(14).catch(() => {});
+    setInterval(() => {
+      limparEventosWebhookAntigos(14).catch(() => {});
+    }, 24 * 60 * 60 * 1000);
+
+    // Cache de preço 2 aquecido para a auto-resposta "Ofertas de hoje"
+    import("./services/produtosClubeDescontosService.js")
+      .then(({ aquecerCacheClubeDescontos }) => {
+        aquecerCacheClubeDescontos();
+        console.log("[clube-descontos] aquecimento do cache iniciado");
+      })
+      .catch((err) => {
+        console.warn("[clube-descontos] aquecimento falhou:", err.message);
+      });
   });
 }
 

@@ -156,7 +156,12 @@ export async function apresentarVendas(itens, periodo) {
       chaveCupom: item.chaveCupom || null,
       formaPagamento: item.formaPagamento || null,
       formasPagamento: item.formasPagamento || [],
-      unidade: item.unidade || null,
+      unidade:
+        item.unidade?.codigo != null
+          ? String(item.unidade.codigo)
+          : typeof item.unidade === "string"
+            ? item.unidade
+            : null,
       cancelada: Boolean(item.cancelada),
       convenio: Boolean(item.convenio),
       elegivelPontos: item.elegivelPontos !== false && !item.cancelada && !item.convenio,

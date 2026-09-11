@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import AdminApp from "./admin/AdminApp.jsx";
+import PadariaApp, { isPadariaRoute } from "./padaria/PadariaApp.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import EditarDadosPage from "./pages/EditarDadosPage.jsx";
@@ -159,7 +160,12 @@ function ClientApp() {
   if (session?.token) {
     let page = null;
 
-    if (view === "regulamento" || view === "privacidade") {
+    if (
+      view === "regulamento" ||
+      view === "privacidade" ||
+      view === "termos" ||
+      view === "exclusao"
+    ) {
       page = <LegalPage slug={view} onVoltar={voltar} />;
     } else if (view === "editar") {
       page = <EditarDadosPage onVoltar={voltar} onSalvo={voltar} />;
@@ -230,6 +236,8 @@ function ClientApp() {
           onContato={() => navegar("contato")}
           onRegulamento={() => navegar("regulamento")}
           onPrivacidade={() => navegar("privacidade")}
+          onTermos={() => navegar("termos")}
+          onExclusao={() => navegar("exclusao")}
           onClubeReady={setClube}
         />
       );
@@ -266,11 +274,16 @@ function ClientApp() {
 
 export default function App() {
   const [adminRoute] = useState(() => isAdminRoute());
+  const [padariaRoute] = useState(() => isPadariaRoute());
   const [descadastrarRoute] = useState(() => isDescadastrarEmailRoute());
   const [assistirVideoRoute] = useState(() => isAssistirVideoRoute());
 
   if (adminRoute) {
     return <AdminApp />;
+  }
+
+  if (padariaRoute) {
+    return <PadariaApp />;
   }
 
   if (descadastrarRoute) {

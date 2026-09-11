@@ -3,5 +3,9 @@ dist/
 .env
 *.log
 .DS_Store
+.cache/
 server/uploads/
+server/bin/ffmpeg
+server/bin/ffprobe
+server/.cache/
 server/scripts/*.csv

@@ -133,12 +133,344 @@ async function ensureSchema() {
   await migrarSenhaRecuperacao(db);
   await migrarNovidades(db);
   await migrarMarketing(db);
+  await migrarPadaria(db);
 
   const { seedAdministradorDoEnv } = await import("./services/painelAdminService.js");
   await seedAdministradorDoEnv();
 
   const { seedConteudoLegal } = await import("./services/legalService.js");
   await seedConteudoLegal();
+}
+
+async function migrarPadaria(db) {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS padaria_usuario (
+      id SERIAL PRIMARY KEY,
+      login VARCHAR(80) NOT NULL UNIQUE,
+      senha_hash TEXT NOT NULL,
+      nome VARCHAR(200) NOT NULL,
+      papel VARCHAR(20) NOT NULL CHECK (papel IN ('atendente', 'padaria', 'gestor')),
+      ativo BOOLEAN NOT NULL DEFAULT true,
+      criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      atualizado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS padaria_produto (
+      codigo VARCHAR(40) PRIMARY KEY,
+      nome_rp VARCHAR(255) NOT NULL,
+      nome_catalogo VARCHAR(255),
+      preco NUMERIC(12, 2) NOT NULL DEFAULT 0,
+      unidade_medida VARCHAR(10) NOT NULL DEFAULT 'UN',
+      venda_por_kg BOOLEAN NOT NULL DEFAULT false,
+      ativo_rp BOOLEAN NOT NULL DEFAULT true,
+      ativo_catalogo BOOLEAN NOT NULL DEFAULT false,
+      descricao TEXT,
+      cobertura TEXT,
+      recheio TEXT,
+      imagem_url TEXT,
+      departamento_codigo VARCHAR(40),
+      grupo VARCHAR(120),
+      dados_rp JSONB,
+      sincronizado_em TIMESTAMPTZ,
+      criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      atualizado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_padaria_produto_catalogo
+    ON padaria_produto (ativo_catalogo, ativo_rp, nome_catalogo, nome_rp)
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS padaria_categoria (
+      id SERIAL PRIMARY KEY,
+      nome VARCHAR(80) NOT NULL UNIQUE,
+      slug VARCHAR(80) NOT NULL UNIQUE,
+      ordem INTEGER NOT NULL DEFAULT 0,
+      cor VARCHAR(20) NOT NULL DEFAULT '#0f766e',
+      ativo BOOLEAN NOT NULL DEFAULT true,
+      criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      atualizado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await db.query(`
+    ALTER TABLE padaria_produto
+    ADD COLUMN IF NOT EXISTS categoria_id INTEGER REFERENCES padaria_categoria(id) ON DELETE SET NULL
+  `);
+
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_padaria_produto_categoria
+    ON padaria_produto (categoria_id)
+  `);
+
+  {
+    const { rows } = await db.query(
+      `SELECT COUNT(*)::int AS n FROM padaria_categoria`
+    );
+    if (!rows[0]?.n) {
+      const seeds = [
+        ["Bolos", "bolos", 10, "#b45309"],
+        ["Lanches", "lanches", 20, "#0f766e"],
+        ["Salgados", "salgados", 30, "#c2410c"],
+        ["Pães", "paes", 40, "#a16207"],
+        ["Doces", "doces", 50, "#be185d"],
+        ["Bebidas", "bebidas", 60, "#1d4ed8"],
+      ];
+      for (const [nome, slug, ordem, cor] of seeds) {
+        await db.query(
+          `INSERT INTO padaria_categoria (nome, slug, ordem, cor)
+           VALUES ($1, $2, $3, $4)
+           ON CONFLICT (slug) DO NOTHING`,
+          [nome, slug, ordem, cor]
+        );
+      }
+    }
+  }
+
+  await db.query(`
+    ALTER TABLE padaria_produto
+    ADD COLUMN IF NOT EXISTS origem VARCHAR(20)
+  `);
+
+  /* Remove catálogo da sync em massa antiga — só permanecem cadastros manuais por código. */
+  await db.query(`
+    UPDATE padaria_produto SET origem = 'sync' WHERE origem IS NULL
+  `);
+  await db.query(`
+    DELETE FROM padaria_produto WHERE origem <> 'manual'
+  `);
+  await db.query(`
+    ALTER TABLE padaria_produto
+    ALTER COLUMN origem SET DEFAULT 'manual'
+  `);
+  await db.query(`
+    DO $$
+    BEGIN
+      ALTER TABLE padaria_produto ALTER COLUMN origem SET NOT NULL;
+    EXCEPTION WHEN others THEN
+      NULL;
+    END $$
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS padaria_pedido (
+      id SERIAL PRIMARY KEY,
+      codigo_publico VARCHAR(32) NOT NULL UNIQUE,
+      cliente_nome VARCHAR(200) NOT NULL,
+      cliente_cpf VARCHAR(14),
+      cliente_telefone VARCHAR(30),
+      data_retirada DATE NOT NULL,
+      hora_retirada TIME NOT NULL,
+      status VARCHAR(20) NOT NULL DEFAULT 'novo'
+        CHECK (status IN ('novo', 'em_producao', 'pronto', 'entregue', 'cancelado')),
+      observacao TEXT,
+      criado_por INTEGER REFERENCES padaria_usuario(id),
+      pronto_em TIMESTAMPTZ,
+      pronto_por INTEGER REFERENCES padaria_usuario(id),
+      criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      atualizado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_padaria_pedido_status_data
+    ON padaria_pedido (status, data_retirada, hora_retirada)
+  `);
+
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_padaria_pedido_data
+    ON padaria_pedido (data_retirada DESC, criado_em DESC)
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS padaria_pedido_item (
+      id SERIAL PRIMARY KEY,
+      pedido_id INTEGER NOT NULL REFERENCES padaria_pedido(id) ON DELETE CASCADE,
+      produto_codigo VARCHAR(40) NOT NULL,
+      nome_snapshot VARCHAR(255) NOT NULL,
+      quantidade NUMERIC(12, 3) NOT NULL,
+      preco_unitario NUMERIC(12, 2) NOT NULL,
+      unidade VARCHAR(10) NOT NULL DEFAULT 'UN',
+      subtotal NUMERIC(12, 2) NOT NULL,
+      cobertura TEXT,
+      recheio TEXT,
+      obs_item TEXT
+    )
+  `);
+
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_padaria_pedido_item_pedido
+    ON padaria_pedido_item (pedido_id)
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS padaria_config (
+      chave VARCHAR(80) PRIMARY KEY,
+      valor TEXT NOT NULL,
+      atualizado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  /* Uma vez: zera produtos herdados da sync em massa do departamento. */
+  {
+    const jaLimpou = await db.query(
+      `SELECT 1 FROM padaria_config WHERE chave = 'limpeza_produtos_sync_v2' LIMIT 1`
+    );
+    if (!jaLimpou.rowCount) {
+      await db.query(`DELETE FROM padaria_produto`);
+      await db.query(
+        `INSERT INTO padaria_config (chave, valor, atualizado_em)
+         VALUES ('limpeza_produtos_sync_v2', 'ok', NOW())`
+      );
+    }
+  }
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS padaria_pedido_seq (
+      ano INTEGER PRIMARY KEY,
+      ultimo INTEGER NOT NULL DEFAULT 0
+    )
+  `);
+
+  await db.query(`
+    ALTER TABLE padaria_pedido
+    ADD COLUMN IF NOT EXISTS entregue_em TIMESTAMPTZ
+  `);
+  await db.query(`
+    ALTER TABLE padaria_pedido
+    ADD COLUMN IF NOT EXISTS entregue_por INTEGER REFERENCES padaria_usuario(id)
+  `);
+  await db.query(`
+    ALTER TABLE padaria_pedido
+    ADD COLUMN IF NOT EXISTS cancelado_em TIMESTAMPTZ
+  `);
+  await db.query(`
+    ALTER TABLE padaria_pedido
+    ADD COLUMN IF NOT EXISTS cancelado_por INTEGER REFERENCES padaria_usuario(id)
+  `);
+  await db.query(`
+    ALTER TABLE padaria_pedido
+    ADD COLUMN IF NOT EXISTS motivo_cancelamento TEXT
+  `);
+
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_padaria_pedido_telefone
+    ON padaria_pedido (cliente_telefone)
+  `);
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_padaria_pedido_codigo
+    ON padaria_pedido (codigo_publico)
+  `);
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_padaria_pedido_status
+    ON padaria_pedido (status)
+  `);
+
+  await db.query(`
+    ALTER TABLE padaria_usuario
+    ADD COLUMN IF NOT EXISTS ultimo_acesso_em TIMESTAMPTZ
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS padaria_auditoria (
+      id BIGSERIAL PRIMARY KEY,
+      usuario_id INTEGER REFERENCES padaria_usuario(id) ON DELETE SET NULL,
+      usuario_nome VARCHAR(200),
+      acao VARCHAR(80) NOT NULL,
+      entidade VARCHAR(80) NOT NULL,
+      entidade_id VARCHAR(80),
+      dados JSONB,
+      criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_padaria_auditoria_criado
+    ON padaria_auditoria (criado_em DESC)
+  `);
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_padaria_auditoria_entidade
+    ON padaria_auditoria (entidade, entidade_id)
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS padaria_produto_decoracao (
+      id SERIAL PRIMARY KEY,
+      produto_codigo VARCHAR(40)
+        REFERENCES padaria_produto(codigo) ON DELETE CASCADE,
+      codigo VARCHAR(40),
+      nome VARCHAR(160) NOT NULL,
+      descricao TEXT,
+      imagem_url TEXT,
+      ordem INTEGER NOT NULL DEFAULT 100,
+      ativo BOOLEAN NOT NULL DEFAULT true,
+      criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      atualizado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await db.query(`
+    ALTER TABLE padaria_produto_decoracao
+    ALTER COLUMN produto_codigo DROP NOT NULL
+  `);
+  await db.query(`
+    ALTER TABLE padaria_produto_decoracao
+    ADD COLUMN IF NOT EXISTS preco NUMERIC(12,2) NOT NULL DEFAULT 0
+  `);
+  await db.query(`
+    ALTER TABLE padaria_produto_decoracao
+    ADD COLUMN IF NOT EXISTS global BOOLEAN NOT NULL DEFAULT false
+  `);
+  await db.query(`
+    ALTER TABLE padaria_produto_decoracao
+    ADD COLUMN IF NOT EXISTS controla_estoque BOOLEAN NOT NULL DEFAULT false
+  `);
+  await db.query(`
+    ALTER TABLE padaria_produto_decoracao
+    ADD COLUMN IF NOT EXISTS estoque INTEGER NOT NULL DEFAULT 0
+  `);
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_padaria_decoracao_produto
+    ON padaria_produto_decoracao (produto_codigo, ativo, ordem)
+  `);
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_padaria_decoracao_global
+    ON padaria_produto_decoracao (ativo, ordem)
+    WHERE global = true
+  `);
+  await db.query(`
+    DROP INDEX IF EXISTS uq_padaria_decoracao_produto_codigo
+  `);
+  await db.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS uq_padaria_decoracao_produto_codigo
+    ON padaria_produto_decoracao (produto_codigo, lower(codigo))
+    WHERE codigo IS NOT NULL AND btrim(codigo) <> ''
+      AND global = false AND produto_codigo IS NOT NULL
+  `);
+  await db.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS uq_padaria_decoracao_global_codigo
+    ON padaria_produto_decoracao (lower(codigo))
+    WHERE global = true AND codigo IS NOT NULL AND btrim(codigo) <> ''
+  `);
+
+  await db.query(`
+    ALTER TABLE padaria_pedido_item
+    ADD COLUMN IF NOT EXISTS decoracao_id INTEGER
+  `);
+  await db.query(`
+    ALTER TABLE padaria_pedido_item
+    ADD COLUMN IF NOT EXISTS decoracao_codigo VARCHAR(40)
+  `);
+  await db.query(`
+    ALTER TABLE padaria_pedido_item
+    ADD COLUMN IF NOT EXISTS decoracao_nome VARCHAR(160)
+  `);
+  await db.query(`
+    ALTER TABLE padaria_pedido_item
+    ADD COLUMN IF NOT EXISTS decoracao_preco NUMERIC(12,2) NOT NULL DEFAULT 0
+  `);
 }
 
 async function migrarPontosLotes(db) {
@@ -553,6 +885,107 @@ async function migrarMarketing(db) {
   await db.query(`
     CREATE INDEX IF NOT EXISTS idx_marketing_campanha_arquivado
     ON marketing_campanha (canal, arquivado_em, criado_em DESC)
+  `);
+
+  await db.query(`
+    ALTER TABLE marketing_campanha
+    ADD COLUMN IF NOT EXISTS template_nome VARCHAR(200) NOT NULL DEFAULT '',
+    ADD COLUMN IF NOT EXISTS template_idioma VARCHAR(20) NOT NULL DEFAULT 'pt_BR',
+    ADD COLUMN IF NOT EXISTS midia_url TEXT NOT NULL DEFAULT '',
+    ADD COLUMN IF NOT EXISTS midia_tipo VARCHAR(20) NOT NULL DEFAULT '',
+    ADD COLUMN IF NOT EXISTS body_params JSONB NOT NULL DEFAULT '[]'::jsonb,
+    ADD COLUMN IF NOT EXISTS button_url_params JSONB NOT NULL DEFAULT '[]'::jsonb,
+    ADD COLUMN IF NOT EXISTS telefones_especificos JSONB NOT NULL DEFAULT '[]'::jsonb,
+    ADD COLUMN IF NOT EXISTS telefone_teste VARCHAR(32)
+  `);
+
+  await db.query(`
+    ALTER TABLE marketing_envio
+    ALTER COLUMN email DROP NOT NULL
+  `);
+
+  await db.query(`
+    ALTER TABLE marketing_envio
+    ADD COLUMN IF NOT EXISTS telefone VARCHAR(32)
+  `);
+
+  await db.query(`
+    ALTER TABLE usuario
+    ADD COLUMN IF NOT EXISTS whatsapp_promocional_opt_out_em TIMESTAMPTZ,
+    ADD COLUMN IF NOT EXISTS whatsapp_promocional_opt_out_motivo TEXT
+  `);
+
+  await db.query(`
+    ALTER TABLE usuario
+    ADD COLUMN IF NOT EXISTS whatsapp_info_liberado_em TIMESTAMPTZ,
+    ADD COLUMN IF NOT EXISTS whatsapp_info_telefone VARCHAR(32)
+  `);
+
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_usuario_whatsapp_opt_out
+    ON usuario (whatsapp_promocional_opt_out_em)
+    WHERE whatsapp_promocional_opt_out_em IS NOT NULL
+  `);
+
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_usuario_whatsapp_info_tel
+    ON usuario (whatsapp_info_telefone)
+    WHERE whatsapp_info_telefone IS NOT NULL
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS whatsapp_webhook_evento (
+      id BIGSERIAL PRIMARY KEY,
+      wamid VARCHAR(128) NOT NULL,
+      telefone VARCHAR(32),
+      tipo VARCHAR(40) NOT NULL DEFAULT 'message',
+      processado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE (wamid)
+    )
+  `);
+
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_whatsapp_webhook_evento_tel
+    ON whatsapp_webhook_evento (telefone, processado_em DESC)
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS whatsapp_auto_reply_estado (
+      telefone VARCHAR(32) PRIMARY KEY,
+      ultimo_menu_em TIMESTAMPTZ,
+      ultimo_botao_em TIMESTAMPTZ,
+      envios_janela INTEGER NOT NULL DEFAULT 0,
+      janela_inicio TIMESTAMPTZ,
+      atualizado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await db.query(`
+    ALTER TABLE whatsapp_auto_reply_estado
+    ADD COLUMN IF NOT EXISTS sessao_modo VARCHAR(40),
+    ADD COLUMN IF NOT EXISTS sessao_atividade_em TIMESTAMPTZ,
+    ADD COLUMN IF NOT EXISTS sessao_usuario_id INTEGER
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS whatsapp_auto_reply_metrica (
+      id BIGSERIAL PRIMARY KEY,
+      telefone VARCHAR(32),
+      acao VARCHAR(40) NOT NULL,
+      wamid VARCHAR(128),
+      message_id VARCHAR(128),
+      criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_wa_auto_metrica_criado
+    ON whatsapp_auto_reply_metrica (criado_em DESC)
+  `);
+
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_wa_auto_metrica_acao_dia
+    ON whatsapp_auto_reply_metrica (acao, criado_em DESC)
   `);
 }
 

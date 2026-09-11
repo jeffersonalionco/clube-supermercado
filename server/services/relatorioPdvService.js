@@ -1,8 +1,13 @@
 import { getWrpdvPool } from "../db/wrpdv.js";
 import { getPool } from "../db.js";
 import { parseDataBR, formatarDataBR } from "../utils/periodoVendas.js";
+import {
+  mapaDataMinimaCadastro,
+  cupomNoOuAposCadastro,
+} from "../utils/vendasPlataforma.js";
 import { parseFinn, isFormaConvenio } from "./wrpdvParser.js";
-import { buscarClientePorCpfCnpj } from "./apiClient.js";
+import { buscarClientePorCpfCnpj, normalizarCpfCnpj } from "./apiClient.js";
+import { buscarVendasClienteWrpdv, valorCupomConfiavel, cupomAposDataMinima } from "./wrpdvVendasService.js";
 
 function nomeTabelaVenda(date) {
   const mes = String(date.getMonth() + 1).padStart(2, "0");
@@ -42,6 +47,13 @@ async function tabelaExiste(nomeTabela) {
     [nomeTabela]
   );
   return rows.length > 0;
+}
+
+function cupomContaNoClube(c, membrosSet, dataMinimaPorCpf) {
+  if (!membrosSet.has(c.cpf)) return false;
+  const min = dataMinimaPorCpf.get(c.cpf);
+  if (min && !cupomAposDataMinima(c.dataHora, min)) return false;
+  return true;
 }
 
 async function buscarNomesUsuarios(cpfs) {
@@ -141,12 +153,23 @@ export async function obterRelatorioPdv({
       const cpf = String(finn.cpf || "").trim();
       if (cpf.length < 11) continue;
 
+      const valor = await valorCupomConfiavel(
+        tabela,
+        {
+          tvd_cupom: row.tvd_cupom,
+          tvd_pdv: row.tvd_pdv,
+          tvd_unidade: row.tvd_unidade,
+          data_hora: row.data_hora,
+        },
+        finn.valor
+      );
+
       cuponsRaw.push({
         cupom: String(row.tvd_cupom ?? "").trim(),
         pdv: String(row.tvd_pdv ?? "").trim(),
         unidade: String(row.tvd_unidade ?? "").trim(),
         dataHora: row.data_hora,
-        valor: Number(finn.valor) || 0,
+        valor,
         cpf,
         nomeERP: String(finn.nomeCliente || "").trim(),
         forma: finn.forma || null,
@@ -157,18 +180,17 @@ export async function obterRelatorioPdv({
 
   const cpfsUnicos = [...new Set(cuponsRaw.map((c) => c.cpf))];
 
-  const membrosSet = new Set();
-  if (cpfsUnicos.length) {
-    const { rows } = await getPool().query(
-      `SELECT cpf FROM usuario WHERE cpf = ANY($1)`,
-      [cpfsUnicos]
-    );
-    for (const r of rows) membrosSet.add(r.cpf);
-  }
+  const { rows: membrosRows } = await getPool().query(
+    `SELECT cpf, criado_em FROM usuario`
+  );
+  const membrosSet = new Set(membrosRows.map((r) => r.cpf));
+  const dataMinimaPorCpf = mapaDataMinimaCadastro(membrosRows);
 
   const nomesMapa = await buscarNomesUsuarios(cpfsUnicos);
 
-  const cuponsClube = cuponsRaw.filter((c) => membrosSet.has(c.cpf));
+  const cuponsClube = cuponsRaw.filter((c) =>
+    cupomContaNoClube(c, membrosSet, dataMinimaPorCpf)
+  );
   const cuponsForaClube = cuponsRaw.filter((c) => !membrosSet.has(c.cpf));
 
   const naoMembrosMap = new Map();
@@ -358,6 +380,11 @@ export async function obterRelatorioPdv({
 
   return {
     geradoEm: new Date().toISOString(),
+    escopo: {
+      membros:
+        "Cupons de membros cadastrados, somente a partir da data de cadastro no clube.",
+      foraClube: "CPF informado no caixa por clientes não cadastrados no programa.",
+    },
     periodo: {
       dataInicio: formatarDataBR(inicio),
       dataFim: formatarDataBR(fim),
@@ -374,6 +401,117 @@ export async function obterRelatorioPdv({
       cupons: cuponsForaClube.length,
       valorTotal: valorTotalForaClube,
       clientes: naoMembros,
+    },
+  };
+}
+
+function resolverPeriodoRelatorio({ dataInicio = "", dataFim = "", dias = 7 } = {}) {
+  let inicio;
+  let fim;
+
+  if (dataInicio && dataFim) {
+    inicio = parseDataBR(dataInicio);
+    fim = parseDataBR(dataFim);
+  }
+
+  if (!inicio || !fim) {
+    const n = Math.min(90, Math.max(1, Number(dias) || 7));
+    fim = new Date();
+    fim.setHours(12, 0, 0, 0);
+    inicio = new Date(fim);
+    inicio.setDate(inicio.getDate() - (n - 1));
+  }
+
+  return {
+    inicio,
+    fim,
+    dataInicio: formatarDataBR(inicio),
+    dataFim: formatarDataBR(fim),
+  };
+}
+
+/**
+ * Detalhe completo dos cupons de um cliente (itens, pagamento, descontos).
+ * Opcionalmente filtra por PDV/caixa.
+ */
+export async function obterCuponsDetalheClientePdv({
+  cpf = "",
+  pdv = "",
+  dataInicio = "",
+  dataFim = "",
+  dias = 7,
+} = {}) {
+  const documento = normalizarCpfCnpj(cpf);
+  if (!documento) {
+    throw new Error("CPF/CNPJ inválido");
+  }
+
+  const periodo = resolverPeriodoRelatorio({ dataInicio, dataFim, dias });
+  const vendas = await buscarVendasClienteWrpdv(
+    documento,
+    periodo.dataInicio,
+    periodo.dataFim
+  );
+
+  if (!vendas.ok) {
+    throw new Error(vendas.error || "Erro ao buscar cupons do cliente");
+  }
+
+  const { rows: membroRows } = await getPool().query(
+    `SELECT criado_em FROM usuario WHERE cpf = $1 LIMIT 1`,
+    [documento]
+  );
+
+  const pdvNorm = String(pdv ?? "").trim();
+  let cupons = vendas.itens || [];
+  if (pdvNorm) {
+    cupons = cupons.filter((c) => String(c.pdv) === pdvNorm);
+  }
+
+  const membroClube = membroRows.length > 0;
+  if (membroClube && membroRows[0].criado_em) {
+    cupons = cupons.filter((c) =>
+      cupomNoOuAposCadastro(c.dataHora || c.data, membroRows[0].criado_em)
+    );
+  }
+
+  cupons.sort((a, b) => {
+    const da = String(a.data || "");
+    const db = String(b.data || "");
+    if (da !== db) return db.localeCompare(da);
+    return String(b.numeroDcto || "").localeCompare(String(a.numeroDcto || ""));
+  });
+
+  const nomesMapa = await buscarNomesUsuarios([documento]);
+  let nome = nomesMapa.get(documento) || "";
+  if (!nome) {
+    const erpMapa = await buscarNomesERP([documento]);
+    nome = erpMapa.get(documento) || documento;
+  }
+
+  const valorTotal = cupons.reduce(
+    (s, c) => s + (Number(c.valorTotalCupom) || 0),
+    0
+  );
+  const quantidadeItens = cupons.reduce(
+    (s, c) => s + (c.produtos?.length || 0),
+    0
+  );
+
+  return {
+    cpf: documento,
+    nome,
+    pdv: pdvNorm || null,
+    membroClube,
+    periodo: {
+      dataInicio: periodo.dataInicio,
+      dataFim: periodo.dataFim,
+    },
+    cupons,
+    totais: {
+      quantidadeCupons: cupons.length,
+      quantidadeItens,
+      valorTotal: Math.round(valorTotal * 100) / 100,
     },
   };
 }

@@ -6,7 +6,11 @@ import { listarDestinatariosCampanha } from "./destinatariosService.js";
 
 const STATUS_EDITAVEIS = new Set(["rascunho", "concluida", "cancelada"]);
 const STATUS_REENVIAVEIS = new Set(["rascunho", "concluida", "cancelada"]);
-const PUBLICOS = new Set(["todos_elegiveis", "emails_especificos"]);
+const PUBLICOS_EMAIL = new Set(["todos_elegiveis", "emails_especificos"]);
+const PUBLICOS_WHATSAPP = new Set([
+  "todos_elegiveis",
+  "telefones_especificos",
+]);
 
 function limparEmails(lista) {
   const out = [];
@@ -20,6 +24,29 @@ function limparEmails(lista) {
     out.push(email);
   }
   return out;
+}
+
+function limparTelefones(lista) {
+  const out = [];
+  const visto = new Set();
+  for (const item of lista || []) {
+    const digitos = String(item || "").replace(/\D/g, "");
+    if (digitos.length < 10 || visto.has(digitos)) continue;
+    visto.add(digitos);
+    out.push(digitos);
+  }
+  return out;
+}
+
+function asStringList(valor) {
+  if (Array.isArray(valor)) {
+    return valor.map((v) => String(v ?? "").trim()).filter(Boolean);
+  }
+  if (valor == null || valor === "") return [];
+  return String(valor)
+    .split(/\n|,/)
+    .map((v) => v.trim())
+    .filter(Boolean);
 }
 
 function mapCampanha(row) {
@@ -38,6 +65,18 @@ function mapCampanha(row) {
       ? row.emails_especificos
       : [],
     emailTeste: row.email_teste,
+    templateNome: row.template_nome || "",
+    templateIdioma: row.template_idioma || "pt_BR",
+    midiaUrl: row.midia_url || "",
+    midiaTipo: row.midia_tipo || "",
+    bodyParams: Array.isArray(row.body_params) ? row.body_params : [],
+    buttonUrlParams: Array.isArray(row.button_url_params)
+      ? row.button_url_params
+      : [],
+    telefonesEspecificos: Array.isArray(row.telefones_especificos)
+      ? row.telefones_especificos
+      : [],
+    telefoneTeste: row.telefone_teste || "",
     criadoPor: row.criado_por,
     criadoEm: row.criado_em,
     atualizadoEm: row.atualizado_em,
@@ -85,7 +124,7 @@ export function validarCampanhaInput(body = {}, { parcial = false } = {}) {
     }
   }
 
-  if (publico != null && !PUBLICOS.has(publico)) {
+  if (publico != null && !PUBLICOS_EMAIL.has(publico)) {
     erros.push("Público inválido");
   }
 
@@ -118,24 +157,31 @@ export function validarCampanhaInput(body = {}, { parcial = false } = {}) {
   };
 }
 
-export async function listarCampanhasEmail({
+export async function listarCampanhas({
+  canal = "email",
   limite = 50,
   arquivadas = false,
 } = {}) {
   const lim = Math.min(Math.max(Number(limite) || 50, 1), 100);
+  const canalNorm = canal === "whatsapp" ? "whatsapp" : "email";
   const { rows } = await getPool().query(
     `SELECT *
      FROM marketing_campanha
-     WHERE canal = 'email'
+     WHERE canal = $3
        AND (
          ($2::boolean = true AND arquivado_em IS NOT NULL)
          OR ($2::boolean = false AND arquivado_em IS NULL)
        )
      ORDER BY criado_em DESC
      LIMIT $1`,
-    [lim, Boolean(arquivadas)]
+    [lim, Boolean(arquivadas), canalNorm]
   );
   return rows.map(mapCampanha);
+}
+
+/** @deprecated use listarCampanhas({ canal: 'email' }) */
+export async function listarCampanhasEmail(opts = {}) {
+  return listarCampanhas({ ...opts, canal: "email" });
 }
 
 export async function buscarCampanha(id) {
@@ -314,10 +360,175 @@ export async function atualizarCampanhaEmail(id, input) {
 }
 
 export async function estimarDestinatariosCampanha(campanha) {
+  if (campanha?.canal === "whatsapp") {
+    const { listarDestinatariosWhatsapp } = await import(
+      "./destinatariosService.js"
+    );
+    return listarDestinatariosWhatsapp({
+      publico: campanha.publico,
+      telefonesEspecificos: campanha.telefonesEspecificos,
+    });
+  }
   return listarDestinatariosCampanha({
     publico: campanha.publico,
     emailsEspecificos: campanha.emailsEspecificos,
   });
+}
+
+export function validarCampanhaWhatsappInput(body = {}) {
+  const erros = [];
+  const assunto = body.assunto != null ? String(body.assunto).trim() : "";
+  const templateNome =
+    body.templateNome != null ? String(body.templateNome).trim() : "";
+  const templateIdioma =
+    body.templateIdioma != null
+      ? String(body.templateIdioma).trim()
+      : "pt_BR";
+  const midiaUrl = body.midiaUrl != null ? String(body.midiaUrl).trim() : "";
+  const midiaTipo = body.midiaTipo != null ? String(body.midiaTipo).trim() : "";
+  const publico =
+    body.publico != null ? String(body.publico).trim() : "todos_elegiveis";
+  const bodyParams = asStringList(body.bodyParams);
+  const buttonUrlParams = asStringList(body.buttonUrlParams);
+  const telefonesEspecificos = limparTelefones(body.telefonesEspecificos);
+
+  if (!assunto || assunto.length < 3) {
+    erros.push("Informe um nome interno da campanha (mín. 3 caracteres)");
+  } else if (assunto.length > 200) {
+    erros.push("Nome da campanha deve ter até 200 caracteres");
+  }
+
+  if (!templateNome) {
+    erros.push("Informe o nome do template aprovado na Meta");
+  }
+
+  if (midiaUrl && midiaTipo !== "video" && midiaTipo !== "image") {
+    erros.push("Informe o tipo da mídia (video ou image)");
+  }
+
+  if (!PUBLICOS_WHATSAPP.has(publico)) {
+    erros.push("Público inválido para WhatsApp");
+  }
+
+  if (publico === "telefones_especificos" && !telefonesEspecificos.length) {
+    erros.push("Informe ao menos um telefone para envio específico");
+  }
+
+  if (erros.length) {
+    return { ok: false, error: erros[0], erros };
+  }
+
+  return {
+    ok: true,
+    dados: {
+      assunto,
+      templateNome,
+      templateIdioma: templateIdioma || "pt_BR",
+      midiaUrl,
+      midiaTipo: midiaUrl ? midiaTipo : "",
+      bodyParams,
+      buttonUrlParams,
+      publico,
+      telefonesEspecificos,
+    },
+  };
+}
+
+export async function criarCampanhaWhatsapp(input, { adminUsuario }) {
+  const validado = validarCampanhaWhatsappInput(input);
+  if (!validado.ok) return validado;
+  const d = validado.dados;
+
+  const { rows } = await getPool().query(
+    `INSERT INTO marketing_campanha (
+       canal, assunto, preheader, corpo_md, corpo_html, corpo_texto,
+       status, publico, emails_especificos, criado_por,
+       template_nome, template_idioma, midia_url, midia_tipo,
+       body_params, button_url_params, telefones_especificos
+     ) VALUES (
+       'whatsapp', $1, '', '', '', '',
+       'rascunho', $2, '[]'::jsonb, $3,
+       $4, $5, $6, $7,
+       $8::jsonb, $9::jsonb, $10::jsonb
+     )
+     RETURNING *`,
+    [
+      d.assunto,
+      d.publico,
+      adminUsuario || "admin",
+      d.templateNome,
+      d.templateIdioma,
+      d.midiaUrl,
+      d.midiaTipo,
+      JSON.stringify(d.bodyParams),
+      JSON.stringify(d.buttonUrlParams),
+      JSON.stringify(d.telefonesEspecificos),
+    ]
+  );
+
+  return { ok: true, campanha: mapCampanha(rows[0]) };
+}
+
+export async function atualizarCampanhaWhatsapp(id, input) {
+  const atual = await buscarCampanha(id);
+  if (!atual) return { ok: false, error: "Campanha não encontrada" };
+  if (atual.canal !== "whatsapp") {
+    return { ok: false, error: "Campanha não é de WhatsApp" };
+  }
+  if (!STATUS_EDITAVEIS.has(atual.status)) {
+    return {
+      ok: false,
+      error:
+        atual.status === "enviando"
+          ? "Aguarde o envio terminar para editar"
+          : "Esta campanha não pode ser editada",
+    };
+  }
+
+  const validado = validarCampanhaWhatsappInput({
+    assunto: input.assunto ?? atual.assunto,
+    templateNome: input.templateNome ?? atual.templateNome,
+    templateIdioma: input.templateIdioma ?? atual.templateIdioma,
+    midiaUrl: input.midiaUrl ?? atual.midiaUrl,
+    midiaTipo: input.midiaTipo ?? atual.midiaTipo,
+    bodyParams: input.bodyParams ?? atual.bodyParams,
+    buttonUrlParams: input.buttonUrlParams ?? atual.buttonUrlParams,
+    publico: input.publico ?? atual.publico,
+    telefonesEspecificos:
+      input.telefonesEspecificos ?? atual.telefonesEspecificos,
+  });
+  if (!validado.ok) return validado;
+  const d = validado.dados;
+
+  const { rows } = await getPool().query(
+    `UPDATE marketing_campanha
+     SET assunto = $2,
+         publico = $3,
+         template_nome = $4,
+         template_idioma = $5,
+         midia_url = $6,
+         midia_tipo = $7,
+         body_params = $8::jsonb,
+         button_url_params = $9::jsonb,
+         telefones_especificos = $10::jsonb,
+         atualizado_em = NOW()
+     WHERE id = $1
+     RETURNING *`,
+    [
+      id,
+      d.assunto,
+      d.publico,
+      d.templateNome,
+      d.templateIdioma,
+      d.midiaUrl,
+      d.midiaTipo,
+      JSON.stringify(d.bodyParams),
+      JSON.stringify(d.buttonUrlParams),
+      JSON.stringify(d.telefonesEspecificos),
+    ]
+  );
+
+  return { ok: true, campanha: mapCampanha(rows[0]) };
 }
 
 export { STATUS_EDITAVEIS, STATUS_REENVIAVEIS };

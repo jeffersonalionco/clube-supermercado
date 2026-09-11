@@ -50,6 +50,7 @@ export default function CadastroClubePage({
   onCadastroConcluido,
   onAbrirRegulamento,
   onAbrirPrivacidade,
+  onAbrirTermos,
 }) {
   const pontosAtivo = useProgramaPublico();
   const [nome, setNome] = useState("");
@@ -400,6 +401,7 @@ export default function CadastroClubePage({
           }}
           onAbrirRegulamento={onAbrirRegulamento}
           onAbrirPrivacidade={onAbrirPrivacidade}
+          onAbrirTermos={onAbrirTermos}
           erro={Boolean(fieldErrors.aceiteLegal)}
         />
         {fieldErrors.aceiteLegal && (

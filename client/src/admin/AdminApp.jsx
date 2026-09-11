@@ -19,8 +19,11 @@ import AdminFunilNovosMembrosPage from "../pages/admin/AdminFunilNovosMembrosPag
 import AdminRelatorioClubePage from "../pages/admin/AdminRelatorioClubePage.jsx";
 import AdminMarketingHubPage from "../pages/admin/AdminMarketingHubPage.jsx";
 import AdminMarketingEmailPage from "../pages/admin/AdminMarketingEmailPage.jsx";
+import AdminMarketingWhatsAppPage from "../pages/admin/AdminMarketingWhatsAppPage.jsx";
+import AdminMarketingWhatsAppAutoPage from "../pages/admin/AdminMarketingWhatsAppAutoPage.jsx";
 import AdminVendasPdvPage from "../pages/admin/AdminVendasPdvPage.jsx";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage.jsx";
+import AdminPadariaPage from "../pages/admin/AdminPadariaPage.jsx";
 import { clearAdminSession, loadAdminSession } from "../utils/adminSession.js";
 import "../styles/admin.css";
 
@@ -30,6 +33,9 @@ function adminTabFromHash() {
   const path = adminPathFromHash();
   if (path === "admin/admins" || path.startsWith("admin/admins/")) {
     return "admins";
+  }
+  if (path === "admin/padaria" || path.startsWith("admin/padaria/")) {
+    return "padaria";
   }
   if (path === "admin/legal" || path.startsWith("admin/legal/")) {
     return "legal";
@@ -76,6 +82,8 @@ function adminTabFromHash() {
 function marketingSubFromHash() {
   const path = adminPathFromHash();
   if (path.startsWith("admin/marketing/email")) return "email";
+  if (path.startsWith("admin/marketing/whatsapp-auto")) return "whatsapp-auto";
+  if (path.startsWith("admin/marketing/whatsapp")) return "whatsapp";
   return "hub";
 }
 
@@ -121,7 +129,10 @@ function hashForAdminTab(tab, sub) {
     return "#/admin/relatorio";
   }
   if (tab === "marketing") {
-    return sub === "email" ? "#/admin/marketing/email" : "#/admin/marketing";
+    if (sub === "email") return "#/admin/marketing/email";
+    if (sub === "whatsapp-auto") return "#/admin/marketing/whatsapp-auto";
+    if (sub === "whatsapp") return "#/admin/marketing/whatsapp";
+    return "#/admin/marketing";
   }
   if (tab === "admins") return "#/admin/admins";
   if (tab === "legal") return "#/admin/legal";
@@ -130,6 +141,7 @@ function hashForAdminTab(tab, sub) {
   if (tab === "conteudo") return "#/admin/conteudo";
   if (tab === "novidades") return "#/admin/novidades";
   if (tab === "clube-descontos") return "#/admin/clube-descontos";
+  if (tab === "padaria") return "#/admin/padaria";
   if (tab === "pontos") return "#/admin/pontos";
   return "#/admin/dashboard";
 }
@@ -170,6 +182,18 @@ export default function AdminApp() {
     window.location.hash = hashForAdminTab("marketing", "email").slice(1);
     setTab("marketing");
     setMarketingSub("email");
+  }, []);
+
+  const abrirMarketingWhatsapp = useCallback(() => {
+    window.location.hash = hashForAdminTab("marketing", "whatsapp").slice(1);
+    setTab("marketing");
+    setMarketingSub("whatsapp");
+  }, []);
+
+  const abrirMarketingWhatsappAuto = useCallback(() => {
+    window.location.hash = hashForAdminTab("marketing", "whatsapp-auto").slice(1);
+    setTab("marketing");
+    setMarketingSub("whatsapp-auto");
   }, []);
 
   const voltarMarketingHub = useCallback(() => {
@@ -215,6 +239,10 @@ export default function AdminApp() {
 
   if (tab === "usuarios") {
     return <AdminUsuariosPage {...layoutProps} />;
+  }
+
+  if (tab === "padaria") {
+    return <AdminPadariaPage {...layoutProps} />;
   }
 
   if (tab === "relatorio") {
@@ -283,10 +311,30 @@ export default function AdminApp() {
         />
       );
     }
+    if (marketingSub === "whatsapp") {
+      return (
+        <AdminMarketingWhatsAppPage
+          {...layoutProps}
+          onVoltarHub={voltarMarketingHub}
+          onAbrirAutoReply={abrirMarketingWhatsappAuto}
+        />
+      );
+    }
+    if (marketingSub === "whatsapp-auto") {
+      return (
+        <AdminMarketingWhatsAppAutoPage
+          {...layoutProps}
+          onVoltarHub={voltarMarketingHub}
+          onAbrirCampanhas={abrirMarketingWhatsapp}
+        />
+      );
+    }
     return (
       <AdminMarketingHubPage
         {...layoutProps}
         onAbrirEmail={abrirMarketingEmail}
+        onAbrirWhatsapp={abrirMarketingWhatsapp}
+        onAbrirWhatsappAuto={abrirMarketingWhatsappAuto}
       />
     );
   }

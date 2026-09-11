@@ -1,0 +1,514 @@
+/* Auto-resposta WhatsApp — métricas (complementa admin.css) */
+
+.wa-auto {
+  --wa-blue: #1b4fa0;
+  --wa-teal: #0f766e;
+  --wa-amber: #b45309;
+  --wa-orange: #c2410c;
+  --wa-slate: #64748b;
+  --wa-ink: var(--admin-primary-dark, #142033);
+  --wa-muted: var(--admin-muted, #5c6b7a);
+  --wa-line: var(--admin-border, #d8e0ea);
+  --wa-bg: #f8fafc;
+}
+
+.wa-auto__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.85rem 1.25rem;
+  margin-bottom: 0;
+}
+
+.wa-auto__head-texto {
+  min-width: 0;
+  flex: 1 1 16rem;
+}
+
+.wa-auto__head-texto .admin-btn {
+  margin-bottom: 0.35rem;
+}
+
+.wa-auto__head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.wa-kpi-hint {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.72rem;
+  color: var(--wa-muted);
+  line-height: 1.35;
+}
+
+.wa-auto__grid {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 980px) {
+  .wa-auto__grid {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}
+
+.wa-card-head {
+  margin-bottom: 1rem;
+}
+
+.wa-card-head h2 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--wa-ink);
+}
+
+.wa-card-head p {
+  margin: 0.25rem 0 0;
+  font-size: 0.82rem;
+  color: var(--wa-muted);
+  line-height: 1.4;
+}
+
+/* Evita margem extra do .admin-card h2 dentro destes cards */
+.wa-auto .admin-card > .wa-card-head h2 {
+  margin: 0;
+}
+
+.wa-funil {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.wa-funil__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.wa-funil__label {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--wa-ink);
+  min-width: 0;
+}
+
+.wa-funil__direita {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  flex-shrink: 0;
+}
+
+.wa-funil__hint {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--wa-muted);
+  font-style: normal;
+}
+
+.wa-funil__valor {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--wa-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.wa-funil__track {
+  height: 10px;
+  border-radius: 999px;
+  background: #eef2f6;
+  overflow: hidden;
+}
+
+.wa-funil__fill {
+  height: 100%;
+  border-radius: inherit;
+  transition: width 0.3s ease;
+  min-width: 0;
+}
+
+.wa-funil__row--menu .wa-funil__fill {
+  background: var(--wa-blue);
+}
+.wa-funil__row--ofertas .wa-funil__fill {
+  background: var(--wa-teal);
+}
+.wa-funil__row--conversar .wa-funil__fill {
+  background: #2563eb;
+}
+.wa-funil__row--clube .wa-funil__fill {
+  background: var(--wa-amber);
+}
+.wa-funil__row--meu-clube .wa-funil__fill {
+  background: var(--wa-orange);
+}
+.wa-funil__row--beneficios .wa-funil__fill {
+  background: #ea580c;
+}
+.wa-funil__row--liberar .wa-funil__fill {
+  background: #d97706;
+}
+.wa-funil__row--compra .wa-funil__fill {
+  background: #a16207;
+}
+
+.wa-bloq-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.wa-bloq-lista li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 10px;
+  background: var(--wa-bg);
+  border: 1px solid var(--wa-line);
+}
+
+.wa-bloq-lista strong {
+  display: block;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--wa-ink);
+}
+
+.wa-bloq-lista span {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.75rem;
+  color: var(--wa-muted);
+}
+
+.wa-bloq-lista em {
+  font-style: normal;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--wa-ink);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.wa-bloq__empty {
+  margin: 0.85rem 0 0;
+  font-size: 0.84rem;
+  color: var(--wa-muted);
+}
+
+.wa-aud {
+  display: grid;
+  gap: 1.35rem;
+}
+
+@media (min-width: 800px) {
+  .wa-aud {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.75rem;
+  }
+}
+
+.wa-aud__block h3 {
+  margin: 0 0 0.65rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--wa-ink);
+}
+
+.wa-aud__legado {
+  margin: 0.55rem 0 0;
+  font-size: 0.75rem;
+  color: var(--wa-muted);
+}
+
+.wa-split__track {
+  display: flex;
+  height: 12px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #eef2f6;
+}
+
+.wa-split__track--vazio {
+  background: #eef2f6;
+}
+
+.wa-split__membro {
+  background: var(--wa-orange);
+  min-width: 0;
+}
+
+.wa-split__visitante {
+  background: var(--wa-slate);
+  min-width: 0;
+}
+
+.wa-split__labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.55rem;
+  font-size: 0.8rem;
+  color: var(--wa-muted);
+  flex-wrap: wrap;
+}
+
+.wa-split__labels strong {
+  color: var(--wa-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.wa-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.35rem;
+  min-height: 180px;
+  padding: 0.25rem 0.15rem 0;
+  overflow-x: auto;
+}
+
+.wa-bars__col {
+  flex: 1 1 0;
+  min-width: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.wa-bars__stack {
+  width: 100%;
+  max-width: 28px;
+  height: 140px;
+  display: flex;
+  flex-direction: column-reverse;
+  border-radius: 8px 8px 4px 4px;
+  overflow: hidden;
+  background: #eef2f6;
+}
+
+.wa-bars__seg {
+  display: block;
+  width: 100%;
+  min-height: 2px;
+}
+
+.wa-bars__spacer {
+  display: block;
+  width: 100%;
+  background: transparent;
+  min-height: 0;
+}
+
+.wa-bars__seg--menu {
+  background: var(--wa-blue);
+}
+.wa-bars__seg--ofertas {
+  background: var(--wa-teal);
+}
+.wa-bars__seg--conversar {
+  background: #2563eb;
+}
+.wa-bars__seg--clube {
+  background: var(--wa-amber);
+}
+.wa-bars__seg--meu-clube {
+  background: var(--wa-orange);
+}
+.wa-bars__seg--empty {
+  background: #d5dde6;
+  height: 2px;
+  min-height: 2px;
+  margin-top: auto;
+  align-self: stretch;
+}
+
+.wa-bars__label {
+  font-size: 0.65rem;
+  color: var(--wa-muted);
+  white-space: nowrap;
+}
+
+.wa-bars__n {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--wa-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.wa-bars__n.is-zero {
+  opacity: 0.35;
+}
+
+.wa-legend {
+  list-style: none;
+  margin: 0.9rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.1rem;
+}
+
+.wa-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--wa-muted);
+  font-weight: 600;
+}
+
+.wa-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.wa-dot--menu {
+  background: var(--wa-blue);
+}
+.wa-dot--ofertas {
+  background: var(--wa-teal);
+}
+.wa-dot--conversar {
+  background: #2563eb;
+}
+.wa-dot--clube {
+  background: var(--wa-amber);
+}
+.wa-dot--meu-clube {
+  background: var(--wa-orange);
+}
+
+.wa-empty {
+  margin: 0;
+  padding: 0.5rem 0;
+  color: var(--wa-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.wa-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  max-height: 420px;
+  overflow: auto;
+}
+
+.wa-feed__item {
+  display: grid;
+  grid-template-columns: minmax(8.5rem, 11rem) minmax(0, 1fr) auto;
+  gap: 0.65rem 0.85rem;
+  align-items: start;
+  padding: 0.7rem 0.85rem;
+  border-radius: 10px;
+  background: var(--wa-bg);
+  border: 1px solid var(--wa-line);
+  border-left-width: 3px;
+  border-left-color: var(--wa-line);
+}
+
+.wa-feed__item--menu,
+.wa-feed__item--menu_membro {
+  border-left-color: var(--wa-blue);
+}
+.wa-feed__item--menu_visitante {
+  border-left-color: var(--wa-slate);
+}
+.wa-feed__item--ofertas {
+  border-left-color: var(--wa-teal);
+}
+.wa-feed__item--conversar {
+  border-left-color: #2563eb;
+}
+.wa-feed__item--clube {
+  border-left-color: var(--wa-amber);
+}
+.wa-feed__item--meu_clube,
+.wa-feed__item--clube_mais,
+.wa-feed__item--clube_liberar,
+.wa-feed__item--clube_compra,
+.wa-feed__item--clube_voltar {
+  border-left-color: var(--wa-orange);
+}
+.wa-feed__item--cooldown_menu,
+.wa-feed__item--cooldown_ofertas,
+.wa-feed__item--rate_limit {
+  border-left-color: #b91c1c;
+}
+
+.wa-feed__acao {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--wa-ink);
+  line-height: 1.3;
+}
+
+.wa-feed__quem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+.wa-feed__nome {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--wa-ink);
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wa-feed__nome--anon {
+  font-weight: 600;
+  color: var(--wa-muted);
+}
+
+.wa-feed__meta {
+  font-size: 0.75rem;
+  color: var(--wa-muted);
+}
+
+.wa-feed__tel,
+.wa-feed__hora {
+  font-size: 0.78rem;
+  color: var(--wa-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.wa-feed__tel {
+  font-weight: 600;
+  color: #334155;
+}
+
+.wa-feed__hora {
+  white-space: nowrap;
+  padding-top: 0.1rem;
+}
+
+@media (max-width: 720px) {
+  .wa-feed__item {
+    grid-template-columns: 1fr auto;
+  }
+  .wa-feed__acao {
+    grid-column: 1 / -1;
+  }
+}

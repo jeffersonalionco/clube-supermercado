@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "node --watch index.js",
     "start": "node index.js",
-    "hash-admin-senha": "node scripts/hash-admin-senha.mjs"
+    "hash-admin-senha": "node scripts/hash-admin-senha.mjs",
+    "test": "node --test tests/padariaRegras.test.js"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",

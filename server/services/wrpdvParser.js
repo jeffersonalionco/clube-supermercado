@@ -2,6 +2,22 @@ function arredondarMoeda(valor) {
   return Math.round(Number(valor) * 100) / 100;
 }
 
+/** Valor FINN acima disso pode ser erro de convênio (ex.: limite Sicoob no campo pagamento). */
+export const VALOR_FINN_AUDITAR = 2000;
+export const RAZAO_FINN_VS_ITENS = 2.5;
+
+/**
+ * Usa total dos itens quando o FINN está incoerente (convênio gravando centenas de mil).
+ */
+export function resolverValorCupom(finnValor, totalLiquido) {
+  const finn = arredondarMoeda(finnValor);
+  const liquido = arredondarMoeda(totalLiquido);
+  if (finn <= 0) return liquido;
+  if (finn < VALOR_FINN_AUDITAR) return finn;
+  if (liquido > 0 && finn > liquido * RAZAO_FINN_VS_ITENS) return liquido;
+  return finn;
+}
+
 function centavosDeMoeda(valor) {
   return Math.round(arredondarMoeda(valor) * 100);
 }

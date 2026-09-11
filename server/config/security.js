@@ -12,6 +12,15 @@ export function getAdminSessionSecret() {
   );
 }
 
+export function getPadariaSessionSecret() {
+  return (
+    process.env.PADARIA_SESSION_SECRET ||
+    process.env.ADMIN_SESSION_SECRET ||
+    process.env.SESSION_SECRET ||
+    DEFAULT_SESSION_SECRET
+  );
+}
+
 export function isProducao() {
   return process.env.NODE_ENV === "production";
 }

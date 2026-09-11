@@ -24,6 +24,8 @@ export default function AdminMarketingHubPage({
   onLogout,
   admin,
   onAbrirEmail,
+  onAbrirWhatsapp,
+  onAbrirWhatsappAuto,
 }) {
   const [resumo, setResumo] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -140,16 +142,53 @@ export default function AdminMarketingHubPage({
             <span className="admin-marketing-canal__cta">Em breve</span>
           </div>
 
-          <div className="admin-marketing-canal admin-marketing-canal--disabled">
+          <button
+            type="button"
+            className="admin-marketing-canal"
+            onClick={onAbrirWhatsapp}
+          >
             <span className="admin-marketing-canal__icone" aria-hidden>
               ◈
             </span>
             <span className="admin-marketing-canal__corpo">
-              <strong>WhatsApp / Push</strong>
-              <span>Em breve.</span>
+              <strong>WhatsApp</strong>
+              <span>
+                Template com vídeo + botão via Meta Cloud API.
+                {resumo?.whatsappDisponivel === false
+                  ? " Configure o token no servidor."
+                  : ""}
+              </span>
+              <small>
+                Último envio:{" "}
+                {formatarDataHora(resumo?.whatsapp?.ultimoEnvio)}
+                {resumo?.whatsapp?.elegiveis != null
+                  ? ` · ${resumo.whatsapp.elegiveis} com celular`
+                  : ""}
+              </small>
             </span>
-            <span className="admin-marketing-canal__cta">Em breve</span>
-          </div>
+            <span className="admin-marketing-canal__cta">Abrir</span>
+          </button>
+
+          {onAbrirWhatsappAuto && (
+            <button
+              type="button"
+              className="admin-marketing-canal"
+              onClick={onAbrirWhatsappAuto}
+            >
+              <span className="admin-marketing-canal__icone" aria-hidden>
+                ▤
+              </span>
+              <span className="admin-marketing-canal__corpo">
+                <strong>Auto-resposta</strong>
+                <span>
+                  Métricas do menu automático: menus enviados e cliques em loja,
+                  clube e Facebook.
+                </span>
+                <small>Painel de conversão da divulgação</small>
+              </span>
+              <span className="admin-marketing-canal__cta">Ver métricas</span>
+            </button>
+          )}
         </div>
       </div>
     </AdminLayout>

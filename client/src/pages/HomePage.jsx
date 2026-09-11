@@ -32,6 +32,7 @@ import "../styles/novidades.css";
 import { useRefetchOnVisible } from "../hooks/useRefetchOnVisible.js";
 import ClienteInsightsPanel from "../components/charts/ClienteInsightsPanel.jsx";
 import HomeVideoCard from "../components/HomeVideoCard.jsx";
+import WhatsAppOfertasCta from "../components/WhatsAppOfertasCta.jsx";
 import {
   periodoInsightsVendas,
   resumoMesAtualDePorData,
@@ -925,6 +926,8 @@ export default function HomePage({
   onContato,
   onRegulamento,
   onPrivacidade,
+  onTermos,
+  onExclusao,
   onClubeReady,
 }) {
   const [loading, setLoading] = useState(true);
@@ -1289,6 +1292,8 @@ export default function HomePage({
                 )}
               </div>
             )}
+
+            <WhatsAppOfertasCta variant="banner" className="home-wa-ofertas" />
             {pontosAtivo ? (
               <div className="home-grid">
                 <nav className="home-menu" aria-label="Área do cliente">
@@ -1561,21 +1566,36 @@ export default function HomePage({
                   <HomeFaq pontosAtivo={false} />
                 </div>
               )}
+              <div className="home-desk-aside-card home-desk-aside-card--wa">
+                <WhatsAppOfertasCta variant="card" />
+              </div>
             </aside>
           </div>
         </div>
 
         <footer className="home-legal-footer">
-          {onRegulamento && (
-            <button type="button" className="home-legal-footer__link" onClick={onRegulamento}>
-              Regulamento
-            </button>
-          )}
-          {onPrivacidade && (
-            <button type="button" className="home-legal-footer__link" onClick={onPrivacidade}>
-              Privacidade
-            </button>
-          )}
+          <div className="home-legal-footer__links">
+            {onRegulamento && (
+              <button type="button" className="home-legal-footer__link" onClick={onRegulamento}>
+                Regulamento
+              </button>
+            )}
+            {onTermos && (
+              <button type="button" className="home-legal-footer__link" onClick={onTermos}>
+                Termos de Uso
+              </button>
+            )}
+            {onPrivacidade && (
+              <button type="button" className="home-legal-footer__link" onClick={onPrivacidade}>
+                Privacidade
+              </button>
+            )}
+            {onExclusao && (
+              <button type="button" className="home-legal-footer__link" onClick={onExclusao}>
+                Exclusão de conta
+              </button>
+            )}
+          </div>
           <MetajiCredit className="metaji-credit--home" />
         </footer>
       </PullToRefresh>

@@ -331,7 +331,7 @@ export default function AdminManualPage({ tab, onTabChange, onLogout, admin }) {
                 </article>
                 <article className="admin-manual-card">
                   <h3>Regulamento</h3>
-                  <p>Textos legais exibidos ao cliente (regulamento e privacidade).</p>
+                  <p>Textos legais exibidos ao cliente (regulamento, privacidade, termos e exclusão).</p>
                 </article>
               </div>
             </Secao>

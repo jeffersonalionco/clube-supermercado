@@ -1,0 +1,182 @@
+[
+  {
+    "codBalanca": "71",
+    "codigoRp": "618705",
+    "nomeCatalogo": "Bolo abacaxi com Coco",
+    "massa": "Branca",
+    "recheio": "Nata e abacaxi com Coco",
+    "cobertura": "Chantilly",
+    "decoracao": "Bombom e cerejas",
+    "vendaPorKg": true
+  },
+  {
+    "codBalanca": "62",
+    "codigoRp": "617881",
+    "nomeCatalogo": "Bolo de Frutas",
+    "massa": "Branca",
+    "recheio": "Nata, pêssego e Abacaxi",
+    "cobertura": "Chantilly",
+    "decoracao": "Bombom e cerejas",
+    "vendaPorKg": true
+  },
+  {
+    "codBalanca": "261",
+    "codigoRp": "677477",
+    "nomeCatalogo": "Bolo de Morango",
+    "massa": "Branca",
+    "recheio": "Nata e Morango",
+    "cobertura": "Chantilly",
+    "decoracao": "Morangos",
+    "vendaPorKg": true
+  },
+  {
+    "codBalanca": "2020",
+    "codigoRp": "1001140",
+    "nomeCatalogo": "Bolo Alpino",
+    "massa": "Preta",
+    "recheio": "Creme sabor Alpino",
+    "cobertura": "Chantilly de Chocolate",
+    "decoracao": "Cereja com raspas",
+    "vendaPorKg": true
+  },
+  {
+    "codBalanca": "334",
+    "codigoRp": "543870",
+    "nomeCatalogo": "Bolo Ferrero Rocher",
+    "massa": "Preta ou Branca",
+    "recheio": "Creme de Avelã / Ferrero Rocher",
+    "cobertura": "Chantilly de Chocolate",
+    "decoracao": "Bombom Ferrero Rocher",
+    "vendaPorKg": true
+  },
+  {
+    "codBalanca": "58",
+    "codigoRp": "615676",
+    "nomeCatalogo": "Bolo de Bombom",
+    "massa": "Preta ou Branca",
+    "recheio": "Nata, bombom sonho de valsa ou Ouro Branco",
+    "cobertura": "Chantilly",
+    "decoracao": "Bombom e Morango",
+    "vendaPorKg": true
+  },
+  {
+    "codBalanca": "76",
+    "codigoRp": "620840",
+    "nomeCatalogo": "Bolo de Brigadeiro",
+    "massa": "Preta",
+    "recheio": "Brigadeiro",
+    "cobertura": "Chantilly de Chocolate",
+    "decoracao": "Brigadeiros",
+    "vendaPorKg": true
+  },
+  {
+    "codBalanca": "214",
+    "codigoRp": "653853",
+    "nomeCatalogo": "Bolo Prestigio",
+    "massa": "Preta",
+    "recheio": "Prestigio",
+    "cobertura": "Chantilly de chocolate",
+    "decoracao": "Coco ralado e beijinho",
+    "vendaPorKg": true
+  },
+  {
+    "codBalanca": "588",
+    "codigoRp": "671991",
+    "nomeCatalogo": "Bolo Dois Amores",
+    "massa": "Branca ou Preta",
+    "recheio": "Brigadeiro e Prestigio",
+    "cobertura": "Chantilly",
+    "decoracao": "Brigadeiro e Beijinho",
+    "vendaPorKg": true
+  },
+  {
+    "codBalanca": "587",
+    "codigoRp": "671967",
+    "nomeCatalogo": "Floresta Negra",
+    "massa": "Preta",
+    "recheio": "Nata e Cereja",
+    "cobertura": "Chantilly de Chocolate",
+    "decoracao": "Cereja",
+    "vendaPorKg": true
+  },
+  {
+    "codBalanca": "196",
+    "codigoRp": "571210",
+    "nomeCatalogo": "Bolo Marta Rocha",
+    "massa": "Branca e Preta",
+    "recheio": "Nata, 4 Leites, Crocante de Castanha e Suspiro",
+    "cobertura": "Nata",
+    "decoracao": "Crocante de Castanha e Cereja",
+    "vendaPorKg": true
+  },
+  {
+    "codBalanca": "93",
+    "codigoRp": "637319",
+    "nomeCatalogo": "Torta de Seda",
+    "massa": "Branca",
+    "recheio": "Nata com doce de leite, Crocante de Castanha",
+    "cobertura": "Nata",
+    "decoracao": "Crocante de Castanha e Cereja",
+    "vendaPorKg": true
+  },
+  {
+    "codBalanca": "145",
+    "codigoRp": "641871",
+    "nomeCatalogo": "Bolo 4 Leites",
+    "massa": "Branca",
+    "recheio": "Creme sabor 4 Leites",
+    "cobertura": "Chantilly",
+    "decoracao": "Bombom e Morango",
+    "vendaPorKg": true
+  },
+  {
+    "codBalanca": "888",
+    "codigoRp": "1051350",
+    "nomeCatalogo": "Bolo Indiano",
+    "massa": "Indiana",
+    "recheio": "Creme 3 Leites",
+    "cobertura": "Creme 3 Leites",
+    "decoracao": "Canela em Pó",
+    "vendaPorKg": true
+  },
+  {
+    "codBalanca": "262",
+    "codigoRp": "846589",
+    "nomeCatalogo": "Bolo Gelado Pedaços",
+    "massa": "Branca",
+    "recheio": "Prestigio",
+    "cobertura": "Molhado com leite condensado e passado no coco",
+    "decoracao": "Embalado em papel alumínio",
+    "vendaPorKg": true
+  },
+  {
+    "codBalanca": "898",
+    "codigoRp": "1049933",
+    "nomeCatalogo": "Brigadeiro de Pote",
+    "massa": "Preta",
+    "recheio": "Brigadeiro",
+    "cobertura": "Chantilly de Chocolate",
+    "decoracao": "Cereja",
+    "vendaPorKg": true
+  },
+  {
+    "codBalanca": "899",
+    "codigoRp": "1049925",
+    "nomeCatalogo": "Prestigio de Pote",
+    "massa": "Preta",
+    "recheio": "Prestigio",
+    "cobertura": "Chantilly",
+    "decoracao": "Cereja",
+    "vendaPorKg": true
+  },
+  {
+    "codBalanca": "9002",
+    "codigoRp": "1143948",
+    "nomeCatalogo": "Bolo Olho De Sogra",
+    "massa": "Branca",
+    "recheio": "Prestigio e doce de leite com ameixa",
+    "cobertura": "Chantilly",
+    "decoracao": "Doce de leite e ameixa",
+    "vendaPorKg": true
+  }
+]

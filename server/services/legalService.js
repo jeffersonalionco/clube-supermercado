@@ -1,6 +1,6 @@
 import { getPool } from "../db.js";
 
-export const LEGAL_SLUGS = ["regulamento", "privacidade"];
+export const LEGAL_SLUGS = ["regulamento", "privacidade", "termos", "exclusao"];
 
 const CONTEUDO_INICIAL = {
   regulamento: {
@@ -461,6 +461,144 @@ Para dúvidas, solicitações de direitos do titular ou comunicações sobre pri
 
 O Superama reafirma seu compromisso de **proteger os dados pessoais dos participantes**, atuar com **integridade e transparência** e **cooperar com a lei e com a Justiça** para a apuração da verdade dos fatos, sempre dentro dos limites legais e do respeito aos direitos de todos os envolvidos.`,
   },
+  termos: {
+    titulo: "Termos de Uso",
+    conteudo: `## 1. Aceitação
+
+Estes **Termos de Uso** regem o acesso e a utilização da plataforma digital do **Clube Superama+**, programa de relacionamento do **Superama Supermercado**, marca do **Kimp Comércio de Alimentos Ltda.**, inscrita no CNPJ sob o nº **00.289.167/0001-14** (matriz), doravante **Superama**.
+
+Ao cadastrar-se, acessar ou utilizar a plataforma, você declara ter lido e concordado com estes Termos, com o **Regulamento do Clube** e com a **Política de Privacidade**, sem prejuízo dos direitos do consumidor e da legislação brasileira aplicável.
+
+## 2. Objeto
+
+A plataforma permite, conforme disponibilidade:
+
+- cadastro e autenticação no Clube Superama+;
+- consulta de dados cadastrais e benefícios;
+- visualização de compras elegíveis e, quando ativo, pontos e prêmios;
+- comunicação com a loja por canais oficiais da plataforma;
+- demais funcionalidades disponibilizadas pelo Superama.
+
+O uso do site/aplicação é **gratuito** para o participante, ressalvados custos de conexão à internet de sua responsabilidade.
+
+## 3. Elegibilidade e cadastro
+
+**3.1.** O Clube destina-se a pessoas físicas maiores de 18 anos, inscritas no CPF, nos termos do Regulamento.
+
+**3.2.** Você é responsável por fornecer dados verdadeiros e manter a confidencialidade da senha.
+
+**3.3.** É vedado criar conta com dados de terceiros, falsos ou incompletos de forma a induzir erro.
+
+## 4. Conta e segurança
+
+**4.1.** A conta é pessoal e intransferível.
+
+**4.2.** Notifique o Superama imediatamente em caso de uso não autorizado ou suspeita de comprometimento da conta.
+
+**4.3.** O Superama poderá suspender ou encerrar o acesso em caso de fraude, violação destes Termos, do Regulamento ou da legislação, preservados o contraditório e a apuração dos fatos na medida do possível.
+
+## 5. Condutas proibidas
+
+É vedado:
+
+- tentar burlar segurança, autenticação ou integrações da plataforma;
+- utilizar bots, scrapers ou meios automatizados sem autorização;
+- praticar fraude em pontuação, resgates ou benefícios;
+- ofender, ameaçar ou difundir conteúdo ilícito pelos canais da plataforma;
+- violar direitos de propriedade intelectual do Superama ou de terceiros.
+
+## 6. Conteúdo e propriedade intelectual
+
+Marcas, logotipos, layout, textos e demais elementos da plataforma são de titularidade do Superama ou de licenciadores. É proibida a reprodução não autorizada.
+
+## 7. Disponibilidade e limitações
+
+A plataforma é oferecida **no estado em que se encontra**, podendo haver manutenção, interrupções ou atrasos de sincronização com sistemas da loja (ERP/PDV). O Superama empregará **esforços razoáveis** para manter o serviço estável, sem garantia de disponibilidade ininterrupta, salvo disposição legal em contrário.
+
+## 8. Relação com outros documentos
+
+Estes Termos complementam o **Regulamento do Clube** (regras do programa) e a **Política de Privacidade** (tratamento de dados). Em caso de conflito sobre pontos/benefícios, prevalece o Regulamento; sobre dados pessoais, prevalece a Política de Privacidade e a LGPD.
+
+## 9. Exclusão de conta
+
+Você pode solicitar a exclusão da conta e o tratamento dos dados conforme a página **Exclusão de conta** e a Política de Privacidade.
+
+## 10. Alterações
+
+O Superama poderá atualizar estes Termos a qualquer tempo. A versão vigente estará disponível na plataforma, com data de atualização. Alterações relevantes poderão exigir novo aceite.
+
+## 11. Legislação e foro
+
+Aplicam-se as leis da **República Federativa do Brasil**, em especial o **Código de Defesa do Consumidor**, o **Marco Civil da Internet** e a **LGPD**.
+
+Fica eleito o foro da comarca da sede da matriz do Superama ou, quando mais benéfico ao consumidor, o foro de seu domicílio (**art. 101, I, do CDC**).
+
+## 12. Contato
+
+**Kimp Comércio de Alimentos Ltda.** — Superama Supermercado / Clube Superama+  
+CNPJ: **00.289.167/0001-14**
+
+Dúvidas: atendimento na loja ou área **Meu contato** na plataforma, após o login.`,
+  },
+  exclusao: {
+    titulo: "Exclusão de conta",
+    conteudo: `## 1. Sobre esta página
+
+Esta página explica **como solicitar a exclusão** da sua conta no **Clube Superama+** e o que ocorre com seus dados, em conformidade com a **LGPD (Lei nº 13.709/2018)** e requisitos de transparência de plataformas digitais.
+
+Controlador: **Kimp Comércio de Alimentos Ltda.** (Superama Supermercado), CNPJ **00.289.167/0001-14**.
+
+## 2. O que é excluído
+
+Ao concluir o pedido de exclusão da conta do clube, o Superama providenciará, nos limites técnicos e legais:
+
+- encerramento do acesso à plataforma digital do Clube Superama+;
+- eliminação ou anonimização dos dados de login e perfil mantidos exclusivamente para o clube, quando não houver outra base legal para retenção;
+- desvinculação da participação no programa de relacionamento digital.
+
+## 3. O que pode ser mantido
+
+Alguns dados podem ser **retidos pelo prazo necessário**, quando houver fundamento legal ou legítimo, por exemplo:
+
+- obrigações fiscais, contábeis ou regulatórias;
+- defesa de direitos em processos administrativos ou judiciais;
+- registros de compras e cupons fiscais mantidos nos sistemas da loja (ERP/PDV), que seguem regras próprias de retenção da operação comercial.
+
+A exclusão da conta do **clube digital** não apaga automaticamente o histórico de compras na loja física, quando esse histórico for necessário à operação do supermercado ou a obrigações legais.
+
+## 4. Como solicitar
+
+Você pode pedir a exclusão da conta por um dos canais abaixo:
+
+- **Na plataforma:** após o login, abra **Meu contato** e solicite expressamente a **exclusão da conta do Clube Superama+**, informando o CPF cadastrado.
+- **Na loja:** dirija-se ao atendimento ao cliente do Superama, apresente documento com foto e solicite a exclusão do cadastro no clube.
+- **Outros canais oficiais** eventualmente divulgados pelo Superama (e-mail ou telefone de SAC).
+
+Para sua segurança, poderemos solicitar **confirmação de identidade** antes de concluir o pedido.
+
+## 5. Prazo
+
+Responderemos e processaremos a solicitação dentro dos **prazos legais** da LGPD, podendo haver etapas de verificação. Você receberá confirmação pelos canais disponíveis (atendimento ou mensagem na plataforma), quando aplicável.
+
+## 6. Efeitos imediatos
+
+Após a exclusão:
+
+- você **não poderá mais acessar** a área do cliente com aquele cadastro;
+- benefícios digitais vinculados à conta serão **encerrados**;
+- para voltar a participar, será necessário **novo cadastro**, sujeito às regras então vigentes.
+
+## 7. Relação com a Privacidade
+
+Detalhes sobre tratamento, retenção e direitos do titular estão na **Política de Privacidade**. Esta página complementa aquele documento especificamente quanto ao **pedido de exclusão de conta**.
+
+## 8. Contato
+
+**Kimp Comércio de Alimentos Ltda.** — Superama Supermercado / Clube Superama+  
+CNPJ: **00.289.167/0001-14**
+
+Atendimento na loja ou área **Meu contato** na plataforma.`,
+  },
 };
 
 function mapRow(row) {
@@ -562,7 +700,13 @@ export async function listarConteudoLegal() {
     `SELECT slug, titulo, conteudo, atualizado_em, admin_usuario
      FROM conteudo_legal
      WHERE slug = ANY($1::varchar[])
-     ORDER BY CASE slug WHEN 'regulamento' THEN 1 WHEN 'privacidade' THEN 2 ELSE 3 END`,
+     ORDER BY CASE slug
+       WHEN 'regulamento' THEN 1
+       WHEN 'privacidade' THEN 2
+       WHEN 'termos' THEN 3
+       WHEN 'exclusao' THEN 4
+       ELSE 5
+     END`,
     [LEGAL_SLUGS]
   );
   return rows.map(mapRow);

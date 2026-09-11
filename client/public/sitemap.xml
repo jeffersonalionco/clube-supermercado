@@ -11,6 +11,16 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://clube.mercadosuperama.com.br/#/termos</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://clube.mercadosuperama.com.br/#/exclusao</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://clube.mercadosuperama.com.br/#/regulamento</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>

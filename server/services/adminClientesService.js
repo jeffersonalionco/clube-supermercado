@@ -16,6 +16,11 @@ import {
   VALOR_REFERENCIA_PONTO,
 } from "../constants/pontosPrograma.js";
 import { listarAuditoriaCliente } from "./clienteAuditoriaService.js";
+import { normalizarClienteApi } from "./clientePresenter.js";
+import {
+  obterNivelFidelidadeCliente,
+  nivelFidelidadeFallback,
+} from "./nivelFidelidadeService.js";
 
 const DIAS_PADRAO = 90;
 const DIAS_INATIVO = 60;
@@ -72,6 +77,86 @@ async function obterBrindeMaisBarato() {
   return rows[0] ?? null;
 }
 
+function labelSexo(sexo) {
+  if (sexo === "M") return "Masculino";
+  if (sexo === "F") return "Feminino";
+  return sexo || null;
+}
+
+function labelEstadoCivil(valor) {
+  const map = {
+    SOLTEIRO: "Solteiro(a)",
+    CASADO: "Casado(a)",
+    DIVORCIADO: "Divorciado(a)",
+    VIUVO: "Viúvo(a)",
+    OUTROS: "Outros",
+  };
+  return map[String(valor || "").toUpperCase()] || valor || null;
+}
+
+function pickCampo(obj, keys) {
+  for (const key of keys) {
+    const val = obj?.[key];
+    if (val != null && val !== "") return val;
+  }
+  return null;
+}
+
+function montarComportamento(compras) {
+  const resumo = compras?.resumo;
+  const base = {
+    ultimaCompra: null,
+    diasSemCompra: null,
+    diasComCompra: compras?.porData?.length ?? 0,
+    cuponsCancelados: resumo?.totalCanceladas ?? 0,
+    cuponsConvenio: resumo?.totalConvenio ?? 0,
+    totalItens: resumo?.totalItens ?? 0,
+    mediaItensPorCupom: 0,
+  };
+
+  if (!compras?.vendas?.length) return base;
+
+  const ativas = compras.vendas.filter((v) => !v.cancelada);
+  const datas = [...new Set(ativas.map((v) => v.data).filter(Boolean))].sort(
+    (a, b) => b.split("/").reverse().join("").localeCompare(a.split("/").reverse().join(""))
+  );
+  const ultimaStr = datas[0] || null;
+
+  if (ultimaStr) {
+    const [dd, mm, yyyy] = ultimaStr.split("/");
+    const ultimaDate = yyyy ? new Date(`${yyyy}-${mm}-${dd}T12:00:00`) : null;
+    base.ultimaCompra = ultimaStr;
+    base.diasSemCompra = ultimaDate ? calcularDiasSemCompra(ultimaDate) : null;
+  }
+
+  if (resumo?.totalVendasAtivas > 0) {
+    base.mediaItensPorCupom =
+      Math.round((resumo.totalItens / resumo.totalVendasAtivas) * 10) / 10;
+  }
+
+  return base;
+}
+
+function montarPerfilErp(erpCliente, usuario) {
+  const erpNorm =
+    erpCliente?.ok && erpCliente.cliente
+      ? normalizarClienteApi(erpCliente.cliente)
+      : {};
+
+  return {
+    email: erpNorm.email || null,
+    telefone: erpNorm.foneCel || erpNorm.telefone || null,
+    endereco: erpNorm.enderecoTexto || null,
+    dataNascimento: erpNorm.dtNasc || erpNorm.dataNascimento || null,
+    sexo: labelSexo(erpNorm.sexo),
+    estadoCivil: labelEstadoCivil(erpNorm.estadoCivil),
+    erpCodigo:
+      pickCampo(erpNorm, ["codigo", "codigo_cliente", "id"]) ||
+      (usuario?.cliente_codigo != null ? String(usuario.cliente_codigo) : null),
+    situacaoErp: pickCampo(erpNorm, ["situacao", "status"]),
+  };
+}
+
 function montarBrindeProximo(pontos, brindeBarato) {
   if (!pontos || !brindeBarato) return null;
 
@@ -120,8 +205,48 @@ export async function obterFichaClienteAdmin(cpfCnpj, dias = DIAS_PADRAO) {
 
   const nomeErp =
     erpCliente?.ok && erpCliente.cliente
-      ? erpCliente.cliente.nome || erpCliente.cliente.razaoSocial
+      ? normalizarClienteApi(erpCliente.cliente).nome ||
+        erpCliente.cliente.nome ||
+        erpCliente.cliente.razaoSocial
       : null;
+
+  const perfilErp = montarPerfilErp(erpCliente, usuario);
+  const comportamento = montarComportamento(compras);
+  const pontosResgatados = baixas.reduce(
+    (acc, b) => acc + (Number(b.pontos) || 0),
+    0
+  );
+
+  let fidelidade = null;
+  if (usuario) {
+    try {
+      fidelidade = await obterNivelFidelidadeCliente(cpf, { usuario });
+    } catch {
+      fidelidade = nivelFidelidadeFallback(usuario);
+    }
+  }
+
+  const clienteBase = usuario
+    ? {
+        cpf: usuario.cpf,
+        nome: usuario.nome || nomeErp,
+        clienteCodigo: usuario.cliente_codigo || perfilErp.erpCodigo,
+        cadastradoEm: usuario.criado_em,
+        dataInicioPlataforma: dataInicioPlataformaBR(usuario.criado_em),
+        atualizadoEm: usuario.atualizado_em,
+        aceiteRegulamentoEm: usuario.aceite_regulamento_em,
+        aceitePrivacidadeEm: usuario.aceite_privacidade_em,
+      }
+    : {
+        cpf,
+        nome: nomeErp,
+        clienteCodigo: perfilErp.erpCodigo,
+        cadastradoEm: null,
+        dataInicioPlataforma: null,
+        atualizadoEm: null,
+        aceiteRegulamentoEm: null,
+        aceitePrivacidadeEm: null,
+      };
 
   return {
     ok: true,
@@ -131,21 +256,16 @@ export async function obterFichaClienteAdmin(cpfCnpj, dias = DIAS_PADRAO) {
       datafim: periodo.datafim,
     },
     noClube: !usuario,
-    cliente: usuario
-      ? {
-          cpf: usuario.cpf,
-          nome: usuario.nome || nomeErp,
-          clienteCodigo: usuario.cliente_codigo,
-          cadastradoEm: usuario.criado_em,
-          dataInicioPlataforma: dataInicioPlataformaBR(usuario.criado_em),
-        }
-      : {
-          cpf,
-          nome: nomeErp,
-          clienteCodigo: null,
-          cadastradoEm: null,
-          dataInicioPlataforma: null,
-        },
+    cliente: {
+      ...clienteBase,
+      ...perfilErp,
+    },
+    comportamento,
+    resgatesResumo: {
+      total: baixas.length,
+      pontosResgatados,
+    },
+    fidelidade,
     pontos,
     brindeProximo: montarBrindeProximo(pontos, brindeBarato),
     baixas,
@@ -159,7 +279,159 @@ export async function obterFichaClienteAdmin(cpfCnpj, dias = DIAS_PADRAO) {
       : null,
     erroVendas: vendasResult.ok ? null : vendasResult.error,
     valorReferenciaPonto: VALOR_REFERENCIA_PONTO,
+    erpEncontrado: Boolean(erpCliente?.ok),
   };
+}
+
+async function buscarNomesErpLote(cpfs) {
+  const mapa = new Map();
+  const lista = [...new Set((cpfs || []).filter(Boolean))];
+  const MAX_PARALELO = 5;
+
+  for (let i = 0; i < lista.length; i += MAX_PARALELO) {
+    const lote = lista.slice(i, i + MAX_PARALELO);
+    const resultados = await Promise.allSettled(
+      lote.map((cpf) => buscarClientePorCpfCnpj(cpf))
+    );
+    for (let j = 0; j < lote.length; j++) {
+      const r = resultados[j];
+      if (r.status === "fulfilled" && r.value?.ok && r.value.cliente) {
+        const norm = normalizarClienteApi(r.value.cliente);
+        const nome = String(norm.nome || norm.razaoSocial || "").trim();
+        if (nome) mapa.set(lote[j], nome);
+      }
+    }
+  }
+  return mapa;
+}
+
+/**
+ * Busca clientes para o CRM admin: CPF/CNPJ, nome, código ou trecho de CPF.
+ */
+export async function buscarClientesAdmin(termo, { limite = 15 } = {}) {
+  const q = String(termo || "").trim();
+  const lim = Math.min(Math.max(Number(limite) || 15, 1), 30);
+  if (q.length < 2) {
+    return { resultados: [], total: 0 };
+  }
+
+  const digits = q.replace(/\D/g, "");
+  const resultados = [];
+  const cpfsVistos = new Set();
+
+  function incluir(item) {
+    if (!item?.cpf || cpfsVistos.has(item.cpf)) return;
+    cpfsVistos.add(item.cpf);
+    resultados.push(item);
+  }
+
+  if (digits.length === 11 || digits.length === 14) {
+    const cpf = normalizarCpfCnpj(digits);
+    const usuario = await buscarUsuarioPorCpf(cpf);
+
+    if (usuario) {
+      incluir({
+        cpf: usuario.cpf,
+        nome: usuario.nome,
+        clienteCodigo: usuario.cliente_codigo,
+        noClube: false,
+        origem: "clube",
+      });
+    }
+
+    const erp = await buscarClientePorCpfCnpj(cpf).catch(() => ({ ok: false }));
+    if (erp.ok && erp.cliente) {
+      const norm = normalizarClienteApi(erp.cliente);
+      const nomeErp = norm.nome || norm.razaoSocial || null;
+      if (usuario) {
+        const idx = resultados.findIndex((r) => r.cpf === usuario.cpf);
+        if (idx >= 0 && !resultados[idx].nome && nomeErp) {
+          resultados[idx].nome = nomeErp;
+          resultados[idx].origem = "clube+erp";
+        }
+      } else {
+        incluir({
+          cpf,
+          nome: nomeErp,
+          clienteCodigo: pickCampo(norm, ["codigo", "codigo_cliente"]),
+          noClube: true,
+          origem: "erp",
+        });
+      }
+    } else if (!usuario) {
+      incluir({
+        cpf,
+        nome: null,
+        clienteCodigo: null,
+        noClube: true,
+        origem: "cpf",
+      });
+    }
+
+    return { resultados: resultados.slice(0, lim), total: resultados.length };
+  }
+
+  if (/^\d+$/.test(digits) && digits.length >= 3) {
+    const { rows: porCodigo } = await getPool().query(
+      `SELECT cpf, nome, cliente_codigo
+       FROM usuario
+       WHERE cliente_codigo::text = $1
+       ORDER BY criado_em DESC
+       LIMIT $2`,
+      [digits, lim]
+    );
+    for (const row of porCodigo) {
+      incluir({
+        cpf: row.cpf,
+        nome: row.nome,
+        clienteCodigo: row.cliente_codigo,
+        noClube: false,
+        origem: "codigo",
+      });
+    }
+  }
+
+  if (digits.length >= 4) {
+    const { rows: porCpfParcial } = await getPool().query(
+      `SELECT cpf, nome, cliente_codigo
+       FROM usuario
+       WHERE cpf LIKE $1
+       ORDER BY criado_em DESC
+       LIMIT $2`,
+      [`%${digits}%`, lim]
+    );
+    for (const row of porCpfParcial) {
+      incluir({
+        cpf: row.cpf,
+        nome: row.nome,
+        clienteCodigo: row.cliente_codigo,
+        noClube: false,
+        origem: "cpf-parcial",
+      });
+    }
+  }
+
+  if (/[a-zA-ZÀ-ÿ]/.test(q)) {
+    const { rows: porNome } = await getPool().query(
+      `SELECT cpf, nome, cliente_codigo
+       FROM usuario
+       WHERE nome ILIKE $1
+       ORDER BY nome
+       LIMIT $2`,
+      [`%${q}%`, lim]
+    );
+    for (const row of porNome) {
+      incluir({
+        cpf: row.cpf,
+        nome: row.nome,
+        clienteCodigo: row.cliente_codigo,
+        noClube: false,
+        origem: "nome",
+      });
+    }
+  }
+
+  return { resultados: resultados.slice(0, lim), total: resultados.length };
 }
 
 export async function listarSegmentosClientes(dias = DIAS_PADRAO) {
@@ -286,6 +558,14 @@ export async function listarSegmentosClientes(dias = DIAS_PADRAO) {
     });
   }
   compramForaTodos.sort((a, b) => b.totalGasto - a.totalGasto);
+
+  const topForaCpfs = compramForaTodos.slice(0, LIMITE_LISTA).map((c) => c.cpf);
+  const nomesErpFora = await buscarNomesErpLote(topForaCpfs);
+  for (const item of compramForaTodos) {
+    if (!item.nome && nomesErpFora.has(item.cpf)) {
+      item.nome = nomesErpFora.get(item.cpf);
+    }
+  }
 
   const totalMembros = membros.length;
   const membrosComCompra = membrosEnriquecidos.filter(

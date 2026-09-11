@@ -152,6 +152,10 @@ export function apresentarCliente({ usuario, cliente, raw, clube }) {
                 ? "Outros"
                 : base.estadoCivil,
     membroDesde: usuario.criado_em,
+    whatsappInfo: {
+      liberado: Boolean(usuario.whatsapp_info_liberado_em),
+      liberadoEm: usuario.whatsapp_info_liberado_em || null,
+    },
   };
 
   return {
