@@ -40,6 +40,7 @@ function carregarCacheDisco(chave) {
     const raw = JSON.parse(fs.readFileSync(file, "utf8"));
     if (!raw?.produtos?.length || !raw.expiresAt) return null;
     if (Number(raw.expiresAt) <= Date.now()) return null;
+    if (!cacheDoDiaAtual(raw)) return null;
     return raw;
   } catch {
     return null;
@@ -47,10 +48,14 @@ function carregarCacheDisco(chave) {
 }
 
 function setCacheMemoria(chave, emCache, { persistir = true } = {}) {
-  cachePorUnidade.set(chave, emCache);
-  if (persistir && emCache?.produtos?.length) {
+  const stamped = {
+    ...emCache,
+    diaSp: emCache?.diaSp || diaSpIso(emCache?.sincronizadoEm || Date.now()),
+  };
+  cachePorUnidade.set(chave, stamped);
+  if (persistir && stamped?.produtos?.length) {
     // Só grava snapshot “útil”; parcial também ajuda após restart
-    salvarCacheDisco(chave, emCache);
+    salvarCacheDisco(chave, stamped);
   }
 }
 
@@ -75,6 +80,42 @@ function consultaApenasAtivos() {
 
 function chaveCache(unidade) {
   return `${unidade}:${consultaApenasAtivos() ? "ativos" : "todos"}`;
+}
+
+/** Dia civil em America/Sao_Paulo (YYYY-MM-DD). */
+export function diaSpIso(valor) {
+  const d = valor ? new Date(valor) : new Date();
+  if (Number.isNaN(d.getTime())) {
+    return new Date().toLocaleDateString("en-CA", {
+      timeZone: "America/Sao_Paulo",
+    });
+  }
+  return d.toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+}
+
+function cacheDoDiaAtual(emCache) {
+  if (!emCache) return false;
+  const hoje = diaSpIso();
+  if (emCache.diaSp) return String(emCache.diaSp) === hoje;
+  if (emCache.sincronizadoEm) return diaSpIso(emCache.sincronizadoEm) === hoje;
+  // Sem data de sync: não confiar como "hoje"
+  return false;
+}
+
+function cacheValido(emCache) {
+  if (!emCache || !(emCache.expiresAt > Date.now())) return false;
+  return cacheDoDiaAtual(emCache);
+}
+
+function invalidarCacheSeOutroDia(chave, emCache) {
+  if (!emCache) return null;
+  if (!cacheDoDiaAtual(emCache)) {
+    // Cache de outro dia: remove e não serve
+    cachePorUnidade.delete(chave);
+    return null;
+  }
+  // Mesmo dia: mantém na memória (stale-while-revalidate se TTL expirou)
+  return emCache;
 }
 
 function obterPreco2Bruto(produto) {
@@ -125,10 +166,6 @@ function normalizarProduto(produto, unidade) {
       produto.Ativo !== false &&
       String(produto.Status ?? "").toUpperCase() !== "INATIVO",
   };
-}
-
-function cacheValido(emCache) {
-  return Boolean(emCache && emCache.expiresAt > Date.now());
 }
 
 function obterProgresso(unidade) {
@@ -192,6 +229,7 @@ function iniciarSincronizacaoBackground(unidade, { forcar = false } = {}) {
           totalCatalogo,
           paginas,
           sincronizadoEm: null,
+          diaSp: diaSpIso(),
           expiresAt: Date.now() + CACHE_TTL_MS,
           parcial: true,
         });
@@ -290,6 +328,7 @@ function iniciarSincronizacaoBackground(unidade, { forcar = false } = {}) {
             totalCatalogo,
             paginas,
             sincronizadoEm: null,
+            diaSp: diaSpIso(),
             expiresAt: Date.now() + CACHE_TTL_MS,
             parcial: true,
           });
@@ -314,6 +353,7 @@ function iniciarSincronizacaoBackground(unidade, { forcar = false } = {}) {
         totalCatalogo,
         paginas,
         sincronizadoEm: new Date().toISOString(),
+        diaSp: diaSpIso(),
         expiresAt: Date.now() + CACHE_TTL_MS,
         parcial: false,
       });
@@ -400,41 +440,48 @@ export async function listarProdutosClubeDescontos({
   const codUnidade = String(unidade ?? unidadePadrao()).trim();
   const chave = chaveCache(codUnidade);
   const forcar = Boolean(atualizar);
-  let emCache = cachePorUnidade.get(chave);
+  let emCache = invalidarCacheSeOutroDia(chave, cachePorUnidade.get(chave));
   if (!emCache || !cacheValido(emCache)) {
     const disco = carregarCacheDisco(chave);
     if (disco) {
       cachePorUnidade.set(chave, disco);
       emCache = disco;
+    } else {
+      emCache = null;
     }
   }
   const progresso = obterProgresso(chave);
   const sincronizando =
     syncEmAndamento.has(chave) || progresso?.sincronizando === true;
   const apenasAtivos = consultaApenasAtivos();
+  const cacheHoje = cacheValido(emCache);
 
-  if (cacheValido(emCache) && !emCache.parcial && !forcar && !sincronizando) {
+  if (cacheHoje && !emCache.parcial && !forcar && !sincronizando) {
     return montarResposta(emCache, { busca, pagina, limite });
   }
 
+  // Outro dia / forçar: sempre ressincroniza (não reaproveita lista velha)
+  const precisaForcar = forcar || !cacheDoDiaAtual(emCache);
   if (!sincronizando) {
-    iniciarSincronizacaoBackground(codUnidade, { forcar });
+    iniciarSincronizacaoBackground(codUnidade, {
+      forcar: precisaForcar,
+    });
   }
 
-  // Serve parcial/disco imediatamente enquanto sync roda (WhatsApp não fica no vazio)
-  if (emCache?.produtos?.length) {
+  // Só serve cache em memória se for do dia atual (stale-while-revalidate no mesmo dia)
+  if (emCache?.produtos?.length && cacheDoDiaAtual(emCache)) {
     return montarResposta(emCache, {
       busca,
       pagina,
       limite,
-      sincronizando,
+      sincronizando: syncEmAndamento.has(chave) || obterProgresso(chave)?.sincronizando,
       progresso: obterProgresso(chave),
     });
   }
 
   const status = obterProgresso(chave);
 
-  if (status?.erro && !sincronizando) {
+  if (status?.erro && !syncEmAndamento.has(chave)) {
     return {
       unidade: codUnidade,
       apenasAtivos,
@@ -450,6 +497,7 @@ export async function listarProdutosClubeDescontos({
       sincronizando: false,
       progresso: status,
       erroSync: status.erro,
+      cacheOutroDia: true,
     };
   }
 
@@ -468,6 +516,7 @@ export async function listarProdutosClubeDescontos({
     sincronizando: true,
     progresso: status,
     erroSync: null,
+    aguardandoDiaAtual: true,
   };
 }
 
@@ -476,12 +525,17 @@ export function aquecerCacheClubeDescontos(unidade) {
   const codUnidade = String(unidade ?? unidadePadrao()).trim();
   const chave = chaveCache(codUnidade);
   const disco = carregarCacheDisco(chave);
-  if (disco?.produtos?.length) {
+  const forcar = !disco || !cacheDoDiaAtual(disco);
+  if (disco?.produtos?.length && cacheDoDiaAtual(disco)) {
     cachePorUnidade.set(chave, disco);
     console.log(
-      `[clube-descontos] cache disco carregado (${disco.produtos.length} itens)`
+      `[clube-descontos] cache disco carregado (${disco.produtos.length} itens, dia ${disco.diaSp || diaSpIso(disco.sincronizadoEm)})`
+    );
+  } else if (disco && !cacheDoDiaAtual(disco)) {
+    console.log(
+      `[clube-descontos] cache disco de outro dia ignorado — sincronizando ofertas de hoje`
     );
   }
-  iniciarSincronizacaoBackground(codUnidade, { forcar: false });
-  return { ok: true, unidade: codUnidade, doDisco: Boolean(disco?.produtos?.length) };
+  iniciarSincronizacaoBackground(codUnidade, { forcar });
+  return { ok: true, unidade: codUnidade, doDisco: Boolean(disco?.produtos?.length && !forcar) };
 }

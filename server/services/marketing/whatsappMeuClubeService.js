@@ -1,4 +1,5 @@
 import { getPool } from "../../db.js";
+import { consultarCrediarioSeAtivo } from "../crediarioClienteService.js";
 import {
   nivelFidelidadeFallback,
   obterNivelFidelidadeCliente,
@@ -22,6 +23,7 @@ export const BTN_MEU_CLUBE = "btn_meu_clube";
 export const BTN_CLUBE_MAIS = "btn_clube_mais";
 export const BTN_CLUBE_LIBERAR = "btn_clube_liberar";
 export const BTN_CLUBE_COMPRA = "btn_clube_compra";
+export const BTN_CLUBE_CREDITO = "btn_clube_credito";
 export const BTN_CLUBE_VOLTAR = "btn_clube_voltar";
 
 export const SESSAO_MEU_CLUBE = "meu_clube";
@@ -89,6 +91,7 @@ export async function limparSessaoMeuClube(telefone) {
      SET sessao_modo = NULL,
          sessao_atividade_em = NULL,
          sessao_usuario_id = NULL,
+         sessao_dados = NULL,
          atualizado_em = NOW()
      WHERE telefone = $1`,
     [telefone]
@@ -112,7 +115,105 @@ function linkPerfilClube(cfg) {
   return `${base}/#/perfil`;
 }
 
-function montarTextoResumoMembro(membro) {
+function moedaBr(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return "R$ —";
+  return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+/** Só retorna dados se acesso ampliado + limite ativo; senão null (silencioso). */
+async function obterCrediarioLiberado(membro) {
+  if (!membro?.infoLiberada || !membro.cpf) return null;
+  try {
+    return await consultarCrediarioSeAtivo(membro.cpf);
+  } catch (err) {
+    console.warn("[whatsapp/meu-clube] crediario:", err.message);
+    return null;
+  }
+}
+
+function montarTextoCrediario(cred, membro) {
+  if (!cred) return null;
+  const pct = Number(cred.percentualUsado) || 0;
+  const nome = membro?.primeiroNome ? `${membro.primeiroNome}, ` : "";
+  const linhas = [
+    `💳 *Seu crédito no Superama*`,
+    "",
+    `${nome}resumo do seu limite no mercado:`,
+    "",
+    `• *Disponível:* ${moedaBr(cred.saldoCredito)}`,
+    `• *Limite:* ${moedaBr(cred.limiteCredito)}`,
+    `• *Utilizado:* ${moedaBr(cred.limiteUtilizado)} (${pct}%)`,
+  ];
+  if (cred.limiteUtilizadoDia > 0) {
+    linhas.push(`• *Hoje:* ${moedaBr(cred.limiteUtilizadoDia)}`);
+  }
+  if (pct >= 90) {
+    linhas.push("", `⚠️ Seu limite está quase no fim.`);
+  } else if (pct >= 80) {
+    linhas.push("", `⚠️ Você já usou boa parte do limite.`);
+  }
+  linhas.push(
+    "",
+    `_Valores do Clube — podem atualizar após compras no caixa._`
+  );
+  return linhas.join("\n");
+}
+
+function botoesPainelLiberado(temCredito) {
+  if (temCredito) {
+    return [
+      { id: BTN_CLUBE_MAIS, title: "Ver benefícios" },
+      { id: BTN_CLUBE_CREDITO, title: "Meu crédito" },
+      { id: BTN_CLUBE_VOLTAR, title: "Menu principal" },
+    ];
+  }
+  return [
+    { id: BTN_CLUBE_MAIS, title: "Ver benefícios" },
+    { id: BTN_CLUBE_COMPRA, title: "Última compra" },
+    { id: BTN_CLUBE_VOLTAR, title: "Menu principal" },
+  ];
+}
+
+function botoesAposBeneficios(temCredito) {
+  if (temCredito) {
+    return [
+      { id: BTN_CLUBE_CREDITO, title: "Meu crédito" },
+      { id: BTN_CLUBE_COMPRA, title: "Última compra" },
+      { id: BTN_CLUBE_VOLTAR, title: "Menu principal" },
+    ];
+  }
+  return [
+    { id: BTN_CLUBE_COMPRA, title: "Última compra" },
+    { id: BTN_CLUBE_MAIS, title: "Atualizar" },
+    { id: BTN_CLUBE_VOLTAR, title: "Menu principal" },
+  ];
+}
+
+function botoesAposCredito() {
+  return [
+    { id: BTN_CLUBE_MAIS, title: "Ver benefícios" },
+    { id: BTN_CLUBE_COMPRA, title: "Última compra" },
+    { id: BTN_CLUBE_VOLTAR, title: "Menu principal" },
+  ];
+}
+
+function botoesAposCompra(temCredito) {
+  if (temCredito) {
+    return [
+      { id: BTN_CLUBE_MAIS, title: "Ver benefícios" },
+      { id: BTN_CLUBE_CREDITO, title: "Meu crédito" },
+      { id: BTN_CLUBE_VOLTAR, title: "Menu principal" },
+    ];
+  }
+  return [
+    { id: BTN_CLUBE_MAIS, title: "Ver benefícios" },
+    { id: BTN_CLUBE_COMPRA, title: "Atualizar compra" },
+    { id: BTN_CLUBE_VOLTAR, title: "Menu principal" },
+  ];
+}
+
+function montarTextoResumoMembro(membro, { temCredito = false } = {}) {
   const codigo = membro.clienteCodigo
     ? `*${membro.clienteCodigo}*`
     : "_não informado_";
@@ -124,13 +225,21 @@ function montarTextoResumoMembro(membro) {
     `• *Código Clube:* ${codigo}\n\n`;
 
   if (membro.infoLiberada) {
+    const opcoes = temCredito
+      ? `O que você pode fazer agora:\n` +
+        `1️⃣ *Ver benefícios* → nível e pontos\n` +
+        `2️⃣ *Meu crédito* → limite no Superama\n` +
+        `3️⃣ *Menu principal* → voltar às ofertas\n\n` +
+        `_Última compra também fica em Ver benefícios._\n\n`
+      : `O que você pode fazer agora:\n` +
+        `1️⃣ *Ver benefícios* → nível e pontos\n` +
+        `2️⃣ *Última compra* → resumo do último cupom\n` +
+        `3️⃣ *Menu principal* → voltar às ofertas\n\n`;
+
     return (
       basico +
       `✅ *Acesso ampliado ativo* neste WhatsApp.\n\n` +
-      `O que você pode fazer agora:\n` +
-      `1️⃣ *Ver benefícios* → nível e pontos\n` +
-      `2️⃣ *Última compra* → resumo do último cupom\n` +
-      `3️⃣ *Menu principal* → voltar às ofertas\n\n` +
+      opcoes +
       `${AVISO_CUPOM_FISCAL}\n\n` +
       `_Se ficar 20 min sem usar, voltamos ao menu inicial._`
     );
@@ -169,12 +278,11 @@ export async function enviarPainelMeuClube(telefone, { wamid, cfg, membro } = {}
 
   await iniciarSessaoMeuClube(telefone, m.id);
 
+  const cred = m.infoLiberada ? await obterCrediarioLiberado(m) : null;
+  const temCredito = Boolean(cred);
+
   const botoes = m.infoLiberada
-    ? [
-        { id: BTN_CLUBE_MAIS, title: "Ver benefícios" },
-        { id: BTN_CLUBE_COMPRA, title: "Última compra" },
-        { id: BTN_CLUBE_VOLTAR, title: "Menu principal" },
-      ]
+    ? botoesPainelLiberado(temCredito)
     : [
         { id: BTN_CLUBE_LIBERAR, title: "Como liberar" },
         { id: BTN_CLUBE_MAIS, title: "Já liberei — atualizar" },
@@ -184,7 +292,7 @@ export async function enviarPainelMeuClube(telefone, { wamid, cfg, membro } = {}
   return enviarMensagemBotoesWhatsapp({
     telefone,
     cabecalho: "MEU CLUBE",
-    corpo: montarTextoResumoMembro(m),
+    corpo: montarTextoResumoMembro(m, { temCredito }),
     rodape: "Clube Superama+",
     botoes,
   });
@@ -192,16 +300,18 @@ export async function enviarPainelMeuClube(telefone, { wamid, cfg, membro } = {}
 
 async function montarTextoMaisInfos(membro) {
   if (!membro.infoLiberada) {
-    return (
-      `⏳ *Ainda não encontramos a liberação*\n\n` +
-      `Confira estes pontos:\n\n` +
-      `1. Você entrou no site com o CPF *${membro.cpfMascarado}*?\n` +
-      `   (é o CPF desta conversa — nome *${membro.nome}*)\n\n` +
-      `2. Em *Meu perfil*, a opção *Informações no WhatsApp* está *ativada*?\n\n` +
-      `3. O celular do cadastro é este WhatsApp?\n\n` +
-      `Depois de ativar, toque de novo em *Já liberei — atualizar*.\n\n` +
-      `Se precisar, use *Como liberar* para abrir o perfil.`
-    );
+    return {
+      texto:
+        `⏳ *Ainda não encontramos a liberação*\n\n` +
+        `Confira estes pontos:\n\n` +
+        `1. Você entrou no site com o CPF *${membro.cpfMascarado}*?\n` +
+        `   (é o CPF desta conversa — nome *${membro.nome}*)\n\n` +
+        `2. Em *Meu perfil*, a opção *Informações no WhatsApp* está *ativada*?\n\n` +
+        `3. O celular do cadastro é este WhatsApp?\n\n` +
+        `Depois de ativar, toque de novo em *Já liberei — atualizar*.\n\n` +
+        `Se precisar, use *Como liberar* para abrir o perfil.`,
+      temCredito: false,
+    };
   }
 
   const linhas = [
@@ -253,21 +363,28 @@ async function montarTextoMaisInfos(membro) {
     /* pontos opcional */
   }
 
+  const cred = await obterCrediarioLiberado(membro);
+  if (cred) {
+    const pct = Number(cred.percentualUsado) || 0;
+    linhas.push(
+      "",
+      `💳 *Crédito no Superama*`,
+      `Disponível: *${moedaBr(cred.saldoCredito)}* · Limite: ${moedaBr(cred.limiteCredito)}`,
+      `Utilizado: ${moedaBr(cred.limiteUtilizado)} (${pct}%)`
+    );
+  }
+
   linhas.push(
     "",
     `No caixa, use o CPF *${membro.cpfMascarado}*.`,
     "",
     AVISO_CUPOM_FISCAL,
     "",
-    `Escolha abaixo: *Atualizar*, *Última compra* ou *Menu principal*.`
+    cred
+      ? `Escolha abaixo: *Meu crédito*, *Última compra* ou *Menu principal*.`
+      : `Escolha abaixo: *Atualizar*, *Última compra* ou *Menu principal*.`
   );
-  return linhas.join("\n");
-}
-
-function moedaBr(v) {
-  const n = Number(v);
-  if (!Number.isFinite(n)) return "R$ —";
-  return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  return { texto: linhas.join("\n"), temCredito: Boolean(cred) };
 }
 
 function labelDataCompra(dataStr) {
@@ -420,6 +537,7 @@ export async function responderMeuClubeBotao(
       buttonId === BTN_CLUBE_MAIS ||
       buttonId === BTN_CLUBE_LIBERAR ||
       buttonId === BTN_CLUBE_COMPRA ||
+      buttonId === BTN_CLUBE_CREDITO ||
       buttonId === BTN_CLUBE_VOLTAR
     ) {
       await limparSessaoMeuClube(telefone);
@@ -493,13 +611,9 @@ export async function responderMeuClubeBotao(
       }
     }
 
-    const texto = await montarTextoMaisInfos(membroFresh);
+    const { texto, temCredito } = await montarTextoMaisInfos(membroFresh);
     const botoes = membroFresh.infoLiberada
-      ? [
-          { id: BTN_CLUBE_COMPRA, title: "Última compra" },
-          { id: BTN_CLUBE_MAIS, title: "Atualizar" },
-          { id: BTN_CLUBE_VOLTAR, title: "Menu principal" },
-        ]
+      ? botoesAposBeneficios(temCredito)
       : [
           { id: BTN_CLUBE_LIBERAR, title: "Como liberar" },
           { id: BTN_CLUBE_MAIS, title: "Já liberei — atualizar" },
@@ -512,6 +626,50 @@ export async function responderMeuClubeBotao(
       corpo: texto,
       rodape: "Clube Superama+",
       botoes,
+    });
+    return { ...r, keepSession: true };
+  }
+
+  if (buttonId === BTN_CLUBE_CREDITO) {
+    if (!membroFresh.infoLiberada) {
+      return enviarPainelMeuClube(telefone, {
+        wamid,
+        cfg,
+        membro: membroFresh,
+      });
+    }
+
+    await enviarMensagemTextoWhatsapp({
+      telefone,
+      texto:
+        `⏳ Aguarde um instante…\n` +
+        `Consultando seu crédito no Superama.`,
+    });
+    if (wamid) {
+      try {
+        await enviarIndicadorDigitandoWhatsapp({ messageId: wamid });
+      } catch {
+        /* ignore */
+      }
+    }
+
+    const cred = await obterCrediarioLiberado(membroFresh);
+    const texto = montarTextoCrediario(cred, membroFresh);
+    if (!texto) {
+      // Sem crédito: volta ao painel sem mencionar a função
+      return enviarPainelMeuClube(telefone, {
+        wamid,
+        cfg,
+        membro: membroFresh,
+      });
+    }
+
+    const r = await enviarMensagemBotoesWhatsapp({
+      telefone,
+      cabecalho: "MEU CRÉDITO",
+      corpo: texto,
+      rodape: "Clube Superama+",
+      botoes: botoesAposCredito(),
     });
     return { ...r, keepSession: true };
   }
@@ -540,16 +698,13 @@ export async function responderMeuClubeBotao(
     }
 
     const texto = await montarTextoUltimaCompra(membroFresh);
+    const cred = await obterCrediarioLiberado(membroFresh);
     const r = await enviarMensagemBotoesWhatsapp({
       telefone,
       cabecalho: "ÚLTIMA COMPRA",
       corpo: texto,
       rodape: "Clube Superama+",
-      botoes: [
-        { id: BTN_CLUBE_MAIS, title: "Ver benefícios" },
-        { id: BTN_CLUBE_COMPRA, title: "Atualizar compra" },
-        { id: BTN_CLUBE_VOLTAR, title: "Menu principal" },
-      ],
+      botoes: botoesAposCompra(Boolean(cred)),
     });
     return { ...r, keepSession: true };
   }
@@ -563,6 +718,7 @@ export function isBotaoMeuClube(buttonId) {
     buttonId === BTN_CLUBE_MAIS ||
     buttonId === BTN_CLUBE_LIBERAR ||
     buttonId === BTN_CLUBE_COMPRA ||
+    buttonId === BTN_CLUBE_CREDITO ||
     buttonId === BTN_CLUBE_VOLTAR
   );
 }
@@ -572,6 +728,7 @@ export function acaoMetricaMeuClube(buttonId) {
   if (buttonId === BTN_CLUBE_MAIS) return "clube_mais";
   if (buttonId === BTN_CLUBE_LIBERAR) return "clube_liberar";
   if (buttonId === BTN_CLUBE_COMPRA) return "clube_compra";
+  if (buttonId === BTN_CLUBE_CREDITO) return "clube_credito";
   if (buttonId === BTN_CLUBE_VOLTAR) return "clube_voltar";
   return null;
 }

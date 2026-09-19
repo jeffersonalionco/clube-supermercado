@@ -1,6 +1,7 @@
 import "./env.js";
 import cors from "cors";
 import express from "express";
+import fs from "fs";
 import helmet from "helmet";
 import os from "os";
 import path from "path";
@@ -103,6 +104,24 @@ app.get("/api/health", (_req, res) => {
   res.json({ ok: true });
 });
 
+app.get("/api/app-version", (_req, res) => {
+  res.set("Cache-Control", "no-store, no-cache, must-revalidate");
+  res.set("Pragma", "no-cache");
+  let version = process.env.APP_VERSION || null;
+  if (!version) {
+    try {
+      const raw = fs.readFileSync(
+        path.join(__dirname, "../client/src/version.json"),
+        "utf8"
+      );
+      version = JSON.parse(raw)?.version || null;
+    } catch {
+      version = null;
+    }
+  }
+  res.json({ version: String(version || "0.0.0") });
+});
+
 app.use("/api", (_req, res) => {
   res.status(404).json({ error: "Rota da API não encontrada" });
 });
@@ -168,6 +187,22 @@ async function start() {
       })
       .catch((err) => {
         console.warn("[clube-descontos] aquecimento falhou:", err.message);
+      });
+
+    import("./services/marketing/metaCatalogService.js")
+      .then(({ iniciarJobSyncPrecoMetaCatalog }) => {
+        iniciarJobSyncPrecoMetaCatalog();
+      })
+      .catch((err) => {
+        console.warn("[meta/catalog] job:", err.message);
+      });
+
+    import("./services/marketing/whatsappCatalogoPedidoService.js")
+      .then(({ iniciarJobLimpezaCatalogoPedido }) => {
+        iniciarJobLimpezaCatalogoPedido();
+      })
+      .catch((err) => {
+        console.warn("[whatsapp/catalogo] job limpeza:", err.message);
       });
   });
 }

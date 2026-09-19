@@ -67,6 +67,7 @@ import {
   buscarNovidadePublica,
   listarNovidadesPublicas,
 } from "../services/novidadesService.js";
+import { consultarCrediarioSeAtivo } from "../services/crediarioClienteService.js";
 
 const MSG_PONTOS_INATIVO =
   "O programa de pontos não está disponível no momento.";
@@ -260,6 +261,20 @@ router.post("/whatsapp-info", async (req, res) => {
     return res.status(500).json({
       error: mensagemParaCliente(error.message),
     });
+  }
+});
+
+/**
+ * Crediário do cliente logado.
+ * Sem limite ativo → { crediario: null } (não revela a funcionalidade).
+ */
+router.get("/crediario", async (req, res) => {
+  try {
+    const crediario = await consultarCrediarioSeAtivo(req.usuario.cpf);
+    return res.json({ crediario });
+  } catch (error) {
+    console.error("[cliente/crediario]", error.message);
+    return res.json({ crediario: null });
   }
 });
 

@@ -35,6 +35,16 @@ function statusLabel(status) {
   return mapa[status] || status;
 }
 
+function labelPublicoCampanha(c) {
+  if (c.publico === "telefones_especificos") {
+    return `${(c.telefonesEspecificos || []).length} selecionado(s)`;
+  }
+  if (c.publico === "carteira_whatsapp") return "Carteira WhatsApp (todos)";
+  if (c.publico === "carteira_com_clube") return "Carteira · com Clube";
+  if (c.publico === "carteira_sem_clube") return "Carteira · sem Clube";
+  return "Todos com celular (cadastro)";
+}
+
 function formatarTelefoneExibicao(tel) {
   const d = String(tel || "").replace(/\D/g, "");
   const local = d.startsWith("55") ? d.slice(2) : d;
@@ -198,6 +208,19 @@ export default function AdminMarketingWhatsAppPage({
   }, [carregarLista]);
 
   useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("wa_campanha_telefones");
+      if (raw && JSON.parse(raw)?.length) {
+        // Vindo da carteira: abre editor já com os telefones
+        novaCampanha();
+      }
+    } catch {
+      /* ignore */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- só na montagem
+  }, []);
+
+  useEffect(() => {
     let ativo = true;
     (async () => {
       try {
@@ -311,18 +334,38 @@ export default function AdminMarketingWhatsAppPage({
 
   function novaCampanha() {
     setCampanhaId(null);
+    let phonesFromCarteira = [];
+    try {
+      const raw = sessionStorage.getItem("wa_campanha_telefones");
+      if (raw) {
+        phonesFromCarteira = JSON.parse(raw);
+        sessionStorage.removeItem("wa_campanha_telefones");
+      }
+    } catch {
+      phonesFromCarteira = [];
+    }
+    const temCarteira =
+      Array.isArray(phonesFromCarteira) && phonesFromCarteira.length > 0;
+
     setForm({
       ...CAMPANHA_VAZIA,
       templateNome: templatePadrao || "",
+      publico: temCarteira ? "telefones_especificos" : CAMPANHA_VAZIA.publico,
     });
     setBodyParams([]);
     setButtonParams([]);
-    setTelefonesSelecionados(new Set());
+    setTelefonesSelecionados(
+      temCarteira ? new Set(phonesFromCarteira.map(String)) : new Set()
+    );
     setTelefoneTeste("45998331383");
     setTemplateSel(null);
     setDestResumo(null);
     setProgresso(null);
-    setSucesso("");
+    setSucesso(
+      temCarteira
+        ? `${phonesFromCarteira.length} telefone(s) da carteira carregados.`
+        : ""
+    );
     setError("");
     setVista("editor");
     if (templatePadrao && templates.length) {
@@ -680,9 +723,7 @@ export default function AdminMarketingWhatsAppPage({
                           <code>{c.templateNome || "—"}</code>
                         </td>
                         <td>
-                          {c.publico === "telefones_especificos"
-                            ? `${(c.telefonesEspecificos || []).length} selecionado(s)`
-                            : "Todos com celular"}
+                          {labelPublicoCampanha(c)}
                         </td>
                         <td>{statusLabel(c.status)}</td>
                         <td>
@@ -1183,7 +1224,52 @@ export default function AdminMarketingWhatsAppPage({
                   }
                 >
                   <strong>Todos com celular</strong>
-                  <span>Base completa (sem opt-out WhatsApp)</span>
+                  <span>Base completa do cadastro (sem opt-out)</span>
+                </button>
+                <button
+                  type="button"
+                  disabled={!editavel}
+                  className={`admin-marketing-modo__opcao${
+                    form.publico === "carteira_whatsapp"
+                      ? " admin-marketing-modo__opcao--ativa"
+                      : ""
+                  }`}
+                  onClick={() =>
+                    setForm((p) => ({ ...p, publico: "carteira_whatsapp" }))
+                  }
+                >
+                  <strong>Carteira WhatsApp</strong>
+                  <span>Quem já falou no número de ofertas</span>
+                </button>
+                <button
+                  type="button"
+                  disabled={!editavel}
+                  className={`admin-marketing-modo__opcao${
+                    form.publico === "carteira_com_clube"
+                      ? " admin-marketing-modo__opcao--ativa"
+                      : ""
+                  }`}
+                  onClick={() =>
+                    setForm((p) => ({ ...p, publico: "carteira_com_clube" }))
+                  }
+                >
+                  <strong>Carteira · com Clube</strong>
+                  <span>Falou no WA e tem cadastro no Clube</span>
+                </button>
+                <button
+                  type="button"
+                  disabled={!editavel}
+                  className={`admin-marketing-modo__opcao${
+                    form.publico === "carteira_sem_clube"
+                      ? " admin-marketing-modo__opcao--ativa"
+                      : ""
+                  }`}
+                  onClick={() =>
+                    setForm((p) => ({ ...p, publico: "carteira_sem_clube" }))
+                  }
+                >
+                  <strong>Carteira · sem Clube</strong>
+                  <span>Só visitante do WhatsApp (sem cadastro)</span>
                 </button>
               </div>
 
@@ -1301,6 +1387,24 @@ export default function AdminMarketingWhatsAppPage({
                     </>
                   ) : (
                     "Salve o rascunho para calcular quantos vão receber."
+                  )}
+                </p>
+              )}
+
+              {(form.publico === "carteira_whatsapp" ||
+                form.publico === "carteira_com_clube" ||
+                form.publico === "carteira_sem_clube") && (
+                <p className="admin-marketing-dest-resumo">
+                  {destResumo ? (
+                    <>
+                      Carteira — vão receber:{" "}
+                      <strong>{destResumo.elegiveis}</strong>
+                      {destResumo.optOut
+                        ? ` · Opt-out: ${destResumo.optOut}`
+                        : ""}
+                    </>
+                  ) : (
+                    "Salve o rascunho para calcular a carteira."
                   )}
                 </p>
               )}

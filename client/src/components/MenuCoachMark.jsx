@@ -30,7 +30,7 @@ export default function MenuCoachMark({ aberto, onFechar }) {
           Menu aqui embaixo
         </p>
         <p className="menu-coach__texto">
-          Toque nas abas para abrir Ofertas, Compras, Novidades e mais.
+          Toque nas abas para abrir Ofertas, Compras, Perfil e mais.
         </p>
         <button type="button" className="menu-coach__btn" onClick={onFechar}>
           Entendi

@@ -263,6 +263,15 @@
     border-color: rgba(27, 79, 160, 0.22);
   }
 
+  .client-desktop-nav__user--active {
+    background: rgba(27, 79, 160, 0.1);
+    border-color: rgba(27, 79, 160, 0.28);
+  }
+
+  .client-desktop-nav__user--active:hover {
+    background: rgba(27, 79, 160, 0.14);
+  }
+
   .client-desktop-nav__avatar {
     display: flex;
     align-items: center;

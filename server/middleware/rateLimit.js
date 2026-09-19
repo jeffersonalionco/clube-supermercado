@@ -54,3 +54,12 @@ export const recuperarSenhaRedefinirLimiter = rateLimit({
     return `${req.ip}|redefinir|${cpf || token || "x"}`;
   },
 });
+
+/** Ingestão de eventos Meta (Pixel → CAPI) a partir do browser. */
+export const metaEventLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: Number(process.env.RATE_LIMIT_META_EVENT_MAX || 60),
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Muitos eventos. Aguarde um momento." },
+});

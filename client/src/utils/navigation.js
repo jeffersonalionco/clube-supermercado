@@ -4,9 +4,14 @@ export const TAB_VIEWS = [
   "compras",
   "pontos",
   "premios",
-  "novidades",
+  "perfil",
 ];
-export const APP_VIEWS = [...TAB_VIEWS, "perfil", "contato", "editar"];
+export const APP_VIEWS = [
+  ...TAB_VIEWS,
+  "novidades",
+  "contato",
+  "editar",
+];
 export const PUBLIC_VIEWS = ["regulamento", "privacidade", "termos", "exclusao"];
 export const ALL_VIEWS = [...APP_VIEWS, ...PUBLIC_VIEWS];
 
@@ -14,7 +19,7 @@ const APP_HISTORY_KEY = "superama";
 
 export function viewFromLocation() {
   const hash = window.location.hash.slice(1).replace(/^\//, "").trim();
-  const view = hash || "home";
+  const view = (hash.split("?")[0] || "home").trim();
   return ALL_VIEWS.includes(view) ? view : "home";
 }
 

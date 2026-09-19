@@ -257,6 +257,29 @@ async function migrarPadaria(db) {
   `);
 
   await db.query(`
+    ALTER TABLE padaria_produto
+    ADD COLUMN IF NOT EXISTS sync_meta_catalog BOOLEAN NOT NULL DEFAULT false,
+    ADD COLUMN IF NOT EXISTS meta_preco_enviado NUMERIC(12, 2),
+    ADD COLUMN IF NOT EXISTS meta_sync_em TIMESTAMPTZ,
+    ADD COLUMN IF NOT EXISTS meta_sync_erro TEXT
+  `);
+
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_padaria_produto_meta_sync
+    ON padaria_produto (sync_meta_catalog)
+    WHERE sync_meta_catalog = TRUE
+  `);
+
+  /* Bolo abacaxi com coco — marcado para catálogo WhatsApp/Meta */
+  await db.query(`
+    UPDATE padaria_produto
+       SET sync_meta_catalog = TRUE,
+           ativo_catalogo = TRUE,
+           atualizado_em = NOW()
+     WHERE codigo = '618705'
+  `);
+
+  await db.query(`
     CREATE TABLE IF NOT EXISTS padaria_pedido (
       id SERIAL PRIMARY KEY,
       codigo_publico VARCHAR(32) NOT NULL UNIQUE,
@@ -964,7 +987,8 @@ async function migrarMarketing(db) {
     ALTER TABLE whatsapp_auto_reply_estado
     ADD COLUMN IF NOT EXISTS sessao_modo VARCHAR(40),
     ADD COLUMN IF NOT EXISTS sessao_atividade_em TIMESTAMPTZ,
-    ADD COLUMN IF NOT EXISTS sessao_usuario_id INTEGER
+    ADD COLUMN IF NOT EXISTS sessao_usuario_id INTEGER,
+    ADD COLUMN IF NOT EXISTS sessao_dados JSONB
   `);
 
   await db.query(`
@@ -986,6 +1010,31 @@ async function migrarMarketing(db) {
   await db.query(`
     CREATE INDEX IF NOT EXISTS idx_wa_auto_metrica_acao_dia
     ON whatsapp_auto_reply_metrica (acao, criado_em DESC)
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS whatsapp_contato (
+      telefone VARCHAR(32) PRIMARY KEY,
+      nome_wa VARCHAR(120),
+      primeiro_inbound_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      ultimo_inbound_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      ultima_acao VARCHAR(40),
+      total_inbounds INTEGER NOT NULL DEFAULT 1,
+      usuario_id INTEGER REFERENCES usuario(id) ON DELETE SET NULL,
+      tem_clube BOOLEAN NOT NULL DEFAULT FALSE,
+      info_liberada BOOLEAN NOT NULL DEFAULT FALSE,
+      atualizado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_whatsapp_contato_ultimo
+    ON whatsapp_contato (ultimo_inbound_em DESC)
+  `);
+
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_whatsapp_contato_clube
+    ON whatsapp_contato (tem_clube, info_liberada)
   `);
 }
 

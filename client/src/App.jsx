@@ -40,19 +40,20 @@ function resolveViewFromPopState(event) {
 
 function isAdminRoute() {
   const hash = window.location.hash.slice(1).replace(/^\//, "").trim();
-  return hash === "admin" || hash.startsWith("admin/");
+  const path = hash.split("?")[0];
+  return path === "admin" || path.startsWith("admin/");
 }
 
 function isDescadastrarEmailRoute() {
   const hash = window.location.hash.slice(1).replace(/^\//, "").trim();
-  return (
-    hash === "descadastrar-email" || hash.startsWith("descadastrar-email?")
-  );
+  const path = hash.split("?")[0];
+  return path === "descadastrar-email";
 }
 
 function isAssistirVideoRoute() {
   const hash = window.location.hash.slice(1).replace(/^\//, "").trim();
-  return hash === "assistir-video" || hash.startsWith("assistir-video?");
+  const path = hash.split("?")[0];
+  return path === "assistir-video";
 }
 
 function ClientApp() {
@@ -207,7 +208,13 @@ function ClientApp() {
       );
     } else if (view === "perfil") {
       page = (
-        <PerfilPage onVoltar={voltar} onEditar={() => navegar("editar")} />
+        <PerfilPage
+          tabMode
+          onVoltar={voltar}
+          onInicio={() => navegar("home")}
+          onEditar={() => navegar("editar")}
+          onLogout={handleLogout}
+        />
       );
     } else if (view === "contato") {
       page = (

@@ -26,6 +26,7 @@ export default function ClientDesktopNav({
   const nome = usuario?.nome || "Cliente";
   const primeiroNome = String(nome).trim().split(/\s+/)[0] || "Cliente";
   const items = filtrarTabItems(pontosAtivo);
+  const perfilAtivo = view === "perfil";
 
   return (
     <header className="client-desktop-nav" aria-label="Navegação principal">
@@ -63,9 +64,12 @@ export default function ClientDesktopNav({
             {onPerfil && (
               <button
                 type="button"
-                className="client-desktop-nav__user"
+                className={`client-desktop-nav__user${
+                  perfilAtivo ? " client-desktop-nav__user--active" : ""
+                }`}
                 onClick={onPerfil}
                 aria-label={`Meu perfil — ${nome}`}
+                aria-current={perfilAtivo ? "page" : undefined}
                 title={nome}
               >
                 <span className="nivel-avatar-wrap">

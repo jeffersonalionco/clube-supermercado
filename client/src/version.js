@@ -1,2 +1,4 @@
-/** Versão congelada do Clube Superama+ (tag git correspondente). */
-export const APP_VERSION = "0.9.0";
+import versionData from "./version.json";
+
+/** Versão pública do Clube Superama+ (sincronizada com version.json). */
+export const APP_VERSION = String(versionData?.version || "0.0.0");

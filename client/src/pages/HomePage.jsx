@@ -312,12 +312,12 @@ function HomeDeskQuickNav({
       subtitle: "Promoções da loja",
       onClick: onOfertas,
     },
-    onNovidades && {
-      id: "novidades",
-      icon: <IconNews size={18} />,
-      title: "Novidades",
-      subtitle: "Avisos e dicas",
-      onClick: onNovidades,
+    onPerfil && {
+      id: "perfil",
+      icon: <IconUser size={18} />,
+      title: "Meu perfil",
+      subtitle: "Dados e conta",
+      onClick: onPerfil,
     },
     onPremios && {
       id: "premios",
@@ -342,12 +342,12 @@ function HomeDeskQuickNav({
       subtitle: "Histórico completo",
       onClick: onPontos,
     },
-    onPerfil && {
-      id: "perfil",
-      icon: <IconUser size={18} />,
-      title: "Meu perfil",
-      subtitle: "Dados pessoais",
-      onClick: onPerfil,
+    onNovidades && {
+      id: "novidades",
+      icon: <IconNews size={18} />,
+      title: "Novidades",
+      subtitle: "Avisos e dicas",
+      onClick: onNovidades,
     },
     onContato && {
       id: "contato",

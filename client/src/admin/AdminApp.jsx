@@ -21,6 +21,7 @@ import AdminMarketingHubPage from "../pages/admin/AdminMarketingHubPage.jsx";
 import AdminMarketingEmailPage from "../pages/admin/AdminMarketingEmailPage.jsx";
 import AdminMarketingWhatsAppPage from "../pages/admin/AdminMarketingWhatsAppPage.jsx";
 import AdminMarketingWhatsAppAutoPage from "../pages/admin/AdminMarketingWhatsAppAutoPage.jsx";
+import AdminMarketingWhatsAppContatosPage from "../pages/admin/AdminMarketingWhatsAppContatosPage.jsx";
 import AdminVendasPdvPage from "../pages/admin/AdminVendasPdvPage.jsx";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage.jsx";
 import AdminPadariaPage from "../pages/admin/AdminPadariaPage.jsx";
@@ -83,6 +84,9 @@ function marketingSubFromHash() {
   const path = adminPathFromHash();
   if (path.startsWith("admin/marketing/email")) return "email";
   if (path.startsWith("admin/marketing/whatsapp-auto")) return "whatsapp-auto";
+  if (path.startsWith("admin/marketing/whatsapp-contatos")) {
+    return "whatsapp-contatos";
+  }
   if (path.startsWith("admin/marketing/whatsapp")) return "whatsapp";
   return "hub";
 }
@@ -131,6 +135,9 @@ function hashForAdminTab(tab, sub) {
   if (tab === "marketing") {
     if (sub === "email") return "#/admin/marketing/email";
     if (sub === "whatsapp-auto") return "#/admin/marketing/whatsapp-auto";
+    if (sub === "whatsapp-contatos") {
+      return "#/admin/marketing/whatsapp-contatos";
+    }
     if (sub === "whatsapp") return "#/admin/marketing/whatsapp";
     return "#/admin/marketing";
   }
@@ -194,6 +201,15 @@ export default function AdminApp() {
     window.location.hash = hashForAdminTab("marketing", "whatsapp-auto").slice(1);
     setTab("marketing");
     setMarketingSub("whatsapp-auto");
+  }, []);
+
+  const abrirMarketingWhatsappContatos = useCallback(() => {
+    window.location.hash = hashForAdminTab(
+      "marketing",
+      "whatsapp-contatos"
+    ).slice(1);
+    setTab("marketing");
+    setMarketingSub("whatsapp-contatos");
   }, []);
 
   const voltarMarketingHub = useCallback(() => {
@@ -329,12 +345,22 @@ export default function AdminApp() {
         />
       );
     }
+    if (marketingSub === "whatsapp-contatos") {
+      return (
+        <AdminMarketingWhatsAppContatosPage
+          {...layoutProps}
+          onVoltarHub={voltarMarketingHub}
+          onAbrirCampanhas={abrirMarketingWhatsapp}
+        />
+      );
+    }
     return (
       <AdminMarketingHubPage
         {...layoutProps}
         onAbrirEmail={abrirMarketingEmail}
         onAbrirWhatsapp={abrirMarketingWhatsapp}
         onAbrirWhatsappAuto={abrirMarketingWhatsappAuto}
+        onAbrirWhatsappContatos={abrirMarketingWhatsappContatos}
       />
     );
   }

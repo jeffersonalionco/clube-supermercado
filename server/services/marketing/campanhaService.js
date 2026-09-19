@@ -10,6 +10,9 @@ const PUBLICOS_EMAIL = new Set(["todos_elegiveis", "emails_especificos"]);
 const PUBLICOS_WHATSAPP = new Set([
   "todos_elegiveis",
   "telefones_especificos",
+  "carteira_whatsapp",
+  "carteira_com_clube",
+  "carteira_sem_clube",
 ]);
 
 function limparEmails(lista) {

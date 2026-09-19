@@ -242,6 +242,45 @@ router.get("/whatsapp/auto-reply/metricas", async (req, res) => {
   }
 });
 
+router.get("/whatsapp/contatos", async (req, res) => {
+  try {
+    const { listarContatosWhatsapp } = await import(
+      "../services/marketing/whatsappContatoService.js"
+    );
+    const parseBool = (v) => {
+      if (v == null || v === "") return null;
+      const s = String(v).toLowerCase();
+      if (s === "1" || s === "true") return true;
+      if (s === "0" || s === "false") return false;
+      return null;
+    };
+    const data = await listarContatosWhatsapp({
+      temClube: parseBool(req.query.temClube),
+      infoLiberada: parseBool(req.query.infoLiberada),
+      busca: String(req.query.busca || "").trim(),
+      page: Number(req.query.page || 1),
+      limit: Number(req.query.limit || 50),
+    });
+    return res.json(data);
+  } catch (error) {
+    console.error("[admin/marketing/whatsapp/contatos]", error.message);
+    return res.status(500).json({ error: mensagemParaCliente(error.message) });
+  }
+});
+
+router.post("/whatsapp/contatos/backfill", async (_req, res) => {
+  try {
+    const { backfillContatosWhatsapp } = await import(
+      "../services/marketing/whatsappContatoService.js"
+    );
+    const data = await backfillContatosWhatsapp();
+    return res.json(data);
+  } catch (error) {
+    console.error("[admin/marketing/whatsapp/contatos/backfill]", error.message);
+    return res.status(500).json({ error: mensagemParaCliente(error.message) });
+  }
+});
+
 router.get("/clientes", async (req, res) => {
   try {
     const busca = String(req.query.busca || "").trim();

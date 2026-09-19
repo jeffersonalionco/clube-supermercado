@@ -1,12 +1,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Cake, Search, Store, X } from "lucide-react";
+import { ArrowLeft, Cake, Check, MessageCircle, Search, Store, X } from "lucide-react";
 import { formatarPrecoPadaria } from "../../utils/padariaSession.js";
+import {
+  WHATSAPP_PADARIA_E164,
+  linkWhatsAppPadaria,
+  montarMensagemPedidoPadaria,
+} from "../../utils/whatsappPadaria.js";
 import { resolveImagemUrl } from "../../utils/adminSession.js";
 import PadariaEmptyState from "../../components/padaria/PadariaEmptyState.jsx";
 import PadariaErrorState from "../../components/padaria/PadariaErrorState.jsx";
 import PadariaLoadingState from "../../components/padaria/PadariaLoadingState.jsx";
 import PadariaDecoracaoCarousel from "../../components/padaria/PadariaDecoracaoCarousel.jsx";
 import { lockBodyScroll } from "../../utils/bodyScrollLock.js";
+import {
+  ensureMetaPixel,
+  rastrearInteresseProduto,
+  trackFunilEncomenda,
+} from "../../lib/metaPixel.js";
 import "../../styles/padaria.css";
 
 const IDLE_CATALOGO_MS = 2 * 60 * 1000;
@@ -17,6 +27,15 @@ function hashFromProducao() {
     return new URLSearchParams(q).get("from") === "producao";
   } catch {
     return false;
+  }
+}
+
+function codigoFromHash() {
+  try {
+    const q = String(window.location.hash.split("?")[1] || "");
+    return String(new URLSearchParams(q).get("codigo") || "").trim();
+  } catch {
+    return "";
   }
 }
 
@@ -56,11 +75,18 @@ export default function PadariaCatalogoPage() {
   const [detalhe, setDetalhe] = useState(null);
   const [decoSelecionada, setDecoSelecionada] = useState(null);
   const [catAtiva, setCatAtiva] = useState("todas");
+  const [passoMeta, setPassoMeta] = useState("idle");
+  const [whatsappEquipe, setWhatsappEquipe] = useState(WHATSAPP_PADARIA_E164);
   const [modoProducao] = useState(() => hashFromProducao());
   const [idleRestante, setIdleRestante] = useState(() =>
     hashFromProducao() ? Math.ceil(IDLE_CATALOGO_MS / 1000) : 0
   );
   const lastActive = useRef(Date.now());
+
+  const fecharDetalhe = useCallback(() => {
+    setDetalhe(null);
+    setPassoMeta("idle");
+  }, []);
 
   const voltarProducao = useCallback(() => {
     window.location.hash = "#/padaria/producao";
@@ -96,14 +122,14 @@ export default function PadariaCatalogoPage() {
     if (!detalhe) return undefined;
     const unlock = lockBodyScroll();
     const onKey = (e) => {
-      if (e.key === "Escape") setDetalhe(null);
+      if (e.key === "Escape") fecharDetalhe();
     };
     window.addEventListener("keydown", onKey);
     return () => {
       unlock();
       window.removeEventListener("keydown", onKey);
     };
-  }, [detalhe]);
+  }, [detalhe, fecharDetalhe]);
 
   const carregar = useCallback(async () => {
     setLoading(true);
@@ -122,6 +148,7 @@ export default function PadariaCatalogoPage() {
         if (!res.ok) throw new Error(data.error || "Falha ao carregar catálogo");
         setProdutos(data.produtos || []);
         setCategorias(data.categorias || []);
+        if (data.whatsappEquipe) setWhatsappEquipe(data.whatsappEquipe);
       }
     } catch (err) {
       setErro(err.message);
@@ -135,6 +162,26 @@ export default function PadariaCatalogoPage() {
   useEffect(() => {
     carregar();
   }, [carregar]);
+
+  useEffect(() => {
+    if (!modoProducao) ensureMetaPixel();
+  }, [modoProducao]);
+
+  // Deep link do WhatsApp: #/padaria?codigo=618705
+  useEffect(() => {
+    if (loading || aba !== "cardapio" || !produtos.length) return;
+    const codigo = codigoFromHash();
+    if (!codigo) return;
+    const p = produtos.find(
+      (x) => String(x.codigo) === codigo || String(x.codigoBarras) === codigo
+    );
+    if (p) {
+      setDetalhe(p);
+      setDecoSelecionada(null);
+      setPassoMeta("idle");
+      if (!modoProducao) rastrearInteresseProduto(p);
+    }
+  }, [loading, aba, produtos, modoProducao]);
 
   const grupos = useMemo(
     () => agruparPorCategoria(produtos, categorias),
@@ -173,9 +220,12 @@ export default function PadariaCatalogoPage() {
   function abrirProduto(p) {
     setDetalhe(p);
     setDecoSelecionada(null); // padrão: bolo sem decoração
+    setPassoMeta("idle");
+    if (!modoProducao) rastrearInteresseProduto(p);
   }
 
   async function abrirDecoracao(deco) {
+    setPassoMeta("idle");
     if (deco.global || !deco.produtoCodigo) {
       setDetalhe({
         codigo: null,
@@ -200,6 +250,7 @@ export default function PadariaCatalogoPage() {
         const match =
           (data.produto.decoracoes || []).find((d) => d.id === deco.id) || deco;
         setDecoSelecionada(match);
+        if (!modoProducao) rastrearInteresseProduto(data.produto);
         return;
       }
     } catch {
@@ -213,11 +264,50 @@ export default function PadariaCatalogoPage() {
       imagemUrl: null,
     });
     setDecoSelecionada(deco);
+    if (!modoProducao && deco.produtoCodigo) {
+      rastrearInteresseProduto({
+        codigo: deco.produtoCodigo,
+        nome: deco.produtoNome,
+        preco: null,
+      });
+    }
   }
 
   const decoracoesDetalhe = (detalhe?.decoracoes || []).filter(
     (d) => d.ativo !== false
   );
+
+  const podeRastrearCompra =
+    !modoProducao &&
+    Boolean(detalhe?.codigo) &&
+    !detalhe?._somenteDecoracao;
+
+  function mensagemWhatsAppPedido() {
+    if (!detalhe) return "";
+    return montarMensagemPedidoPadaria({
+      nome: detalhe.nome,
+      codigo: detalhe.codigo,
+      precoLabel:
+        detalhe.preco != null
+          ? formatarPrecoPadaria(detalhe.preco, detalhe.vendaPorKg)
+          : null,
+      decoracaoNome: decoSelecionada?.nome || null,
+      decoracaoCodigo: decoSelecionada?.codigo || null,
+    });
+  }
+
+  const linkWhatsAppPedido = detalhe
+    ? linkWhatsAppPadaria(mensagemWhatsAppPedido(), whatsappEquipe)
+    : "#";
+
+  function handleEncomendarWhatsApp() {
+    if (!podeRastrearCompra || !detalhe) return;
+    if (passoMeta === "enviando") return;
+    setPassoMeta("enviando");
+    trackFunilEncomenda(detalhe)
+      .catch(() => {})
+      .finally(() => setPassoMeta("compra"));
+  }
 
   return (
     <div className="padaria-app padaria-app--catalogo">
@@ -246,7 +336,9 @@ export default function PadariaCatalogoPage() {
               <strong>Superama</strong>
               <span>Padaria</span>
             </div>
-            <p className="padaria-brandbar__note">Peça no balcão com o código do item</p>
+            <p className="padaria-brandbar__note">
+              Encomende e confirme com a padaria no WhatsApp
+            </p>
           </div>
 
           <div className="padaria-tabs" role="tablist" aria-label="Seções do catálogo">
@@ -283,8 +375,8 @@ export default function PadariaCatalogoPage() {
         <header className="padaria-intro">
           <h1>Feito sob encomenda</h1>
           <p>
-            Escolha o produto e a decoração. No balcão, informe os códigos e o
-            horário de retirada.
+            Escolha o produto e a decoração. Depois confirme no WhatsApp — sem
+            a confirmação da equipe o pedido não é feito.
           </p>
         </header>
 
@@ -455,8 +547,8 @@ export default function PadariaCatalogoPage() {
         <aside className="padaria-cta">
           <strong>Como encomendar</strong>
           <p>
-            Anote o código do produto e da decoração. No balcão, o atendente
-            registra a retirada para você.
+            Confirme o pedido no WhatsApp com a equipe da padaria. Só depois
+            da confirmação a encomenda é feita.
           </p>
         </aside>
 
@@ -476,7 +568,7 @@ export default function PadariaCatalogoPage() {
         >
           <div
             className="padaria-modal__backdrop"
-            onClick={() => setDetalhe(null)}
+            onClick={fecharDetalhe}
           />
           <div className="padaria-modal__panel padaria-modal__panel--catalogo">
             <div className="padaria-modal__grab" aria-hidden />
@@ -499,7 +591,7 @@ export default function PadariaCatalogoPage() {
               <button
                 type="button"
                 className="padaria-btn padaria-btn--ghost padaria-btn--sm"
-                onClick={() => setDetalhe(null)}
+                onClick={fecharDetalhe}
                 aria-label="Fechar"
               >
                 <X size={16} strokeWidth={2} />
@@ -574,17 +666,56 @@ export default function PadariaCatalogoPage() {
 
               <p className="padaria-modal__hint">
                 <Store size={14} strokeWidth={2.25} aria-hidden />
-                Encomenda no balcão
+                Confirme no WhatsApp
                 {detalhe.codigo ? ` · ${detalhe.codigo}` : ""}
               </p>
                 </>
               )}
             </div>
             <div className="padaria-modal__foot">
+              {passoMeta === "compra" ? (
+                <>
+                  <p className="padaria-encomenda-ok">
+                    <Check size={16} strokeWidth={2.4} aria-hidden />
+                    O pedido só é feito quando a equipe confirmar no WhatsApp.
+                    Código <strong>{detalhe.codigo}</strong>
+                    {decoSelecionada?.codigo
+                      ? ` · deco ${decoSelecionada.codigo}`
+                      : ""}
+                    .
+                  </p>
+                  <a
+                    className="padaria-btn padaria-btn--primary padaria-btn--lg padaria-btn--block"
+                    href={linkWhatsAppPedido}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <MessageCircle size={18} strokeWidth={2.2} aria-hidden />
+                    Falar no WhatsApp
+                  </a>
+                </>
+              ) : podeRastrearCompra ? (
+                <a
+                  className="padaria-btn padaria-btn--primary padaria-btn--lg padaria-btn--block"
+                  href={linkWhatsAppPedido}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={handleEncomendarWhatsApp}
+                >
+                  <MessageCircle size={18} strokeWidth={2.2} aria-hidden />
+                  {passoMeta === "enviando"
+                    ? "Abrindo WhatsApp…"
+                    : "Encomendar no WhatsApp"}
+                </a>
+              ) : null}
               <button
                 type="button"
-                className="padaria-btn padaria-btn--primary padaria-btn--lg padaria-btn--block"
-                onClick={() => setDetalhe(null)}
+                className={`padaria-btn padaria-btn--lg padaria-btn--block ${
+                  passoMeta === "compra" || !podeRastrearCompra
+                    ? "padaria-btn--primary"
+                    : "padaria-btn--secondary"
+                }`}
+                onClick={fecharDetalhe}
               >
                 Fechar
               </button>

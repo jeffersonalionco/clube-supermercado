@@ -17,7 +17,8 @@ function padariaViewFromHash() {
 
 export function isPadariaRoute() {
   const hash = window.location.hash.slice(1).replace(/^\//, "").trim();
-  return hash === "padaria" || hash.startsWith("padaria/");
+  const path = hash.split("?")[0];
+  return path === "padaria" || path.startsWith("padaria/");
 }
 
 export default function PadariaApp() {

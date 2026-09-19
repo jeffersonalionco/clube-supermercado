@@ -444,6 +444,7 @@
 .wa-feed__item--clube_mais,
 .wa-feed__item--clube_liberar,
 .wa-feed__item--clube_compra,
+.wa-feed__item--clube_credito,
 .wa-feed__item--clube_voltar {
   border-left-color: var(--wa-orange);
 }

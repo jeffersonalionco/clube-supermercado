@@ -2,9 +2,9 @@ import {
   IconCart,
   IconGift,
   IconHome,
-  IconNews,
   IconOffers,
   IconStar,
+  IconUser,
 } from "./icons/ClientIcons.jsx";
 
 export const CLIENT_TAB_ITEMS = [
@@ -13,7 +13,7 @@ export const CLIENT_TAB_ITEMS = [
   { id: "compras", label: "Compras", Icon: IconCart },
   { id: "pontos", label: "Pontos", Icon: IconStar },
   { id: "premios", label: "Prêmios", Icon: IconGift },
-  { id: "novidades", label: "Novidades", Icon: IconNews },
+  { id: "perfil", label: "Perfil", Icon: IconUser },
 ];
 
 export function filtrarTabItems(pontosAtivo) {
@@ -23,6 +23,6 @@ export function filtrarTabItems(pontosAtivo) {
       item.id === "home" ||
       item.id === "ofertas" ||
       item.id === "compras" ||
-      item.id === "novidades"
+      item.id === "perfil"
   );
 }

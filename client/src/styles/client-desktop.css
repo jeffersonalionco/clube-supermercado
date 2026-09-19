@@ -36,7 +36,8 @@
   .client-shell--tabs .home-app,
   .client-shell--tabs .compras-app,
   .client-shell--tabs .ph-app,
-  .client-shell--tabs .premios-app {
+  .client-shell--tabs .premios-app,
+  .client-shell--tabs .perfil-app {
     background: transparent;
   }
 

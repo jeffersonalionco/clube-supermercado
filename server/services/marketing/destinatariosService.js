@@ -302,6 +302,23 @@ export async function listarDestinatariosWhatsapp({
 } = {}) {
   const db = getPool();
 
+  if (
+    publico === "carteira_whatsapp" ||
+    publico === "carteira_com_clube" ||
+    publico === "carteira_sem_clube"
+  ) {
+    const { listarDestinatariosCarteiraWhatsapp } = await import(
+      "./whatsappContatoService.js"
+    );
+    const filtro =
+      publico === "carteira_com_clube"
+        ? "com_clube"
+        : publico === "carteira_sem_clube"
+          ? "sem_clube"
+          : "todos";
+    return listarDestinatariosCarteiraWhatsapp({ filtro });
+  }
+
   if (publico === "telefones_especificos") {
     const dest = [];
     const visto = new Set();

@@ -1525,6 +1525,26 @@
 
 .padaria-modal__panel--catalogo .padaria-modal__foot {
   padding-bottom: calc(var(--pk-space-4) + env(safe-area-inset-bottom, 0px));
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.padaria-encomenda-ok {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  background: color-mix(in srgb, #16a34a 12%, var(--pk-surface-elevated, #fff));
+  color: #166534;
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+
+.padaria-encomenda-ok svg {
+  flex-shrink: 0;
+  margin-top: 0.12rem;
 }
 
 .padaria-modal__panel--catalogo .padaria-modal__img,

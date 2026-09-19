@@ -87,6 +87,11 @@ function mapProduto(row, { publico = false } = {}) {
     codigoBalanca,
     sincronizadoEm: row.sincronizado_em,
     atualizadoEm: row.atualizado_em,
+    syncMetaCatalog: Boolean(row.sync_meta_catalog),
+    metaPrecoEnviado:
+      row.meta_preco_enviado != null ? Number(row.meta_preco_enviado) : null,
+    metaSyncEm: row.meta_sync_em,
+    metaSyncErro: row.meta_sync_erro,
   };
   if (publico) {
     return {
@@ -157,6 +162,12 @@ function extrairProdutoRp(produto) {
 }
 
 async function upsertProdutoDoRp(extraido, { origem = null } = {}) {
+  const { rows: antes } = await getPool().query(
+    `SELECT preco, sync_meta_catalog FROM padaria_produto WHERE codigo = $1`,
+    [extraido.codigo]
+  );
+  const precoAnterior = antes[0] ? Number(antes[0].preco) : null;
+
   await getPool().query(
     `INSERT INTO padaria_produto (
        codigo, nome_rp, preco, unidade_medida, ativo_rp,
@@ -192,6 +203,21 @@ async function upsertProdutoDoRp(extraido, { origem = null } = {}) {
       origem,
     ]
   );
+
+  if (antes[0]?.sync_meta_catalog) {
+    try {
+      const { aposAtualizarPrecoPadaria } = await import(
+        "./marketing/metaCatalogService.js"
+      );
+      await aposAtualizarPrecoPadaria(
+        extraido.codigo,
+        precoAnterior,
+        extraido.preco
+      );
+    } catch (err) {
+      console.warn("[padaria/meta] sync preco:", err.message);
+    }
+  }
 }
 
 export function obterStatusSyncPadaria() {
@@ -519,6 +545,10 @@ export async function atualizarProdutoPadaria(codigo, dados = {}) {
     campos.push(`ativo_catalogo = $${i++}`);
     params.push(Boolean(dados.ativoCatalogo));
   }
+  if (dados.syncMetaCatalog != null) {
+    campos.push(`sync_meta_catalog = $${i++}`);
+    params.push(Boolean(dados.syncMetaCatalog));
+  }
   if (dados.categoriaId !== undefined) {
     campos.push(`categoria_id = $${i++}`);
     const raw = dados.categoriaId;
@@ -537,6 +567,19 @@ export async function atualizarProdutoPadaria(codigo, dados = {}) {
   );
 
   if (!rows[0]) throw new Error("Produto não encontrado");
+
+  // Ligou sync Meta → envia produto completo ao catálogo
+  if (dados.syncMetaCatalog === true) {
+    try {
+      const { sincronizarProdutoMetaCatalog } = await import(
+        "./marketing/metaCatalogService.js"
+      );
+      await sincronizarProdutoMetaCatalog(codigo, { force: true });
+    } catch (err) {
+      console.warn("[padaria/meta] ao ligar sync:", err.message);
+    }
+  }
+
   const produto = await obterProdutoAdmin(codigo);
   await registrarAuditoriaPadaria({
     acao: "produto_atualizado",
@@ -571,4 +614,34 @@ export async function sincronizarProdutoCodigo(codigo) {
   if (!extraido.codigo) throw new Error("Código inválido no RP");
   await upsertProdutoDoRp(extraido, { origem: "manual" });
   return obterProdutoAdmin(extraido.codigo);
+}
+
+/**
+ * Atualiza no RP só os produtos vinculados ao catálogo Meta,
+ * e empurra preço quando mudar.
+ */
+export async function atualizarProdutosMarcadosMeta() {
+  const { rows } = await getPool().query(
+    `SELECT codigo FROM padaria_produto
+     WHERE sync_meta_catalog = TRUE
+     ORDER BY codigo`
+  );
+  if (!rows.length) return { total: 0, atualizados: 0 };
+
+  const config = await obterConfigPadaria();
+  const unidade = config.unidade_rp || "001";
+  let atualizados = 0;
+  for (const row of rows) {
+    try {
+      const resultado = await buscarProdutoUnidadePorCodigo(row.codigo, unidade);
+      if (!resultado.ok || !resultado.produto) continue;
+      const extraido = extrairProdutoRp(resultado.produto);
+      if (!extraido.codigo) continue;
+      await upsertProdutoDoRp(extraido);
+      atualizados += 1;
+    } catch (err) {
+      console.warn("[padaria/meta] rp", row.codigo, err.message);
+    }
+  }
+  return { total: rows.length, atualizados };
 }

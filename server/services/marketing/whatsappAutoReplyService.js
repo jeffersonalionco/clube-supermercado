@@ -20,10 +20,67 @@ import {
   responderMeuClubeBotao,
   enviarPainelMeuClube,
 } from "./whatsappMeuClubeService.js";
+import {
+  continuarPedidoCatalogo,
+  iniciarPedidoCatalogo,
+  isBotaoCatalogoPedido,
+  limparSessaoCatalogoPedido,
+  obterSessaoCatalogoPedido,
+} from "./whatsappCatalogoPedidoService.js";
 
 const BTN_OFERTAS = "btn_ofertas";
 const BTN_CONVERSAR = "btn_conversar";
 const BTN_CLUBE = "btn_clube";
+/** Abre o menu completo a partir das boas-vindas (quebra-gelo). */
+const BTN_VER_MENU = "btn_ver_menu";
+
+/** Textos das “mensagens iniciais” / ice breakers configurados no Meta. */
+const QUEBRA_GELO = {
+  ofertas: {
+    id: "ofertas",
+    metrica: "ice_ofertas",
+    // frases aceitas (após normalizar)
+    match: (t) =>
+      t.includes("quais sao as ofertas de hoje") ||
+      (t.includes("ofertas de hoje") && t.length < 80) ||
+      (t.includes("ofertas") && t.includes("hoje") && t.includes("quais")),
+  },
+  clube: {
+    id: "clube",
+    metrica: "ice_clube",
+    match: (t) =>
+      t.includes("quero saber mais sobre o clube") ||
+      t.includes("saber mais sobre o clube superama") ||
+      (t.includes("saber mais") && t.includes("clube") && t.includes("superama")),
+  },
+  cadastro: {
+    id: "cadastro",
+    metrica: "ice_cadastro",
+    match: (t) =>
+      t.includes("como faco para me cadastrar") ||
+      t.includes("me cadastrar no clube") ||
+      (t.includes("cadastrar") && t.includes("clube") && t.includes("superama")),
+  },
+};
+
+function normalizarTextoIntent(texto) {
+  return String(texto || "")
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s+]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export function detectarQuebraGelo(texto) {
+  const t = normalizarTextoIntent(texto);
+  if (!t || t.length > 200) return null;
+  for (const item of Object.values(QUEBRA_GELO)) {
+    if (item.match(t)) return item;
+  }
+  return null;
+}
 
 /** Fila simples em memória para absorver picos sem bloquear o webhook. */
 const fila = [];
@@ -123,7 +180,60 @@ export function autoReplyConfig() {
         String(process.env.WHATSAPP_REDIRECT_FACEBOOK || "").trim() ||
         "https://www.facebook.com/superamasupermercado.supermercadoalianca",
     },
+    equipeWa: waNumero,
   };
+}
+
+/**
+ * Detecta interesse no catálogo Meta:
+ * - "Message business" em um produto → context.referred_product
+ * - Carrinho enviado → type=order
+ */
+function extrairIntentCatalogo(msg) {
+  const raw = msg.raw || {};
+  const referred =
+    raw.context?.referred_product ||
+    raw.context?.whatsapp_referred_product ||
+    null;
+
+  if (referred?.product_retailer_id) {
+    return {
+      tipo: "inquiry",
+      catalogId: referred.catalog_id || null,
+      itens: [
+        {
+          codigo: String(referred.product_retailer_id).trim(),
+          quantidade: 1,
+          preco: null,
+        },
+      ],
+      textoCliente: msg.text || null,
+    };
+  }
+
+  if (msg.type === "order" || raw.type === "order" || raw.order) {
+    const order = raw.order || {};
+    const itens = (order.product_items || [])
+      .map((it) => ({
+        codigo: String(it.product_retailer_id || "").trim(),
+        quantidade: Number(it.quantity) || 1,
+        preco:
+          it.item_price != null && Number.isFinite(Number(it.item_price))
+            ? Number(it.item_price)
+            : null,
+      }))
+      .filter((it) => it.codigo);
+    if (itens.length) {
+      return {
+        tipo: "order",
+        catalogId: order.catalog_id || null,
+        itens,
+        textoCliente: order.text || msg.text || null,
+      };
+    }
+  }
+
+  return null;
 }
 
 export function validarAssinaturaWebhook(rawBody, signatureHeader) {
@@ -282,7 +392,126 @@ function acaoPorBotao(buttonId) {
   if (buttonId === BTN_OFERTAS) return "ofertas";
   if (buttonId === BTN_CONVERSAR) return "conversar";
   if (buttonId === BTN_CLUBE) return "clube";
+  if (buttonId === BTN_VER_MENU) return "ver_menu";
   return acaoMetricaMeuClube(buttonId);
+}
+
+/**
+ * Boas-vindas das quebras de gelo: não abre o menu direto —
+ * mensagem de entrada + botões para ofertas/clube/menu.
+ */
+async function enviarBoasVindasQuebraGelo(telefone, intent, { wamid } = {}) {
+  const cfg = autoReplyConfig();
+  await pausaDigitando(wamid);
+
+  let membro = null;
+  try {
+    membro = await buscarMembroClubePorTelefoneWa(telefone);
+  } catch {
+    /* ignore */
+  }
+
+  try {
+    await limparSessaoMeuClube(telefone);
+  } catch {
+    /* ignore */
+  }
+
+  const nome = membro?.primeiroNome ? `, *${membro.primeiroNome}*` : "";
+  const saudacao = saudacaoPorHorario();
+
+  let cabecalho = "SUPERAMA";
+  let corpo = "";
+  let botoes = [];
+  let rodape = "Toque em um botão ↓";
+
+  if (intent.id === "ofertas") {
+    cabecalho = "OFERTAS DO DIA";
+    corpo =
+      `${saudacao}${nome}! ✨\n\n` +
+      `Você chegou no canal certo.\n` +
+      `Aqui as *ofertas de hoje* do Superama saem fresquinhas — ` +
+      `e com preço de *Clube Superama+* no caixa.\n\n` +
+      `👇 Escolha: ver as ofertas agora ou abrir o *menu* completo.`;
+    botoes = [
+      { id: BTN_OFERTAS, title: "Ver ofertas agora" },
+      { id: BTN_VER_MENU, title: "Abrir o menu" },
+      membro
+        ? { id: BTN_MEU_CLUBE, title: "Meu Clube" }
+        : { id: BTN_CLUBE, title: "Conhecer o Clube" },
+    ];
+  } else if (intent.id === "clube") {
+    cabecalho = "CLUBE SUPERAMA+";
+    corpo =
+      `${saudacao}${nome}! 💛\n\n` +
+      `O *Clube Superama+* é o seu acesso a preço exclusivo, ` +
+      `benefícios e um jeito mais inteligente de fazer a feira.\n\n` +
+      `No caixa, é só informar o CPF${
+        membro?.cpfMascarado ? ` (*${membro.cpfMascarado}*)` : ""
+      }.\n\n` +
+      `👇 Explore o Clube ou abra o menu de ofertas.`;
+    botoes = [
+      membro
+        ? { id: BTN_MEU_CLUBE, title: "Meu Clube" }
+        : { id: BTN_CLUBE, title: "Abrir o Clube" },
+      { id: BTN_OFERTAS, title: "Ver ofertas" },
+      { id: BTN_VER_MENU, title: "Abrir o menu" },
+    ];
+  } else {
+    // cadastro
+    cabecalho = "CADASTRE-SE";
+    corpo =
+      `${saudacao}${nome}! 🌟\n\n` +
+      `Entrar no *Clube Superama+* é rápido:\n` +
+      `1️⃣ Abra o site do Clube\n` +
+      `2️⃣ Cadastre-se com seu CPF\n` +
+      `3️⃣ No caixa, informe o CPF e pronto — preço de membro\n\n` +
+      `👇 Comece o cadastro ou veja o menu enquanto isso.`;
+    botoes = [
+      { id: BTN_CLUBE, title: "Quero me cadastrar" },
+      { id: BTN_OFERTAS, title: "Ver ofertas" },
+      { id: BTN_VER_MENU, title: "Abrir o menu" },
+    ];
+    // CTA reforça o caminho de cadastro (logo após a mensagem com botões)
+  }
+
+  // Gancho curto antes dos botões (chama atenção)
+  const gancho =
+    intent.id === "ofertas"
+      ? `🛒 *Ofertas na mão* — preparei um atalho pra você.`
+      : intent.id === "clube"
+        ? `💎 *Clube Superama+* — vale a pena conhecer de perto.`
+        : `🚀 *Seu lugar no Clube* começa em poucos toques.`;
+
+  await enviarMensagemTextoWhatsapp({
+    telefone,
+    texto: gancho,
+  });
+
+  const r = await enviarMensagemBotoesWhatsapp({
+    telefone,
+    cabecalho,
+    corpo,
+    rodape,
+    botoes,
+  });
+
+  // Cadastro: reforço com CTA URL para o site
+  if (intent.id === "cadastro" && r.ok) {
+    await enviarCtaOuTexto({
+      telefone,
+      corpo:
+        `Quando estiver pronto, toque abaixo e faça o cadastro no *Clube Superama+*.`,
+      url: cfg.links.clube,
+      displayText: "Cadastrar no site",
+      textoFallback: `Cadastre-se no Clube:\n${cfg.links.clube}`,
+    });
+  }
+
+  return {
+    ...r,
+    metricaAcao: intent.metrica,
+  };
 }
 
 async function sleep(ms) {
@@ -349,27 +578,47 @@ async function enviarOfertasDoDia(telefone, { wamid } = {}) {
 
   const MIN_ITENS = 5;
   let ofertas = await obterOfertasParaWhatsapp();
+
+  // Cache de outro dia / ainda sincronizando o dia atual: NÃO envia lista velha
   const precisaEsperar =
-    ofertas.itens.length < MIN_ITENS &&
-    (ofertas.sincronizando || !ofertas.itens.length);
+    ofertas.aguardandoDiaAtual ||
+    (ofertas.sincronizando && ofertas.itens.length < MIN_ITENS) ||
+    (ofertas.itens.length < MIN_ITENS &&
+      (ofertas.sincronizando || !ofertas.itens.length));
 
   if (precisaEsperar) {
-    // Só avisa se ainda não tem lista utilizável
-    if (!ofertas.itens.length) {
-      await enviarMensagemTextoWhatsapp({
-        telefone,
-        texto:
-          `Buscando as ofertas do Clube no sistema…\n` +
-          `Já te envio a lista.`,
-      });
-    }
-    // Até ~45s: a listagem do ERP agora publica itens parciais bem mais cedo
-    for (let i = 0; i < 15; i++) {
+    await enviarMensagemTextoWhatsapp({
+      telefone,
+      texto: ofertas.aguardandoDiaAtual
+        ? `Atualizando as *ofertas de hoje*…\nJá te envio a lista fresquinha.`
+        : !ofertas.itens.length
+          ? `Buscando as ofertas do Clube no sistema…\nJá te envio a lista.`
+          : `Atualizando a lista de ofertas…\nJá te mando em instantes.`,
+    });
+    // Até ~60s: espera o sync do dia atual (parcial já serve se for de hoje)
+    for (let i = 0; i < 20; i++) {
       await sleep(3000);
       ofertas = await obterOfertasParaWhatsapp();
-      if (ofertas.itens.length >= MIN_ITENS) break;
-      if (!ofertas.sincronizando && ofertas.itens.length > 0) break;
-      if (!ofertas.sincronizando && !ofertas.itens.length) break;
+      if (
+        !ofertas.aguardandoDiaAtual &&
+        ofertas.itens.length >= MIN_ITENS
+      ) {
+        break;
+      }
+      if (
+        !ofertas.aguardandoDiaAtual &&
+        !ofertas.sincronizando &&
+        ofertas.itens.length > 0
+      ) {
+        break;
+      }
+      if (
+        !ofertas.aguardandoDiaAtual &&
+        !ofertas.sincronizando &&
+        !ofertas.itens.length
+      ) {
+        break;
+      }
     }
   }
 
@@ -432,6 +681,10 @@ async function enviarCtaOuTexto({ telefone, corpo, url, displayText, textoFallba
 async function responderBotao(telefone, buttonId, { wamid } = {}) {
   const cfg = autoReplyConfig();
 
+  if (buttonId === BTN_VER_MENU) {
+    return enviarMenuPadrao(telefone, { wamid });
+  }
+
   if (buttonId === BTN_OFERTAS) {
     return enviarOfertasDoDia(telefone, { wamid });
   }
@@ -481,13 +734,20 @@ function extrairMensagensEntrada(body) {
     for (const change of entry.changes || []) {
       if (change.field && change.field !== "messages") continue;
       const value = change.value || {};
+      const contatosPerfil = {};
+      for (const c of value.contacts || []) {
+        const waId = String(c.wa_id || "").replace(/\D/g, "");
+        if (waId) contatosPerfil[waId] = c.profile?.name || null;
+      }
       for (const msg of value.messages || []) {
+        const fromDigits = String(msg.from || "").replace(/\D/g, "");
         out.push({
           wamid: msg.id,
           from: msg.from,
           timestamp: msg.timestamp,
           type: msg.type,
           text: msg.text?.body || null,
+          nomeWa: contatosPerfil[fromDigits] || null,
           buttonId:
             msg.interactive?.button_reply?.id ||
             msg.button?.payload ||
@@ -497,6 +757,9 @@ function extrairMensagensEntrada(body) {
             msg.interactive?.button_reply?.title ||
             msg.button?.text ||
             null,
+          // Payload bruto — necessário p/ códigos Meta (às vezes type=unsupported)
+          raw: msg,
+          errors: value.errors || null,
         });
       }
     }
@@ -527,12 +790,135 @@ async function processarMensagem(msg) {
     return;
   }
 
+  // Carteira de contatos (número de ofertas) — ignora mensagens sistema Meta
+  if (msg.type !== "unsupported" && msg.type !== "system" && msg.type !== "unknown") {
+    try {
+      const { registrarContatoWhatsappInbound } = await import(
+        "./whatsappContatoService.js"
+      );
+      await registrarContatoWhatsappInbound({
+        telefone,
+        nomeWa: msg.nomeWa || null,
+        acao: msg.buttonId || msg.type || "message",
+      });
+    } catch (err) {
+      console.warn("[whatsapp/contato] upsert:", err.message);
+    }
+  }
+
   console.log("[whatsapp/auto-reply] inbound", {
     telefone,
     type: msg.type,
     buttonId: msg.buttonId || null,
+    text: msg.text || null,
     wamid: msg.wamid,
   });
+
+  // Mensagens que a Cloud API não decodifica (ex.: código de verificação Meta)
+  if (msg.type === "unsupported" || msg.type === "system" || msg.type === "unknown") {
+    console.log(
+      "[whatsapp/auto-reply] MENSAGEM ESPECIAL (possível código):",
+      JSON.stringify({ raw: msg.raw, errors: msg.errors }, null, 2)
+    );
+    return;
+  }
+
+  // Catálogo Meta: "enviar mensagem" no produto ou pedido do carrinho
+  const intentCatalogo = extrairIntentCatalogo(msg);
+  if (intentCatalogo) {
+    const lim = await checarEAtualizarRateLimit(telefone, { tipo: "botao" });
+    if (!lim.ok) {
+      console.log("[whatsapp/auto-reply] bloqueado", lim.motivo, telefone);
+      await registrarMetricaAutoReply({
+        acao: lim.motivo,
+        telefone,
+        wamid: msg.wamid,
+      });
+      return;
+    }
+    try {
+      await limparSessaoMeuClube(telefone);
+    } catch {
+      /* ignore */
+    }
+    const r = await iniciarPedidoCatalogo(telefone, intentCatalogo, {
+      wamid: msg.wamid,
+      nomeWa: msg.nomeWa || null,
+      cfg: autoReplyConfig(),
+    });
+    if (!r.ok) {
+      console.warn("[whatsapp/auto-reply] catálogo falhou:", r.error);
+    } else {
+      await registrarMetricaAutoReply({
+        acao: r.metricaAcao || "catalog_inquiry",
+        telefone,
+        wamid: msg.wamid,
+        messageId: r.messageId,
+      });
+      console.log(
+        "[whatsapp/auto-reply] catálogo ok",
+        intentCatalogo.tipo,
+        r.catalogCodigo,
+        r.messageId
+      );
+    }
+    return;
+  }
+
+  // Sessão ativa de encomenda (peso → retirada → telefone)
+  try {
+    const sessCat = await obterSessaoCatalogoPedido(telefone);
+    if (sessCat.ativa) {
+      const botaoCat = msg.buttonId && isBotaoCatalogoPedido(msg.buttonId);
+      if (msg.buttonId && !botaoCat) {
+        // Sai do fluxo e segue o botão do menu
+        await limparSessaoCatalogoPedido(telefone);
+      } else {
+        const lim = await checarEAtualizarRateLimit(telefone, { tipo: "botao" });
+        if (!lim.ok) {
+          await registrarMetricaAutoReply({
+            acao: lim.motivo,
+            telefone,
+            wamid: msg.wamid,
+          });
+          return;
+        }
+        const r = await continuarPedidoCatalogo(telefone, msg.text || "", {
+          wamid: msg.wamid,
+          dados: sessCat.dados,
+          buttonId: botaoCat ? msg.buttonId : null,
+        });
+        if (r?._reabrirMenu) {
+          const menu = await enviarMenuPadrao(telefone, { wamid: msg.wamid });
+          if (menu.ok) {
+            await registrarMetricaAutoReply({
+              acao: menu.metricaAcao || "menu",
+              telefone,
+              wamid: msg.wamid,
+              messageId: menu.messageId,
+            });
+          }
+          return;
+        }
+        if (r?.metricaAcao) {
+          await registrarMetricaAutoReply({
+            acao: r.metricaAcao,
+            telefone,
+            wamid: msg.wamid,
+            messageId: r.messageId,
+          });
+        }
+        console.log(
+          "[whatsapp/auto-reply] catálogo passo",
+          sessCat.dados?.passo,
+          r?.messageId
+        );
+        return;
+      }
+    }
+  } catch (err) {
+    console.warn("[whatsapp/auto-reply] sessão catálogo:", err.message);
+  }
 
   if (msg.buttonId) {
     const lim = await checarEAtualizarRateLimit(telefone, { tipo: "botao" });
@@ -576,6 +962,42 @@ async function processarMensagem(msg) {
       );
     }
     return;
+  }
+
+  // Quebras de gelo (Meta): mensagem de entrada → depois botões p/ menu
+  if (msg.type === "text" && msg.text) {
+    const intent = detectarQuebraGelo(msg.text);
+    if (intent) {
+      const lim = await checarEAtualizarRateLimit(telefone, { tipo: "botao" });
+      if (!lim.ok) {
+        console.log("[whatsapp/auto-reply] bloqueado", lim.motivo, telefone);
+        await registrarMetricaAutoReply({
+          acao: lim.motivo,
+          telefone,
+          wamid: msg.wamid,
+        });
+        return;
+      }
+      const r = await enviarBoasVindasQuebraGelo(telefone, intent, {
+        wamid: msg.wamid,
+      });
+      if (!r.ok) {
+        console.warn("[whatsapp/auto-reply] quebra-gelo falhou:", r.error);
+      } else {
+        await registrarMetricaAutoReply({
+          acao: r.metricaAcao || intent.metrica,
+          telefone,
+          wamid: msg.wamid,
+          messageId: r.messageId,
+        });
+        console.log(
+          "[whatsapp/auto-reply] quebra-gelo ok",
+          intent.id,
+          r.messageId
+        );
+      }
+      return;
+    }
   }
 
   // Sessão Meu Clube ativa: texto não reabre o menu principal

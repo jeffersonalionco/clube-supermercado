@@ -6,6 +6,10 @@ export default defineConfig({
   server: {
     host: "0.0.0.0",
     port: 5173,
+    headers: {
+      // Evita o celular/navegador segurar o shell antigo
+      "Cache-Control": "no-store",
+    },
     allowedHosts: [
       "clube.mercadosuperama.com.br",
       "10.1.1.100",
@@ -27,10 +31,22 @@ export default defineConfig({
   preview: {
     host: true,
     port: 5173,
+    headers: {
+      "Cache-Control": "no-store",
+    },
     allowedHosts: [
       "clube.mercadosuperama.com.br",
       "10.1.1.100",
       "localhost",
     ],
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        entryFileNames: "assets/[name]-[hash].js",
+        chunkFileNames: "assets/[name]-[hash].js",
+        assetFileNames: "assets/[name]-[hash][extname]",
+      },
+    },
   },
 });

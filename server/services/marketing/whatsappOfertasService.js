@@ -137,16 +137,19 @@ export function montarMensagensOfertas(itens, { totalClube = 0 } = {}) {
 }
 /**
  * Busca no cache/ERP os produtos com preço 2 e prioriza maiores descontos.
+ * @param {{ forcarAtualizar?: boolean }} [opts]
  */
-export async function obterOfertasParaWhatsapp() {
+export async function obterOfertasParaWhatsapp(opts = {}) {
   const limite = limiteOfertas();
+  const forcar = Boolean(opts.forcarAtualizar);
   const dados = await listarProdutosClubeDescontos({
     pagina: 1,
     limite: 200,
-    atualizar: false,
+    atualizar: forcar,
   });
 
   const sincronizando = Boolean(dados.sincronizando);
+  const aguardandoDiaAtual = Boolean(dados.aguardandoDiaAtual);
   let itens = Array.isArray(dados.itens) ? [...dados.itens] : [];
 
   // Preço 2 ativo no ERP (mesmo se economia ainda não estiver batendo no preço 1)
@@ -173,6 +176,7 @@ export async function obterOfertasParaWhatsapp() {
   return {
     ok: true,
     sincronizando,
+    aguardandoDiaAtual,
     erroSync: dados.erroSync || null,
     sincronizadoEm: dados.sincronizadoEm || null,
     totalClube: Number(dados.totalClube) || itens.length,

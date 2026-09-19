@@ -62,6 +62,15 @@ import {
 } from "../services/padariaDecoracoesService.js";
 import { buscarClientesAdmin } from "../services/adminClientesService.js";
 import { mensagemParaCliente } from "../utils/mensagemCliente.js";
+import { trackCatalogoMetaFireAndForget } from "../services/marketing/metaConversionsService.js";
+import { normalizarTelefoneWa } from "../services/marketing/whatsappCloudService.js";
+
+function whatsappEquipePublico() {
+  return (
+    normalizarTelefoneWa(process.env.WHATSAPP_REDIRECT_WA || "4598161551") ||
+    "554598161551"
+  );
+}
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const uploadDir = path.join(__dirname, "../uploads/padaria");
@@ -98,7 +107,11 @@ router.get("/catalogo", async (req, res) => {
       }),
       listarCategoriasPadaria({ apenasAtivas: true }),
     ]);
-    return res.json({ produtos, categorias });
+    return res.json({
+      produtos,
+      categorias,
+      whatsappEquipe: whatsappEquipePublico(),
+    });
   } catch (error) {
     console.error("[padaria/catalogo]", error.message);
     return res.status(500).json({ error: mensagemParaCliente(error.message) });
@@ -196,6 +209,21 @@ router.post("/pedidos", requireAtendente, async (req, res) => {
       ...req.body,
       criadoPorId: req.padariaUsuario.id,
       criadoPorNome: req.padariaUsuario.nome,
+    });
+    trackCatalogoMetaFireAndForget({
+      eventName: "Purchase",
+      items: (pedido.itens || []).map((i) => ({
+        codigo: i.produtoCodigo,
+        nome: i.nome,
+        preco: i.precoUnitario,
+        quantidade: i.quantidade,
+      })),
+      actionSource: "physical_store",
+      telefone: pedido.clienteTelefone,
+      nome: pedido.clienteNome,
+      externalId: pedido.clienteCpf,
+      eventSourceUrl: "https://clube.mercadosuperama.com.br/#/padaria",
+      orderId: pedido.codigoPublico,
     });
     return res.status(201).json({ pedido });
   } catch (error) {
@@ -427,6 +455,52 @@ router.post(
       return res.json({ produto });
     } catch (error) {
       console.error("[padaria/admin/produtos/atualizar-rp]", error.message);
+      return res
+        .status(400)
+        .json({ error: mensagemParaCliente(error.message) });
+    }
+  }
+);
+
+/** Envia/atualiza o produto no catálogo Meta (WhatsApp). */
+router.post(
+  "/admin/produtos/:codigo/sync-meta",
+  requirePadariaAdmin,
+  async (req, res) => {
+    try {
+      const { sincronizarProdutoMetaCatalog } = await import(
+        "../services/marketing/metaCatalogService.js"
+      );
+      const sync = await sincronizarProdutoMetaCatalog(req.params.codigo, {
+        force: true,
+      });
+      const produto = await obterProdutoAdmin(req.params.codigo);
+      return res.json({ produto, sync });
+    } catch (error) {
+      console.error("[padaria/admin/sync-meta]", error.message);
+      return res
+        .status(400)
+        .json({ error: mensagemParaCliente(error.message) });
+    }
+  }
+);
+
+/**
+ * Marca todos do catálogo ativo (com foto) e envia para a Meta
+ * com brand/categoria Padaria Superama.
+ */
+router.post(
+  "/admin/produtos/sync-meta-catalogo",
+  requirePadariaAdmin,
+  async (_req, res) => {
+    try {
+      const { sincronizarCatalogoAtivoPadariaMeta } = await import(
+        "../services/marketing/metaCatalogService.js"
+      );
+      const resultado = await sincronizarCatalogoAtivoPadariaMeta();
+      return res.json(resultado);
+    } catch (error) {
+      console.error("[padaria/admin/sync-meta-catalogo]", error.message);
       return res
         .status(400)
         .json({ error: mensagemParaCliente(error.message) });

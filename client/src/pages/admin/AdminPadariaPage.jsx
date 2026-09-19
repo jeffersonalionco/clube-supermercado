@@ -109,6 +109,7 @@ export default function AdminPadariaPage({ tab, onTabChange, onLogout, admin }) 
   const [codigoRp, setCodigoRp] = useState("");
   const [editando, setEditando] = useState(null);
   const [syncStatus, setSyncStatus] = useState(null);
+  const [syncMetaCatalogo, setSyncMetaCatalogo] = useState(false);
   const [config, setConfig] = useState(null);
   const [usuarios, setUsuarios] = useState([]);
   const [categorias, setCategorias] = useState([]);
@@ -274,6 +275,9 @@ export default function AdminPadariaPage({ tab, onTabChange, onLogout, admin }) 
       recheio: produto.recheio || "",
       vendaPorKg: Boolean(produto.vendaPorKg),
       ativoCatalogo: Boolean(produto.ativoCatalogo),
+      syncMetaCatalog: Boolean(produto.syncMetaCatalog),
+      metaSyncErro: produto.metaSyncErro || "",
+      metaSyncEm: produto.metaSyncEm || null,
       ativoRp: Boolean(produto.ativoRp),
       preco: produto.preco,
       imagemUrl: produto.imagemUrl || "",
@@ -306,6 +310,9 @@ export default function AdminPadariaPage({ tab, onTabChange, onLogout, admin }) 
               recheio: full.recheio || "",
               vendaPorKg: Boolean(full.vendaPorKg),
               ativoCatalogo: Boolean(full.ativoCatalogo),
+              syncMetaCatalog: Boolean(full.syncMetaCatalog),
+              metaSyncErro: full.metaSyncErro || "",
+              metaSyncEm: full.metaSyncEm || null,
               ativoRp: Boolean(full.ativoRp),
               preco: full.preco,
               imagemUrl: full.imagemUrl || "",
@@ -494,6 +501,39 @@ export default function AdminPadariaPage({ tab, onTabChange, onLogout, admin }) 
     }
   }
 
+  async function sincronizarCatalogoMeta() {
+    if (
+      !window.confirm(
+        "Marcar todos os produtos ativos no catálogo (com foto) e enviar para a Meta como Padaria Superama?"
+      )
+    ) {
+      return;
+    }
+    setErro("");
+    setMsg("");
+    setSyncMetaCatalogo(true);
+    try {
+      const data = await fetchPadariaAdmin("/admin/produtos/sync-meta-catalogo", {
+        method: "POST",
+        body: {},
+      });
+      await carregarProdutos();
+      const falhas = data?.falhas || 0;
+      setMsg(
+        falhas
+          ? `Meta: ${data.ok}/${data.total} ok, ${falhas} falha(s).`
+          : `Meta: ${data.ok} produto(s) enviados como Padaria Superama.`
+      );
+      if (data?.semImagem?.length) {
+        setErro(`Sem foto (não enviados): ${data.semImagem.join(", ")}`);
+      }
+    } catch (err) {
+      handleAuthError(err);
+    } finally {
+      setSyncMetaCatalogo(false);
+    }
+  }
+
   async function atualizarUmDoRp(codigo) {
     setErro("");
     try {
@@ -542,10 +582,15 @@ export default function AdminPadariaPage({ tab, onTabChange, onLogout, admin }) 
           recheio: editando.recheio,
           vendaPorKg: editando.vendaPorKg,
           ativoCatalogo: editando.ativoCatalogo,
+          syncMetaCatalog: editando.syncMetaCatalog,
           categoriaId: editando.categoriaId === "" ? null : Number(editando.categoriaId),
         },
       });
-      setMsg("Produto salvo.");
+      setMsg(
+        editando.syncMetaCatalog
+          ? "Produto salvo. Sync com catálogo Meta/WhatsApp solicitado."
+          : "Produto salvo."
+      );
       setEditando(null);
       await carregarProdutos();
     } catch (err) {
@@ -1089,6 +1134,16 @@ export default function AdminPadariaPage({ tab, onTabChange, onLogout, admin }) 
                 >
                   <RefreshCw size={14} className={syncStatus?.sincronizando ? "is-spin" : ""} />
                   Atualizar preços RP
+                </button>
+                <button
+                  type="button"
+                  className="admin-btn admin-btn--ghost admin-btn--sm"
+                  onClick={sincronizarCatalogoMeta}
+                  disabled={syncMetaCatalogo || stats.noCatalogo === 0}
+                  title="Envia o catálogo ativo para o WhatsApp / Meta como Padaria Superama"
+                >
+                  <RefreshCw size={14} className={syncMetaCatalogo ? "is-spin" : ""} />
+                  {syncMetaCatalogo ? "Enviando Meta…" : "Enviar catálogo → Meta"}
                 </button>
               </div>
 
@@ -1806,6 +1861,34 @@ export default function AdminPadariaPage({ tab, onTabChange, onLogout, admin }) 
                                 <span>
                                   <strong>Ativo no catálogo</strong>
                                   <small>Aparece para cliente e atendente</small>
+                                </span>
+                              </label>
+                              <label
+                                className={`admin-padaria-modal__toggle ${
+                                  editando.syncMetaCatalog ? "is-on" : ""
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={Boolean(editando.syncMetaCatalog)}
+                                  onChange={(e) =>
+                                    setEditando({
+                                      ...editando,
+                                      syncMetaCatalog: e.target.checked,
+                                    })
+                                  }
+                                />
+                                <span className="admin-padaria-modal__toggle-ui" aria-hidden />
+                                <span>
+                                  <strong>Catálogo WhatsApp / Meta</strong>
+                                  <small>
+                                    Preço do ERP atualiza o catálogo do Facebook
+                                    {editando.metaSyncErro
+                                      ? ` · erro: ${editando.metaSyncErro}`
+                                      : editando.metaSyncEm
+                                        ? " · sincronizado"
+                                        : ""}
+                                  </small>
                                 </span>
                               </label>
                             </div>
