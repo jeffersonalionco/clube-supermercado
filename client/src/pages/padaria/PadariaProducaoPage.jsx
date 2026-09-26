@@ -3,12 +3,18 @@ import {
   AlertTriangle,
   Bell,
   BookOpen,
+  ChevronRight,
   LogOut,
   Printer,
   RefreshCw,
   X,
 } from "lucide-react";
 import PadariaLoginPage from "./PadariaLoginPage.jsx";
+import {
+  PadariaFotosBadge,
+  PadariaFotosGaleria,
+  PadariaFotosStrip,
+} from "../../components/padaria/PadariaFotosPedido.jsx";
 import {
   clearPadariaSession,
   fetchPadaria,
@@ -100,6 +106,102 @@ function labelTempo(minutos) {
   return `Em ${minutos} min`;
 }
 
+function qtdItem(i) {
+  return `${i.quantidade}${
+    String(i.unidade || "").toUpperCase() === "KG" ? "kg" : "×"
+  }`;
+}
+
+function extrasItem(i) {
+  return [
+    i.decoracaoNome
+      ? `Deco: ${i.decoracaoNome}${
+          i.decoracaoCodigo ? ` (${i.decoracaoCodigo})` : ""
+        }${
+          Number(i.decoracaoPreco) > 0
+            ? ` · +${formatarPrecoPadaria(i.decoracaoPreco)}`
+            : ""
+        }`
+      : null,
+    i.cobertura,
+    i.recheio,
+    i.obsItem,
+  ].filter(Boolean);
+}
+
+function previewItens(itens = []) {
+  if (!itens.length) return "Sem itens";
+  const primeiros = itens
+    .slice(0, 2)
+    .map((i) => `${qtdItem(i)} ${i.nome}`)
+    .join(" · ");
+  const extra = itens.length > 2 ? ` · +${itens.length - 2}` : "";
+  return `${primeiros}${extra}`;
+}
+
+const IDLE_TOPO_MS = 20000;
+
+function PkProdColLista({ children }) {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+    let timer = null;
+    let emUso = false;
+
+    const limpar = () => {
+      if (timer) {
+        window.clearTimeout(timer);
+        timer = null;
+      }
+    };
+
+    const voltarAoTopo = () => {
+      if (emUso || el.scrollTop <= 1) return;
+      el.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    const agendar = () => {
+      limpar();
+      if (emUso || el.scrollTop <= 1) return;
+      timer = window.setTimeout(voltarAoTopo, IDLE_TOPO_MS);
+    };
+
+    const pausar = () => {
+      emUso = true;
+      limpar();
+    };
+
+    const soltar = () => {
+      if (!emUso) return;
+      emUso = false;
+      agendar();
+    };
+
+    el.addEventListener("scroll", agendar, { passive: true });
+    el.addEventListener("pointerdown", pausar);
+    el.addEventListener("wheel", agendar, { passive: true });
+    window.addEventListener("pointerup", soltar);
+    window.addEventListener("pointercancel", soltar);
+
+    return () => {
+      limpar();
+      el.removeEventListener("scroll", agendar);
+      el.removeEventListener("pointerdown", pausar);
+      el.removeEventListener("wheel", agendar);
+      window.removeEventListener("pointerup", soltar);
+      window.removeEventListener("pointercancel", soltar);
+    };
+  }, []);
+
+  return (
+    <div ref={ref} className="pk-prod__col-lista">
+      {children}
+    </div>
+  );
+}
+
 function loadSeenSet(storageKey, dia) {
   try {
     const raw = sessionStorage.getItem(storageKey);
@@ -154,6 +256,8 @@ export default function PadariaProducaoPage() {
   const [somAtivo, setSomAtivo] = useState(() => audioPadariaLiberado());
   const [ordenacao, setOrdenacao] = useState(() => loadOrdenacao());
   const [confirmStatus, setConfirmStatus] = useState(null);
+  const [pedidoAbertoId, setPedidoAbertoId] = useState(null);
+  const [fotoLightbox, setFotoLightbox] = useState(false);
 
   const seeded = useRef(false);
   const seededCancel = useRef(false);
@@ -167,6 +271,10 @@ export default function PadariaProducaoPage() {
 
   const popupAtual = popupFila[0] || null;
   const cancelAtual = cancelFila[0] || null;
+  const pedidoAberto =
+    pedidoAbertoId != null
+      ? pedidos.find((p) => p.id === pedidoAbertoId) || null
+      : null;
 
   const fecharPopupAtual = useCallback(() => {
     if (popupTimer.current) {
@@ -381,19 +489,47 @@ export default function PadariaProducaoPage() {
   }, [cancelAtual?.id]);
 
   useEffect(() => {
-    if (!popupAtual && !cancelAtual) return undefined;
+    setPedidoAbertoId(null);
+  }, [data]);
+
+  useEffect(() => {
+    const bloquear =
+      popupAtual ||
+      cancelAtual ||
+      pedidoAberto ||
+      confirmStatus ||
+      fotoLightbox;
+    if (!bloquear) return undefined;
     const unlock = lockBodyScroll();
     const onKey = (e) => {
       if (e.key !== "Escape") return;
       if (cancelAtual) return;
-      fecharPopupAtual();
+      if (fotoLightbox) return;
+      if (confirmStatus && !acaoId) {
+        setConfirmStatus(null);
+        return;
+      }
+      if (pedidoAbertoId != null) {
+        setPedidoAbertoId(null);
+        return;
+      }
+      if (popupAtual) fecharPopupAtual();
     };
     window.addEventListener("keydown", onKey);
     return () => {
       unlock();
       window.removeEventListener("keydown", onKey);
     };
-  }, [popupAtual, cancelAtual, fecharPopupAtual]);
+  }, [
+    popupAtual,
+    cancelAtual,
+    pedidoAberto,
+    confirmStatus,
+    fotoLightbox,
+    acaoId,
+    pedidoAbertoId,
+    fecharPopupAtual,
+  ]);
 
   async function mudarStatus(id, status) {
     if (acaoId) return;
@@ -484,14 +620,6 @@ export default function PadariaProducaoPage() {
           >
             Marcar como pronto
           </button>
-          <button
-            type="button"
-            className="padaria-btn padaria-btn--ghost padaria-btn--block"
-            disabled={acaoId === p.id}
-            onClick={() => pedirConfirmacaoStatus(p, "novo")}
-          >
-            Voltar para Novos
-          </button>
         </div>
       ),
     },
@@ -518,6 +646,7 @@ export default function PadariaProducaoPage() {
 
   return (
     <div className="padaria-app pk-prod">
+      <div className="pk-prod__chrome">
       <header className="pk-prod__top">
         <div>
           <h1>Produção</h1>
@@ -599,6 +728,7 @@ export default function PadariaProducaoPage() {
           🔊 Toque aqui para ativar o som dos alertas
         </button>
       )}
+      </div>
 
       <div className="pk-prod__kanban">
         {colunas.map((col) => (
@@ -607,81 +737,226 @@ export default function PadariaProducaoPage() {
               {col.titulo}
               <span className="pk-prod__count">{col.count}</span>
             </h2>
+            <PkProdColLista>
             {col.items.map((p) => (
               <article
                 key={p.id}
-                className={`pk-prod__card${
+                className={`pk-prod__card pk-prod__card--compact${
                   p.atrasado
                     ? " pk-prod__card--atrasado"
                     : p.urgente
                       ? " pk-prod__card--urgente"
                       : ""
-                }${p.status === "pronto" ? " pk-prod__card--pronto" : ""}`}
+                }${p.status === "pronto" ? " pk-prod__card--pronto" : ""}${
+                  pedidoAbertoId === p.id ? " pk-prod__card--aberto" : ""
+                }`}
               >
-                <div className="pk-prod__hora">{p.horaRetirada}</div>
-                <div className="pk-prod__codigo">{p.codigoPublico}</div>
-                <div className="pk-prod__cliente">{p.clienteNome}</div>
-                {(p.atrasado || p.urgente) && (
-                  <span
-                    className={`pk-prod__badge ${
-                      p.atrasado
-                        ? "pk-prod__badge--atrasado"
-                        : "pk-prod__badge--urgente"
-                    }`}
-                  >
-                    {labelTempo(p.minutosParaRetirada)}
-                  </span>
-                )}
-                <ul>
-                  {p.itens?.map((i) => (
-                    <li key={i.id}>
-                      <strong>
-                        {i.quantidade}
-                        {i.unidade === "KG" ? "kg" : "x"}
-                      </strong>{" "}
-                      {i.nome}
-                      {i.decoracaoNome && (
-                        <div className="pk-prod__codigo">
-                          Deco: {i.decoracaoNome}
-                          {i.decoracaoCodigo ? ` (${i.decoracaoCodigo})` : ""}
-                          {Number(i.decoracaoPreco) > 0
-                            ? ` · +${formatarPrecoPadaria(i.decoracaoPreco)}`
-                            : ""}
-                        </div>
-                      )}
-                      {(i.cobertura || i.recheio || i.obsItem) && (
-                        <div className="pk-prod__codigo">
-                          {[i.cobertura, i.recheio, i.obsItem]
-                            .filter(Boolean)
-                            .join(" · ")}
-                        </div>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-                {p.observacao && (
-                  <p className="pk-prod__obs">OBS: {p.observacao}</p>
-                )}
                 <button
                   type="button"
-                  className="padaria-btn padaria-btn--ghost padaria-btn--sm padaria-btn--block"
-                  onClick={() =>
-                    imprimirPedidoPadaria(p).catch((err) =>
-                      setErro(err.message || "Falha ao imprimir")
-                    )
-                  }
+                  className="pk-prod__card-hit"
+                  onClick={() => setPedidoAbertoId(p.id)}
+                  aria-label={`${p.codigoPublico}, ${p.clienteNome}, retirada ${p.horaRetirada}. Abrir itens e fotos.`}
                 >
-                  <Printer size={14} strokeWidth={2} /> Imprimir cupom
+                  <div className="pk-prod__card-top">
+                    <div className="pk-prod__hora">{p.horaRetirada}</div>
+                    <div className="pk-prod__card-meta">
+                      <PadariaFotosBadge qtd={p.fotos?.length} />
+                      {(p.atrasado || p.urgente) && (
+                        <span
+                          className={`pk-prod__badge ${
+                            p.atrasado
+                              ? "pk-prod__badge--atrasado"
+                              : "pk-prod__badge--urgente"
+                          }`}
+                        >
+                          {labelTempo(p.minutosParaRetirada)}
+                        </span>
+                      )}
+                      <ChevronRight
+                        className="pk-prod__abrir-ico"
+                        size={18}
+                        strokeWidth={2.2}
+                        aria-hidden
+                      />
+                    </div>
+                  </div>
+                  <div className="pk-prod__codigo">{p.codigoPublico}</div>
+                  <div className="pk-prod__cliente">{p.clienteNome}</div>
+                  <p className="pk-prod__preview">
+                    {p.itens?.length || 0}{" "}
+                    {(p.itens?.length || 0) === 1 ? "item" : "itens"}
+                    {p.observacao ? " · obs" : ""}
+                    {" · "}
+                    {previewItens(p.itens)}
+                  </p>
+                  <PadariaFotosStrip fotos={p.fotos} max={3} />
                 </button>
-                {col.acao?.(p)}
+                <div className="pk-prod__card-acoes">
+                  {col.acao?.(p)}
+                </div>
               </article>
             ))}
             {col.items.length === 0 && (
               <p className="pk-prod__empty">Nenhum pedido</p>
             )}
+            </PkProdColLista>
           </section>
         ))}
       </div>
+
+      {pedidoAberto && (
+        <div
+          className="padaria-modal pk-prod-detalhe"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="prod-detalhe-titulo"
+        >
+          <div
+            className="padaria-modal__backdrop"
+            onClick={() => !fotoLightbox && setPedidoAbertoId(null)}
+          />
+          <div className="padaria-modal__panel pk-prod-detalhe__panel">
+            <div className="padaria-modal__head">
+              <div>
+                <p className="pk-prod-detalhe__eyebrow">Detalhe da produção</p>
+                <h2 id="prod-detalhe-titulo">{pedidoAberto.codigoPublico}</h2>
+              </div>
+              <button
+                type="button"
+                className="padaria-btn padaria-btn--ghost padaria-btn--sm"
+                onClick={() => setPedidoAbertoId(null)}
+                aria-label="Fechar"
+              >
+                <X size={16} strokeWidth={2} />
+              </button>
+            </div>
+            <div className="padaria-modal__body">
+              <div className="pk-prod-detalhe__resumo">
+                <p className="pk-prod-detalhe__hora">{pedidoAberto.horaRetirada}</p>
+                <div>
+                  <p className="pk-prod-detalhe__cliente">
+                    {pedidoAberto.clienteNome}
+                  </p>
+                  <p className="pk-prod-detalhe__meta">
+                    Retirada{" "}
+                    {formatDateTime(
+                      pedidoAberto.dataRetirada,
+                      pedidoAberto.horaRetirada
+                    )}
+                    {pedidoAberto.clienteTelefone
+                      ? ` · ${formatPhone(pedidoAberto.clienteTelefone)}`
+                      : ""}
+                  </p>
+                </div>
+                {(pedidoAberto.atrasado || pedidoAberto.urgente) && (
+                  <span
+                    className={`pk-prod__badge ${
+                      pedidoAberto.atrasado
+                        ? "pk-prod__badge--atrasado"
+                        : "pk-prod__badge--urgente"
+                    }`}
+                  >
+                    {labelTempo(pedidoAberto.minutosParaRetirada)}
+                  </span>
+                )}
+              </div>
+
+              <h3 className="pk-prod-detalhe__bloco-titulo">Itens</h3>
+              <ul className="pk-prod-detalhe__itens">
+                {(pedidoAberto.itens || []).map((i) => {
+                  const extras = extrasItem(i);
+                  const deco = extras.find((x) => String(x).startsWith("Deco:"));
+                  const resto = extras.filter((x) => !String(x).startsWith("Deco:"));
+                  return (
+                    <li key={i.id || `${i.produtoCodigo}-${i.nome}`}>
+                      <strong>
+                        {qtdItem(i)} {i.nome}
+                      </strong>
+                      {deco ? <span>{deco}</span> : null}
+                      {resto.length ? <span>{resto.join(" · ")}</span> : null}
+                    </li>
+                  );
+                })}
+              </ul>
+
+              {pedidoAberto.observacao ? (
+                <p className="pk-prod-detalhe__obs">
+                  <strong>Obs.:</strong> {pedidoAberto.observacao}
+                </p>
+              ) : null}
+
+              <PadariaFotosGaleria
+                fotos={pedidoAberto.fotos}
+                onLightboxChange={setFotoLightbox}
+              />
+            </div>
+            <div className="padaria-modal__foot pk-prod-detalhe__foot">
+              <button
+                type="button"
+                className="padaria-btn padaria-btn--ghost"
+                onClick={() =>
+                  imprimirPedidoPadaria(pedidoAberto).catch((err) =>
+                    setErro(err.message || "Falha ao imprimir")
+                  )
+                }
+              >
+                <Printer size={14} strokeWidth={2} /> Cupom
+              </button>
+              {pedidoAberto.status === "novo" ? (
+                <button
+                  type="button"
+                  className="padaria-btn padaria-btn--primary"
+                  disabled={acaoId === pedidoAberto.id}
+                  onClick={() =>
+                    pedirConfirmacaoStatus(pedidoAberto, "em_producao")
+                  }
+                >
+                  Iniciar produção
+                </button>
+              ) : null}
+              {pedidoAberto.status === "em_producao" ? (
+                <>
+                  <button
+                    type="button"
+                    className="padaria-btn padaria-btn--amber"
+                    disabled={acaoId === pedidoAberto.id}
+                    onClick={() => pedirConfirmacaoStatus(pedidoAberto, "pronto")}
+                  >
+                    Marcar como pronto
+                  </button>
+                  <button
+                    type="button"
+                    className="padaria-btn padaria-btn--ghost"
+                    disabled={acaoId === pedidoAberto.id}
+                    onClick={() => pedirConfirmacaoStatus(pedidoAberto, "novo")}
+                  >
+                    Voltar para Novos
+                  </button>
+                </>
+              ) : null}
+              {pedidoAberto.status === "pronto" ? (
+                <button
+                  type="button"
+                  className="padaria-btn padaria-btn--ghost"
+                  disabled={acaoId === pedidoAberto.id}
+                  onClick={() =>
+                    pedirConfirmacaoStatus(pedidoAberto, "em_producao")
+                  }
+                >
+                  Voltar para Em produção
+                </button>
+              ) : null}
+              <button
+                type="button"
+                className="padaria-btn padaria-btn--secondary"
+                onClick={() => setPedidoAbertoId(null)}
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {cancelAtual && (
         <div
@@ -872,6 +1147,12 @@ export default function PadariaProducaoPage() {
                   <strong>Obs.:</strong> {popupAtual.observacao}
                 </p>
               ) : null}
+
+              <PadariaFotosGaleria
+                fotos={popupAtual.fotos}
+                titulo="Fotos de referência"
+                onLightboxChange={setFotoLightbox}
+              />
 
               <div className="pk-prod-popup__timer">
                 <p>

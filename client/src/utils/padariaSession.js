@@ -33,9 +33,10 @@ export function clearPadariaSession() {
 
 export async function fetchPadaria(path, options = {}) {
   const session = loadPadariaSession();
+  const isFormData = options.body instanceof FormData;
   const headers = {
     Accept: "application/json",
-    ...(options.body ? { "Content-Type": "application/json" } : {}),
+    ...(options.body && !isFormData ? { "Content-Type": "application/json" } : {}),
     ...(options.headers || {}),
   };
   if (session?.token) {
@@ -45,8 +46,9 @@ export async function fetchPadaria(path, options = {}) {
   const res = await fetch(`/api/padaria${path}`, {
     ...options,
     headers,
-    body:
-      options.body && typeof options.body !== "string"
+    body: isFormData
+      ? options.body
+      : options.body && typeof options.body !== "string"
         ? JSON.stringify(options.body)
         : options.body,
   });

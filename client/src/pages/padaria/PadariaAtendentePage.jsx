@@ -18,6 +18,15 @@ import PadariaEmptyState from "../../components/padaria/PadariaEmptyState.jsx";
 import PadariaLoadingState from "../../components/padaria/PadariaLoadingState.jsx";
 import PadariaDecoracaoCarousel from "../../components/padaria/PadariaDecoracaoCarousel.jsx";
 import {
+  PADARIA_MAX_FOTOS_PEDIDO,
+  PadariaFotosBadge,
+  PadariaFotosCheckout,
+  PadariaFotosGaleria,
+  PadariaFotosStrip,
+  revogarFotosLocais,
+  validarArquivoFotoPadaria,
+} from "../../components/padaria/PadariaFotosPedido.jsx";
+import {
   clearPadariaSession,
   fetchPadaria,
   formatarPrecoPadaria,
@@ -34,7 +43,12 @@ import {
   STATUS_PEDIDO,
 } from "../../utils/padariaFormat.js";
 import { resolveImagemUrl } from "../../utils/adminSession.js";
-import { imprimirPedidoPadaria, conectarImpressoraCupom, desconectarImpressoraCupom, impressoraSerialConectada, obterLarguraCupomMm, definirLarguraCupomMm } from "../../utils/padariaImpressao.js";
+import {
+  imprimirPedidoPadaria,
+  imprimirTestePadaria,
+  obterLarguraCupomMm,
+  definirLarguraCupomMm,
+} from "../../utils/padariaImpressao.js";
 import { lockBodyScroll } from "../../utils/bodyScrollLock.js";
 import {
   carregarVistos15min,
@@ -60,6 +74,48 @@ const MOTIVOS = [
 
 const DRAFT_KEY = "padaria.atendente.rascunho.v1";
 const POLL_MS = 12000;
+const TOAST_OK_MS = 4500;
+const TOAST_ERRO_MS = 7000;
+
+function PkToast({ ok, erro, onFecharOk, onFecharErro }) {
+  const texto = erro || ok || "";
+  const tipo = erro ? "erro" : "ok";
+  const ms = erro ? TOAST_ERRO_MS : TOAST_OK_MS;
+
+  useEffect(() => {
+    if (!texto) return undefined;
+    const t = window.setTimeout(() => {
+      if (erro) onFecharErro();
+      else onFecharOk();
+    }, ms);
+    return () => window.clearTimeout(t);
+  }, [texto, erro, ms, onFecharOk, onFecharErro]);
+
+  if (!texto) return null;
+
+  return (
+    <div
+      className={`pk-toast pk-toast--${tipo}`}
+      role={erro ? "alert" : "status"}
+      aria-live="polite"
+    >
+      <p>{texto}</p>
+      <button
+        type="button"
+        className="pk-toast__x"
+        onClick={() => (erro ? onFecharErro() : onFecharOk())}
+        aria-label="Fechar aviso"
+      >
+        <X size={16} strokeWidth={2.2} />
+      </button>
+      <span
+        className="pk-toast__barra"
+        aria-hidden
+        style={{ animationDuration: `${ms}ms` }}
+      />
+    </div>
+  );
+}
 
 function hojeISO() {
   return dataLocalISO();
@@ -188,6 +244,9 @@ export default function PadariaAtendentePage() {
     draftHora(draftInicial?.horaRetirada)
   );
   const [observacao, setObservacao] = useState(draftInicial?.observacao || "");
+  const [fotosLocais, setFotosLocais] = useState([]);
+  const [fotoAviso, setFotoAviso] = useState("");
+  const [enviandoFotos, setEnviandoFotos] = useState(false);
   const [itens, setItens] = useState(() =>
     Array.isArray(draftInicial?.itens) ? draftInicial.itens : []
   );
@@ -203,13 +262,20 @@ export default function PadariaAtendentePage() {
   const [alertas, setAlertas] = useState([]);
   const [pedidoDetalhe, setPedidoDetalhe] = useState(null);
   const [cupomMm, setCupomMm] = useState(() => obterLarguraCupomMm());
-  const [serialOk, setSerialOk] = useState(() => impressoraSerialConectada());
+  const [impressoraHost, setImpressoraHost] = useState("10.1.1.13");
+  const [impressoraPorta, setImpressoraPorta] = useState(9100);
   const alertasSeeded = useRef(false);
   const alertasBusy = useRef(false);
   const statusMapRef = useRef(null);
 
   const podeAcessar =
     session?.usuario && ["atendente", "gestor"].includes(session.usuario.papel);
+
+  const fecharToastOk = useCallback(() => setOkMsg(""), []);
+  const fecharToastErro = useCallback(() => {
+    setErro("");
+    setFotoAviso("");
+  }, []);
 
   const carregarCatalogo = useCallback(async () => {
     const res = await fetch("/api/padaria/catalogo");
@@ -371,7 +437,14 @@ export default function PadariaAtendentePage() {
     carregarCatalogo().catch(() => {});
     fetchPadaria("/config")
       .then((data) => {
-        if (data?.config) setConfigRetirada(data.config);
+        if (data?.config) {
+          setConfigRetirada(data.config);
+          if (data.config.impressoraHost) setImpressoraHost(data.config.impressoraHost);
+          if (data.config.impressoraPorta) setImpressoraPorta(Number(data.config.impressoraPorta) || 9100);
+          if (data.config.impressoraLarguraMm) {
+            setCupomMm(definirLarguraCupomMm(data.config.impressoraLarguraMm));
+          }
+        }
       })
       .catch(() => {});
     pedirPermissaoNotificacao();
@@ -524,6 +597,11 @@ export default function PadariaAtendentePage() {
     };
   }, [pedidoDetalhe, alertas.length]);
 
+  useEffect(() => {
+    return () => revogarFotosLocais(fotosLocais);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- só no unmount
+  }, []);
+
   function abrirDetalhePedido(pedido, { dispensarAlertaKey } = {}) {
     if (!pedido) return;
     setPedidoDetalhe(pedido);
@@ -561,6 +639,9 @@ export default function PadariaAtendentePage() {
   );
 
   function limparPedidoEmAndamento() {
+    revogarFotosLocais(fotosLocais);
+    setFotosLocais([]);
+    setFotoAviso("");
     setItens([]);
     setClienteNome("");
     setClienteTelefone("");
@@ -579,35 +660,70 @@ export default function PadariaAtendentePage() {
     if (!pedido) return;
     setErro("");
     try {
-      const r = await imprimirPedidoPadaria(pedido, { larguraMm: cupomMm });
-      setOkMsg(
-        r.modo === "escpos"
-          ? "Cupom enviado à impressora."
-          : `Impressão de cupom ${cupomMm}mm — escolha a Epson/Bematech e use margens zeradas.`
-      );
+      await imprimirPedidoPadaria(pedido, { larguraMm: cupomMm });
+      setOkMsg("Cupom enviado à Bematech no PDV13 (texto ESC/POS).");
     } catch (err) {
       setErro(err.message || "Falha ao imprimir cupom.");
     }
   }
 
-  async function handleConectarImpressora() {
+  async function anexarFotosPedidoExistente(pedido, fileList) {
+    const files = [...(fileList || [])];
+    if (!pedido?.id || !files.length) return;
+    const atuais = pedido.fotos?.length || 0;
+    const aceitos = [];
+    for (const file of files) {
+      if (atuais + aceitos.length >= PADARIA_MAX_FOTOS_PEDIDO) break;
+      const invalido = validarArquivoFotoPadaria(file);
+      if (invalido) {
+        setErro(invalido);
+        continue;
+      }
+      aceitos.push(file);
+    }
+    if (!aceitos.length) return;
+    setEnviandoFotos(true);
     setErro("");
     try {
-      if (serialOk) {
-        await desconectarImpressoraCupom();
-        setSerialOk(false);
-        setOkMsg("Impressora desconectada. A impressão voltará ao diálogo do Windows.");
-        return;
-      }
-      await conectarImpressoraCupom();
-      setSerialOk(true);
-      setOkMsg("Impressora conectada para envio direto (ESC/POS).");
+      const form = new FormData();
+      for (const file of aceitos) form.append("fotos", file);
+      const data = await fetchPadaria(`/pedidos/${pedido.id}/fotos`, {
+        method: "POST",
+        body: form,
+      });
+      setPedidoDetalhe(data.pedido);
+      await carregarPedidos();
     } catch (err) {
-      if (err?.name === "NotFoundError") return;
-      setErro(
-        err.message ||
-          "Não foi possível conectar. Use Chrome/Edge ou imprima pelo diálogo escolhendo a Epson/Bematech."
-      );
+      setErro(err.message || "Não foi possível anexar as fotos.");
+    } finally {
+      setEnviandoFotos(false);
+    }
+  }
+
+  async function removerFotoPedidoExistente(pedido, foto) {
+    if (!pedido?.id || !foto?.id) return;
+    setEnviandoFotos(true);
+    setErro("");
+    try {
+      const data = await fetchPadaria(`/pedidos/${pedido.id}/fotos/${foto.id}`, {
+        method: "DELETE",
+      });
+      setPedidoDetalhe(data.pedido);
+      await carregarPedidos();
+    } catch (err) {
+      setErro(err.message || "Não foi possível remover a foto.");
+    } finally {
+      setEnviandoFotos(false);
+    }
+  }
+
+  async function handleTestarImpressora() {
+    setErro("");
+    try {
+      await imprimirTestePadaria({ larguraMm: cupomMm });
+      setOkMsg(`Teste enviado para ${impressoraHost}:${impressoraPorta} (texto ESC/POS).`);
+    } catch (err) {
+      setErro(err.message || "Não chegou no print-server do PDV13.");
     }
   }
 
@@ -766,11 +882,31 @@ export default function PadariaAtendentePage() {
           })),
         },
       });
-      setPedidoCriado(data.pedido);
+      let pedido = data.pedido;
+      let avisoFoto = "";
+      if (fotosLocais.length && pedido?.id) {
+        try {
+          const form = new FormData();
+          for (const foto of fotosLocais) form.append("fotos", foto.file);
+          const up = await fetchPadaria(`/pedidos/${pedido.id}/fotos`, {
+            method: "POST",
+            body: form,
+          });
+          pedido = up.pedido || pedido;
+        } catch (err) {
+          avisoFoto =
+            err.message ||
+            "Pedido criado, mas as fotos não foram enviadas. Abra o pedido e anexe de novo.";
+        }
+      }
+      setPedidoCriado(pedido);
+      setFotoAviso(avisoFoto);
       setConflitoHorario(null);
       setClienteNome("");
       setClienteTelefone("");
       setObservacao("");
+      revogarFotosLocais(fotosLocais);
+      setFotosLocais([]);
       setDataRetiradaBr(isoParaBr(hojeISO()));
       setHoraRetirada("16:30");
       setItens([]);
@@ -909,6 +1045,9 @@ export default function PadariaAtendentePage() {
             {formatDateTime(pedidoCriado.dataRetirada, pedidoCriado.horaRetirada)}
           </p>
           <p className="padaria-tile__preco">{formatarPrecoPadaria(pedidoCriado.total)}</p>
+          {(pedidoCriado.fotos || []).length > 0 ? (
+            <PadariaFotosStrip fotos={pedidoCriado.fotos} />
+          ) : null}
           <div className="pk-checkout" style={{ marginTop: 8 }}>
             <button
               type="button"
@@ -922,6 +1061,7 @@ export default function PadariaAtendentePage() {
               className="padaria-btn padaria-btn--secondary padaria-btn--lg padaria-btn--block"
               onClick={() => {
                 setPedidoCriado(null);
+                setFotoAviso("");
                 setAba("novo");
               }}
             >
@@ -932,6 +1072,7 @@ export default function PadariaAtendentePage() {
               className="padaria-btn padaria-btn--ghost padaria-btn--block"
               onClick={() => {
                 setPedidoCriado(null);
+                setFotoAviso("");
                 setAba("lista");
               }}
             >
@@ -939,6 +1080,12 @@ export default function PadariaAtendentePage() {
             </button>
           </div>
         </div>
+        <PkToast
+          ok={okMsg}
+          erro={erro || fotoAviso}
+          onFecharOk={fecharToastOk}
+          onFecharErro={fecharToastErro}
+        />
       </div>
     );
   }
@@ -951,32 +1098,36 @@ export default function PadariaAtendentePage() {
           <span>{session.usuario.nome}</span>
         </div>
         <div className="pk-kiosk__nav">
-          <button
-            type="button"
-            className={`padaria-btn padaria-btn--sm ${aba === "novo" ? "padaria-btn--primary" : "padaria-btn--ghost"}`}
-            onClick={() => setAba("novo")}
-          >
-            Nova encomenda
-          </button>
-          <button
-            type="button"
-            className={`padaria-btn padaria-btn--sm ${aba === "lista" ? "padaria-btn--primary" : "padaria-btn--ghost"}`}
-            onClick={() => setAba("lista")}
-          >
-            Pedidos
-            {alertas.length > 0 && (
-              <span className="pk-nav-badge" aria-hidden>
-                {alertas.length}
-              </span>
-            )}
-          </button>
+          <div className="pk-kiosk__tabs" role="tablist" aria-label="Área do atendente">
+            <button
+              type="button"
+              className={`padaria-btn padaria-btn--sm ${aba === "novo" ? "padaria-btn--primary" : "padaria-btn--ghost"}`}
+              onClick={() => setAba("novo")}
+            >
+              Nova encomenda
+            </button>
+            <button
+              type="button"
+              className={`padaria-btn padaria-btn--sm ${aba === "lista" ? "padaria-btn--primary" : "padaria-btn--ghost"}`}
+              onClick={() => setAba("lista")}
+            >
+              Pedidos
+              {alertas.length > 0 && (
+                <span className="pk-nav-badge" aria-hidden>
+                  {alertas.length}
+                </span>
+              )}
+            </button>
+          </div>
+          <div className="pk-kiosk__tools">
             <button
               type="button"
               className="padaria-btn padaria-btn--ghost padaria-btn--sm"
-              onClick={handleConectarImpressora}
-              title="Conexão direta USB/serial (Chrome/Edge). Sem isso, use o diálogo do Windows."
+              onClick={handleTestarImpressora}
+              title={`Envia texto ESC/POS para o print-server em ${impressoraHost}:${impressoraPorta}. Não usa o diálogo do Windows.`}
             >
-              {serialOk ? "Impressora OK" : "Conectar impressora"}
+              <Printer size={14} strokeWidth={2} />
+              Teste PDV13
             </button>
             <label className="pk-cupom-largura" title="Largura do papel do cupom">
               <span>Cupom</span>
@@ -1000,8 +1151,10 @@ export default function PadariaAtendentePage() {
                 setSession(null);
               }}
             >
-              <LogOut size={14} /> Sair
+              <LogOut size={14} strokeWidth={2} />
+              Sair
             </button>
+          </div>
         </div>
       </header>
 
@@ -1144,6 +1297,32 @@ export default function PadariaAtendentePage() {
                 ) : null}
               </dl>
 
+              <PadariaFotosGaleria
+                fotos={pedidoDetalhe.fotos}
+                onRemover={
+                  ["novo", "em_producao"].includes(pedidoDetalhe.status)
+                    ? (foto) => removerFotoPedidoExistente(pedidoDetalhe, foto)
+                    : undefined
+                }
+                removendoId={enviandoFotos ? "ocupado" : null}
+              />
+              {["novo", "em_producao"].includes(pedidoDetalhe.status) &&
+              (pedidoDetalhe.fotos?.length || 0) < PADARIA_MAX_FOTOS_PEDIDO ? (
+                <label className="pk-fotos-checkout__add pk-fotos-checkout__add--inline">
+                  Adicionar foto
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    multiple
+                    disabled={enviandoFotos}
+                    onChange={(e) => {
+                      anexarFotosPedidoExistente(pedidoDetalhe, e.target.files);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+              ) : null}
+
               <h3 className="pk-pedido-detalhe__itens-titulo">Itens</h3>
               <ul className="pk-pedido-detalhe__itens">
                 {(pedidoDetalhe.itens || []).map((i) => (
@@ -1214,14 +1393,9 @@ export default function PadariaAtendentePage() {
         </div>
       )}
 
-      {okMsg && (
-        <p className="padaria-alert padaria-alert--ok" style={{ margin: "0.75rem 1rem 0" }}>
-          {okMsg}
-        </p>
-      )}
-
       {aba === "novo" ? (
         <>
+          <div className="pk-kiosk__chrome">
           <div className="pk-kiosk__busca">
             <Search size={18} strokeWidth={2} aria-hidden />
             <input
@@ -1276,6 +1450,7 @@ export default function PadariaAtendentePage() {
               </button>
             ))}
           </nav>
+          </div>
 
           <div className="pk-kiosk__body">
             <main className="pk-kiosk__menu" ref={menuRef}>
@@ -1362,7 +1537,8 @@ export default function PadariaAtendentePage() {
                   {(itens.length > 0 ||
                     clienteNome ||
                     clienteTelefone ||
-                    observacao) && (
+                    observacao ||
+                    fotosLocais.length > 0) && (
                     <button
                       type="button"
                       className="padaria-btn padaria-btn--ghost padaria-btn--sm"
@@ -1559,7 +1735,7 @@ export default function PadariaAtendentePage() {
                       ? ` · mínimo ${configRetirada.antecedenciaMinimaHoras}h de antecedência`
                       : ""}
                   </p>
-                  <label className="pk-checkout__field">
+                    <label className="pk-checkout__field">
                     Observação
                     <textarea
                       className="pk-checkout__control"
@@ -1568,6 +1744,14 @@ export default function PadariaAtendentePage() {
                       onChange={(e) => setObservacao(e.target.value)}
                     />
                   </label>
+                  <PadariaFotosCheckout
+                    fotos={fotosLocais}
+                    disabled={enviando}
+                    onChange={(lista, erro) => {
+                      setFotosLocais(lista);
+                      if (erro) setErro(erro);
+                    }}
+                  />
                   <button type="submit" className="padaria-btn padaria-btn--primary padaria-btn--lg padaria-btn--block">
                     Revisar pedido
                   </button>
@@ -1617,6 +1801,19 @@ export default function PadariaAtendentePage() {
                     {observacao && (
                       <p>
                         <strong>Obs:</strong> {observacao}
+                      </p>
+                    )}
+                    {fotosLocais.length > 0 ? (
+                      <div className="pk-resumo__fotos">
+                        <strong>
+                          {fotosLocais.length} foto
+                          {fotosLocais.length > 1 ? "s" : ""} de referência
+                        </strong>
+                        <PadariaFotosStrip fotos={fotosLocais} />
+                      </div>
+                    ) : (
+                      <p className="pk-resumo__fotos-vazio">
+                        Sem fotos de referência
                       </p>
                     )}
                     <div className="pk-cart__total">
@@ -1717,7 +1914,10 @@ export default function PadariaAtendentePage() {
               <article key={p.id} className="pk-pedido">
                 <div className="pk-pedido__top">
                   <strong>{p.codigoPublico}</strong>
-                  <PadariaStatusBadge status={p.status} />
+                  <span className="pk-pedido__top-end">
+                    <PadariaFotosBadge qtd={p.fotos?.length} />
+                    <PadariaStatusBadge status={p.status} />
+                  </span>
                 </div>
                 <p className="pk-pedido__cliente">{p.clienteNome}</p>
                 <p className="pk-pedido__meta">
@@ -2060,31 +2260,12 @@ export default function PadariaAtendentePage() {
         </div>
       )}
 
-      {erro && (
-        <div
-          className="padaria-erro-popup"
-          role="alertdialog"
-          aria-modal="true"
-          aria-labelledby="pk-erro-titulo"
-        >
-          <div
-            className="padaria-erro-popup__backdrop"
-            onClick={() => setErro("")}
-          />
-          <div className="padaria-erro-popup__panel">
-            <h2 id="pk-erro-titulo">Atenção</h2>
-            <p>{erro}</p>
-            <button
-              type="button"
-              className="padaria-btn padaria-btn--primary padaria-btn--lg padaria-btn--block"
-              onClick={() => setErro("")}
-              autoFocus
-            >
-              Entendi
-            </button>
-          </div>
-        </div>
-      )}
+      <PkToast
+        ok={okMsg}
+        erro={erro}
+        onFecharOk={fecharToastOk}
+        onFecharErro={fecharToastErro}
+      />
     </div>
   );
 }

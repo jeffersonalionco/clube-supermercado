@@ -86,7 +86,7 @@ export default function RecuperarSenhaFlow({ cpfInicial = "", onVoltarLogin, onS
         throw new Error(mensagemParaUsuario(data.error));
       }
 
-      setSuccess(data.message || "Se as informações estiverem corretas, enviamos o e-mail.");
+      setSuccess(data.message || "Enviamos as instruções para o e-mail cadastrado. Verifique a caixa de entrada e o spam.");
       setEtapa("codigo");
     } catch (err) {
       setError(err.message || "Não foi possível enviar a solicitação.");
@@ -243,9 +243,7 @@ export default function RecuperarSenhaFlow({ cpfInicial = "", onVoltarLogin, onS
         <form id="form-recuperar-solicitar" onSubmit={handleSolicitar} noValidate>
           <h2 className="auth-form-title">Informe seu CPF</h2>
           <p className="auth-form-sub">
-            Se houver conta e e-mail cadastrado, enviaremos o código e o link. A mensagem é a
-            mesma mesmo quando o CPF não existir — assim ninguém descobre contas de outras
-            pessoas.
+            Enviaremos um código e um link de redefinição para o e-mail cadastrado.
           </p>
 
           <div className="auth-callout" role="note">

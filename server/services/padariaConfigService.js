@@ -6,6 +6,9 @@ const DEFAULTS = {
   antecedencia_minima_horas: "2",
   horario_retirada_inicio: "08:00",
   horario_retirada_fim: "19:00",
+  impressora_host: "10.1.1.13",
+  impressora_porta: "9100",
+  impressora_largura_mm: "80",
 };
 
 export async function obterConfigPadaria() {
@@ -25,6 +28,15 @@ export async function obterConfigPadaria() {
 
   if (!mapa.departamento_rp && envDept) mapa.departamento_rp = envDept;
   if (!mapa.unidade_rp) mapa.unidade_rp = envUnidade;
+
+  const envHost = String(process.env.PADARIA_IMPRESSORA_HOST || "").trim();
+  const envPorta = String(process.env.PADARIA_IMPRESSORA_PORTA || "").trim();
+  if (envHost && mapa.impressora_host === DEFAULTS.impressora_host) {
+    mapa.impressora_host = envHost;
+  }
+  if (envPorta && mapa.impressora_porta === DEFAULTS.impressora_porta) {
+    mapa.impressora_porta = envPorta;
+  }
 
   return mapa;
 }

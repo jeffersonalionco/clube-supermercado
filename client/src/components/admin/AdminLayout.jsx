@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  HardDrive,
   LayoutDashboard,
   Users,
   Star,
@@ -54,6 +55,7 @@ const NAV_SECTIONS = [
     label: "Configuração",
     items: [
       { id: "programa", label: "Programa", desc: "Ativar/desativar pontos", Icon: Settings },
+      { id: "backup", label: "Backup", desc: "Cópia diária do banco na rede", Icon: HardDrive },
       { id: "admins", label: "Administradores", desc: "Perfis e permissões", Icon: ShieldCheck },
       { id: "legal", label: "Regulamento", desc: "Textos legais", Icon: FileText },
       { id: "manual", label: "Manual", desc: "Regras e operação", Icon: HelpCircle },

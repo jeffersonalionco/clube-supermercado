@@ -634,9 +634,31 @@ export default function AdminPadariaPage({ tab, onTabChange, onLogout, admin }) 
           antecedencia_minima_horas: config.antecedencia_minima_horas,
           horario_retirada_inicio: config.horario_retirada_inicio,
           horario_retirada_fim: config.horario_retirada_fim,
+          impressora_host: config.impressora_host,
+          impressora_porta: config.impressora_porta,
+          impressora_largura_mm: config.impressora_largura_mm,
         },
       });
       setMsg("Configuração salva.");
+    } catch (err) {
+      handleAuthError(err);
+    }
+  }
+
+  async function testarImpressora(e) {
+    e.preventDefault();
+    setMsg("");
+    setErro("");
+    try {
+      await fetchPadariaAdmin("/admin/impressora/teste", {
+        method: "POST",
+        body: { larguraMm: config.impressora_largura_mm },
+      });
+      setMsg(
+        `Teste ESC/POS enviado para ${config.impressora_host || "10.1.1.13"}:${
+          config.impressora_porta || "9100"
+        }.`
+      );
     } catch (err) {
       handleAuthError(err);
     }
@@ -2517,9 +2539,54 @@ export default function AdminPadariaPage({ tab, onTabChange, onLogout, admin }) 
                   />
                 </Field>
               </div>
-              <button type="submit" className="admin-btn admin-btn--primary">
-                Salvar configuração
-              </button>
+              <Field
+                label="Bematech (PDV13)"
+                hint="TCP RAW no print-server.ps1. Texto/ESC-POS — não usa o diálogo gráfico do Windows."
+              >
+                <input
+                  value={config.impressora_host || ""}
+                  onChange={(e) =>
+                    setConfig({ ...config, impressora_host: e.target.value })
+                  }
+                  placeholder="10.1.1.13"
+                />
+              </Field>
+              <div className="admin-padaria__grid-2">
+                <Field label="Porta">
+                  <input
+                    type="number"
+                    min="1"
+                    max="65535"
+                    value={config.impressora_porta ?? "9100"}
+                    onChange={(e) =>
+                      setConfig({ ...config, impressora_porta: e.target.value })
+                    }
+                  />
+                </Field>
+                <Field label="Largura do cupom">
+                  <select
+                    value={config.impressora_largura_mm === "58" ? "58" : "80"}
+                    onChange={(e) =>
+                      setConfig({ ...config, impressora_largura_mm: e.target.value })
+                    }
+                  >
+                    <option value="80">80 mm</option>
+                    <option value="58">58 mm</option>
+                  </select>
+                </Field>
+              </div>
+              <div className="admin-padaria__grid-2">
+                <button type="submit" className="admin-btn admin-btn--primary">
+                  Salvar configuração
+                </button>
+                <button
+                  type="button"
+                  className="admin-btn admin-btn--ghost"
+                  onClick={testarImpressora}
+                >
+                  Testar cupom
+                </button>
+              </div>
             </form>
           </section>
         )}

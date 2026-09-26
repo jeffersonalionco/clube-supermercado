@@ -16,7 +16,7 @@ const COOLDOWN_SEGUNDOS = Number(process.env.RECUPERAR_SENHA_COOLDOWN_SEG || 90)
 const MAX_POR_HORA_CPF = Number(process.env.RECUPERAR_SENHA_MAX_HORA || 3);
 
 const MSG_GENERICA =
-  "Se existir uma conta com esse CPF e um e-mail cadastrado, enviamos as instruções. Verifique a caixa de entrada e o spam. Você também pode redefinir a senha na loja com um atendente.";
+  "Enviamos as instruções para o e-mail cadastrado. Verifique a caixa de entrada e o spam.";
 
 function hashSegredo(valor) {
   return crypto.createHash("sha256").update(String(valor), "utf8").digest("hex");

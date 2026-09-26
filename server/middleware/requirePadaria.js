@@ -49,6 +49,13 @@ export const requireAtendente = requirePadariaAuth(["atendente", "gestor"]);
 /** Padaria (produção) ou gestor. */
 export const requirePadaria = requirePadariaAuth(["padaria", "gestor"]);
 
+/** Atendente, produção ou gestor — cupom na Bematech. */
+export const requireOperacaoPadaria = requirePadariaAuth([
+  "atendente",
+  "padaria",
+  "gestor",
+]);
+
 /** Só gestor padaria. */
 export const requireGestorPadaria = requirePadariaAuth(["gestor"]);
 

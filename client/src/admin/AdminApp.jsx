@@ -25,6 +25,7 @@ import AdminMarketingWhatsAppContatosPage from "../pages/admin/AdminMarketingWha
 import AdminVendasPdvPage from "../pages/admin/AdminVendasPdvPage.jsx";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage.jsx";
 import AdminPadariaPage from "../pages/admin/AdminPadariaPage.jsx";
+import AdminBackupPage from "../pages/admin/AdminBackupPage.jsx";
 import { clearAdminSession, loadAdminSession } from "../utils/adminSession.js";
 import "../styles/admin.css";
 
@@ -46,6 +47,9 @@ function adminTabFromHash() {
   }
   if (path === "admin/programa" || path.startsWith("admin/programa/")) {
     return "programa";
+  }
+  if (path === "admin/backup" || path.startsWith("admin/backup/")) {
+    return "backup";
   }
   if (path === "admin/conteudo" || path.startsWith("admin/conteudo/")) {
     return "conteudo";
@@ -145,6 +149,7 @@ function hashForAdminTab(tab, sub) {
   if (tab === "legal") return "#/admin/legal";
   if (tab === "manual") return "#/admin/manual";
   if (tab === "programa") return "#/admin/programa";
+  if (tab === "backup") return "#/admin/backup";
   if (tab === "conteudo") return "#/admin/conteudo";
   if (tab === "novidades") return "#/admin/novidades";
   if (tab === "clube-descontos") return "#/admin/clube-descontos";
@@ -375,6 +380,10 @@ export default function AdminApp() {
 
   if (tab === "programa") {
     return <AdminProgramaPage {...layoutProps} />;
+  }
+
+  if (tab === "backup") {
+    return <AdminBackupPage {...layoutProps} />;
   }
 
   if (tab === "conteudo") {

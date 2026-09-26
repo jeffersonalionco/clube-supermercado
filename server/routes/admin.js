@@ -52,6 +52,20 @@ import {
   obterConfigPrograma,
 } from "../services/programaConfigService.js";
 import {
+  apresentarConfigBackup,
+  executarBackupClube,
+  listarExecucoesBackup,
+  obterConfigBackup,
+  salvarConfigBackup,
+  statusFerramentasBackup,
+  testarDestinoBackup,
+} from "../services/backupClubeService.js";
+import {
+  apresentarBackupRemoto,
+  conferirBackupRemoto,
+  dispararBackupRemoto,
+} from "../services/backupRemotoService.js";
+import {
   apresentarConteudoAdmin,
   atualizarVideoHome,
   obterConfigConteudo,
@@ -110,6 +124,96 @@ router.get("/config/programa", async (_req, res) => {
   } catch (error) {
     console.error("[admin/config/programa GET]", error.message);
     return res.status(500).json({ error: mensagemParaCliente(error.message) });
+  }
+});
+
+router.get("/backup", async (_req, res) => {
+  try {
+    const [config, execucoes, ferramentas, remoto] = await Promise.all([
+      obterConfigBackup(),
+      listarExecucoesBackup(24),
+      statusFerramentasBackup(),
+      apresentarBackupRemoto(),
+    ]);
+    return res.json({
+      ...apresentarConfigBackup(config, { ferramentas }),
+      execucoes,
+      remoto,
+    });
+  } catch (error) {
+    console.error("[admin/backup GET]", error.message);
+    return res.status(500).json({ error: mensagemParaCliente(error.message) });
+  }
+});
+
+router.put("/backup", async (req, res) => {
+  try {
+    const config = await salvarConfigBackup(req.body || {}, req.admin?.usuario);
+    return res.json({
+      message: "Configuração de backup salva.",
+      ...apresentarConfigBackup(config),
+    });
+  } catch (error) {
+    console.error("[admin/backup PUT]", error.message);
+    return res.status(400).json({ error: mensagemParaCliente(error.message) });
+  }
+});
+
+router.post("/backup/testar", async (_req, res) => {
+  try {
+    const resultado = await testarDestinoBackup();
+    return res.json({
+      message: `Pasta acessível em ${resultado.destino}`,
+      ...resultado,
+    });
+  } catch (error) {
+    console.error("[admin/backup/testar]", error.message);
+    return res.status(400).json({ error: mensagemParaCliente(error.message) });
+  }
+});
+
+router.post("/backup/executar", async (req, res) => {
+  try {
+    const resultado = await executarBackupClube({
+      origem: "manual",
+      disparadoPor: req.admin?.usuario || "admin",
+    });
+    return res.json({
+      message: `Backup ${resultado.arquivo} enviado para ${resultado.destino}`,
+      ...resultado,
+    });
+  } catch (error) {
+    console.error("[admin/backup/executar]", error.message);
+    const status = /em andamento/i.test(error.message) ? 409 : 400;
+    return res.status(status).json({ error: mensagemParaCliente(error.message) });
+  }
+});
+
+router.post("/backup/executar-remoto", async (req, res) => {
+  try {
+    const sistema = String(req.body?.sistema || "all").toLowerCase();
+    const resultado = await dispararBackupRemoto({
+      sistema,
+      origem: "manual",
+      disparadoPor: req.admin?.usuario || "admin",
+    });
+    return res.json(resultado);
+  } catch (error) {
+    console.error("[admin/backup/executar-remoto]", error.message);
+    return res.status(400).json({ error: mensagemParaCliente(error.message) });
+  }
+});
+
+router.post("/backup/conferir", async (_req, res) => {
+  try {
+    const resultado = await conferirBackupRemoto({ origem: "manual" });
+    return res.json({
+      message: "Conferência das pastas WR PDV e ERP concluída.",
+      ...resultado,
+    });
+  } catch (error) {
+    console.error("[admin/backup/conferir]", error.message);
+    return res.status(400).json({ error: mensagemParaCliente(error.message) });
   }
 });
 

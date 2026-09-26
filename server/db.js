@@ -134,6 +134,7 @@ async function ensureSchema() {
   await migrarNovidades(db);
   await migrarMarketing(db);
   await migrarPadaria(db);
+  await migrarConfigBackup(db);
 
   const { seedAdministradorDoEnv } = await import("./services/painelAdminService.js");
   await seedAdministradorDoEnv();
@@ -328,6 +329,21 @@ async function migrarPadaria(db) {
   await db.query(`
     CREATE INDEX IF NOT EXISTS idx_padaria_pedido_item_pedido
     ON padaria_pedido_item (pedido_id)
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS padaria_pedido_foto (
+      id SERIAL PRIMARY KEY,
+      pedido_id INTEGER NOT NULL REFERENCES padaria_pedido(id) ON DELETE CASCADE,
+      url TEXT NOT NULL,
+      ordem INTEGER NOT NULL DEFAULT 0,
+      criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_padaria_pedido_foto_pedido
+    ON padaria_pedido_foto (pedido_id, ordem, id)
   `);
 
   await db.query(`
@@ -1035,6 +1051,105 @@ async function migrarMarketing(db) {
   await db.query(`
     CREATE INDEX IF NOT EXISTS idx_whatsapp_contato_clube
     ON whatsapp_contato (tem_clube, info_liberada)
+  `);
+}
+
+async function migrarConfigBackup(db) {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS config_backup (
+      id SMALLINT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+      ativo BOOLEAN NOT NULL DEFAULT false,
+      hora VARCHAR(5) NOT NULL DEFAULT '02:00',
+      host VARCHAR(64) NOT NULL DEFAULT '10.1.1.195',
+      share VARCHAR(80) NOT NULL DEFAULT 'backup',
+      pasta VARCHAR(80) NOT NULL DEFAULT 'clube',
+      usuario VARCHAR(120) NOT NULL DEFAULT 'Administrador',
+      senha TEXT NOT NULL DEFAULT '',
+      dominio VARCHAR(80) NOT NULL DEFAULT '',
+      limiar_bytes BIGINT NOT NULL DEFAULT 10737418240,
+      manter_abaixo INTEGER NOT NULL DEFAULT 2,
+      manter_acima INTEGER NOT NULL DEFAULT 1,
+      ultimo_sucesso_em TIMESTAMPTZ,
+      ultimo_erro TEXT,
+      atualizado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      atualizado_por VARCHAR(100)
+    )
+  `);
+
+  await db.query(`
+    INSERT INTO config_backup (id)
+    VALUES (1)
+    ON CONFLICT (id) DO NOTHING
+  `);
+
+  await db.query(`
+    UPDATE config_backup
+    SET usuario = 'Administrador'
+    WHERE id = 1 AND (usuario IS NULL OR usuario = '')
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS backup_execucao (
+      id SERIAL PRIMARY KEY,
+      origem VARCHAR(20) NOT NULL DEFAULT 'agenda',
+      status VARCHAR(20) NOT NULL DEFAULT 'rodando',
+      iniciado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      concluido_em TIMESTAMPTZ,
+      arquivo VARCHAR(200),
+      tamanho_bytes BIGINT,
+      destino TEXT,
+      mantidos INTEGER,
+      removidos INTEGER,
+      erro TEXT,
+      disparado_por VARCHAR(100)
+    )
+  `);
+
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_backup_execucao_inicio
+    ON backup_execucao (iniciado_em DESC)
+  `);
+
+  await db.query(`
+    ALTER TABLE backup_execucao
+    ADD COLUMN IF NOT EXISTS sistema VARCHAR(20) NOT NULL DEFAULT 'clube'
+  `);
+
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_backup_execucao_sistema
+    ON backup_execucao (sistema, iniciado_em DESC)
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS config_backup_sistema (
+      id VARCHAR(20) PRIMARY KEY,
+      ativo BOOLEAN NOT NULL DEFAULT true,
+      hora VARCHAR(5) NOT NULL DEFAULT '02:00',
+      hora_conferencia VARCHAR(5) NOT NULL DEFAULT '06:30',
+      pasta VARCHAR(80) NOT NULL,
+      manter INTEGER NOT NULL DEFAULT 1,
+      ultimo_sucesso_em TIMESTAMPTZ,
+      ultimo_erro TEXT,
+      ultimo_arquivo VARCHAR(200),
+      ultimo_bytes BIGINT,
+      ultimo_disparo_em TIMESTAMPTZ,
+      ultimo_conferencia_em TIMESTAMPTZ,
+      atualizado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await db.query(`
+    INSERT INTO config_backup_sistema (id, pasta, hora, hora_conferencia, manter)
+    VALUES
+      ('wrpdv', 'BKP_WRPDV', '02:00', '06:30', 1),
+      ('erp', 'BKP_ERP', '02:00', '06:30', 1)
+    ON CONFLICT (id) DO NOTHING
+  `);
+
+  await db.query(`
+    UPDATE config_backup_sistema
+    SET hora = '02:00', atualizado_em = NOW()
+    WHERE id IN ('wrpdv', 'erp') AND hora = '03:00'
   `);
 }
 

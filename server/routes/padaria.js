@@ -8,6 +8,7 @@ import {
   requireAtendente,
   requirePadaria,
   requirePadariaAdmin,
+  requireOperacaoPadaria,
 } from "../middleware/requirePadaria.js";
 import {
   autenticarUsuarioPadaria,
@@ -47,6 +48,8 @@ import {
   atualizarPedidoAtendente,
   obterDashboardPadaria,
   buscarClientePorTelefone,
+  adicionarFotosPedido,
+  removerFotoPedido,
   MOTIVOS_CANCELAMENTO_LABEL,
 } from "../services/padariaPedidosService.js";
 import {
@@ -62,6 +65,10 @@ import {
 } from "../services/padariaDecoracoesService.js";
 import { buscarClientesAdmin } from "../services/adminClientesService.js";
 import { mensagemParaCliente } from "../utils/mensagemCliente.js";
+import {
+  imprimirPedidoNaBematech,
+  imprimirTesteNaBematech,
+} from "../services/padariaImpressaoService.js";
 import { trackCatalogoMetaFireAndForget } from "../services/marketing/metaConversionsService.js";
 import { normalizarTelefoneWa } from "../services/marketing/whatsappCloudService.js";
 
@@ -94,6 +101,12 @@ const upload = multer({
     cb(null, true);
   },
 });
+
+function removerArquivoPadaria(url) {
+  const nome = path.basename(String(url || ""));
+  if (!nome || nome.includes("..")) return;
+  fs.unlink(path.join(uploadDir, nome), () => {});
+}
 
 const router = Router();
 
@@ -182,6 +195,9 @@ router.get("/config", requireAtendente, async (_req, res) => {
         antecedenciaMinimaHoras: Number(raw.antecedencia_minima_horas) || 0,
         horarioRetiradaInicio: raw.horario_retirada_inicio || "08:00",
         horarioRetiradaFim: raw.horario_retirada_fim || "19:00",
+        impressoraHost: raw.impressora_host || "10.1.1.13",
+        impressoraPorta: Number(raw.impressora_porta) || 9100,
+        impressoraLarguraMm: Number(raw.impressora_largura_mm) === 58 ? 58 : 80,
       },
     });
   } catch (error) {
@@ -302,6 +318,86 @@ router.get("/pedidos/:id", requireAtendente, async (req, res) => {
   } catch (error) {
     console.error("[padaria/pedidos/:id GET]", error.message);
     return res.status(500).json({ error: mensagemParaCliente(error.message) });
+  }
+});
+
+router.post("/pedidos/:id/imprimir", requireOperacaoPadaria, async (req, res) => {
+  try {
+    const pedido = await obterPedido(req.params.id);
+    if (!pedido) return res.status(404).json({ error: "Pedido não encontrado" });
+    const resultado = await imprimirPedidoNaBematech(pedido, {
+      larguraMm: req.body?.larguraMm,
+    });
+    return res.json(resultado);
+  } catch (error) {
+    console.error("[padaria/pedidos/:id/imprimir]", error.message);
+    const status = /não encontrado|Host da impressora|não respondeu|recusou|Não alcançou/i.test(
+      error.message
+    )
+      ? 400
+      : 500;
+    return res.status(status).json({ error: mensagemParaCliente(error.message) });
+  }
+});
+
+router.post("/impressora/teste", requireOperacaoPadaria, async (req, res) => {
+  try {
+    const resultado = await imprimirTesteNaBematech({
+      larguraMm: req.body?.larguraMm,
+    });
+    return res.json(resultado);
+  } catch (error) {
+    console.error("[padaria/impressora/teste]", error.message);
+    return res.status(400).json({ error: mensagemParaCliente(error.message) });
+  }
+});
+
+router.post("/pedidos/:id/fotos", requireAtendente, (req, res) => {
+  upload.array("fotos", 5)(req, res, async (err) => {
+    const arquivos = req.files || [];
+    const limparArquivos = () => {
+      for (const file of arquivos) {
+        removerArquivoPadaria(`/uploads/padaria/${file.filename}`);
+      }
+    };
+    if (err) {
+      return res.status(400).json({ error: mensagemParaCliente(err.message) });
+    }
+    if (!arquivos.length) {
+      return res.status(400).json({ error: "Nenhuma imagem enviada" });
+    }
+    try {
+      const urls = arquivos.map((file) => `/uploads/padaria/${file.filename}`);
+      const pedido = await adicionarFotosPedido(req.params.id, urls);
+      return res.status(201).json({ pedido });
+    } catch (error) {
+      limparArquivos();
+      console.error("[padaria/pedidos/:id/fotos POST]", error.message);
+      const status = /não encontrado|máximo|neste status|nenhuma foto/i.test(
+        error.message
+      )
+        ? 400
+        : 500;
+      return res
+        .status(status)
+        .json({ error: mensagemParaCliente(error.message) });
+    }
+  });
+});
+
+router.delete("/pedidos/:id/fotos/:fotoId", requireAtendente, async (req, res) => {
+  try {
+    const resultado = await removerFotoPedido(req.params.id, req.params.fotoId);
+    removerArquivoPadaria(resultado.url);
+    return res.json({ pedido: resultado.pedido });
+  } catch (error) {
+    console.error("[padaria/pedidos/:id/fotos DELETE]", error.message);
+    const status = /não encontrado|neste status/i.test(error.message)
+      ? 400
+      : 500;
+    return res
+      .status(status)
+      .json({ error: mensagemParaCliente(error.message) });
   }
 });
 
@@ -685,6 +781,32 @@ router.put("/admin/config", requirePadariaAdmin, async (req, res) => {
   } catch (error) {
     console.error("[padaria/admin/config PUT]", error.message);
     return res.status(500).json({ error: mensagemParaCliente(error.message) });
+  }
+});
+
+router.post("/admin/pedidos/:id/imprimir", requirePadariaAdmin, async (req, res) => {
+  try {
+    const pedido = await obterPedido(req.params.id);
+    if (!pedido) return res.status(404).json({ error: "Pedido não encontrado" });
+    const resultado = await imprimirPedidoNaBematech(pedido, {
+      larguraMm: req.body?.larguraMm,
+    });
+    return res.json(resultado);
+  } catch (error) {
+    console.error("[padaria/admin/pedidos/:id/imprimir]", error.message);
+    return res.status(400).json({ error: mensagemParaCliente(error.message) });
+  }
+});
+
+router.post("/admin/impressora/teste", requirePadariaAdmin, async (req, res) => {
+  try {
+    const resultado = await imprimirTesteNaBematech({
+      larguraMm: req.body?.larguraMm,
+    });
+    return res.json(resultado);
+  } catch (error) {
+    console.error("[padaria/admin/impressora/teste]", error.message);
+    return res.status(400).json({ error: mensagemParaCliente(error.message) });
   }
 });
 

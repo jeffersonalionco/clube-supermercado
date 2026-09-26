@@ -28,6 +28,8 @@ export function navegarAdminComQuery(tab, params = {}) {
                 ? "admin/manual"
                 : tab === "programa"
                   ? "admin/programa"
+                  : tab === "backup"
+                    ? "admin/backup"
                   : tab === "conteudo"
                     ? "admin/conteudo"
                   : tab === "clube-descontos"

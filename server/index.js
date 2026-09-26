@@ -204,6 +204,14 @@ async function start() {
       .catch((err) => {
         console.warn("[whatsapp/catalogo] job limpeza:", err.message);
       });
+
+    import("./services/backupClubeService.js")
+      .then(({ iniciarJobBackupClube }) => {
+        iniciarJobBackupClube();
+      })
+      .catch((err) => {
+        console.warn("[backup] agenda:", err.message);
+      });
   });
 }
 

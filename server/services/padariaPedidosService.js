@@ -76,7 +76,18 @@ function mapItem(row) {
   };
 }
 
-function mapPedido(row, itens = []) {
+export const MAX_FOTOS_PEDIDO = 5;
+
+function mapFoto(row) {
+  return {
+    id: row.id,
+    url: row.url,
+    ordem: Number(row.ordem) || 0,
+    criadoEm: row.criado_em || null,
+  };
+}
+
+function mapPedido(row, itens = [], fotos = []) {
   if (!row) return null;
   return {
     id: row.id,
@@ -106,6 +117,7 @@ function mapPedido(row, itens = []) {
     criadoEm: row.criado_em,
     atualizadoEm: row.atualizado_em,
     itens,
+    fotos,
     total: itens.reduce((acc, i) => acc + (Number(i.subtotal) || 0), 0),
   };
 }
@@ -154,14 +166,43 @@ async function carregarItensPorPedidos(pedidoIds) {
   return map;
 }
 
+async function carregarFotosPorPedidos(pedidoIds) {
+  if (!pedidoIds.length) return new Map();
+  const { rows } = await getPool().query(
+    `SELECT id, pedido_id, url, ordem, criado_em
+     FROM padaria_pedido_foto
+     WHERE pedido_id = ANY($1::int[])
+     ORDER BY ordem ASC, id ASC`,
+    [pedidoIds]
+  );
+  const map = new Map();
+  for (const row of rows) {
+    const lista = map.get(row.pedido_id) || [];
+    lista.push(mapFoto(row));
+    map.set(row.pedido_id, lista);
+  }
+  return map;
+}
+
+async function hidratarPedidos(rows) {
+  const ids = (rows || []).map((r) => r.id);
+  const [itensMap, fotosMap] = await Promise.all([
+    carregarItensPorPedidos(ids),
+    carregarFotosPorPedidos(ids),
+  ]);
+  return (rows || []).map((row) =>
+    mapPedido(row, itensMap.get(row.id) || [], fotosMap.get(row.id) || [])
+  );
+}
+
 async function carregarPedidoCompleto(id) {
   const { rows } = await getPool().query(
     `${SELECT_PEDIDO} WHERE p.id = $1`,
     [id]
   );
   if (!rows[0]) return null;
-  const itensMap = await carregarItensPorPedidos([Number(id)]);
-  return mapPedido(rows[0], itensMap.get(Number(id)) || []);
+  const [pedido] = await hidratarPedidos(rows);
+  return pedido;
 }
 
 function parseHora(hora) {
@@ -466,9 +507,7 @@ export async function listarPedidosConflitoHorario({
     [data, hora, janela]
   );
 
-  const itensMap = await carregarItensPorPedidos(rows.map((r) => r.id));
-  const pedidos = rows.map((row) => {
-    const pedido = mapPedido(row, itensMap.get(row.id) || []);
+  const pedidos = (await hidratarPedidos(rows)).map((pedido) => {
     const mins = parseHora(pedido.horaRetirada) ?? 0;
     pedido.minutosDiferenca = mins - minutosAlvo;
     return pedido;
@@ -538,8 +577,7 @@ export async function listarPedidos({
     params
   );
 
-  const itensMap = await carregarItensPorPedidos(rows.map((r) => r.id));
-  const pedidos = rows.map((row) => mapPedido(row, itensMap.get(row.id) || []));
+  const pedidos = await hidratarPedidos(rows);
 
   return {
     pedidos,
@@ -559,8 +597,63 @@ export async function obterPedidoPorCodigo(codigo) {
     [String(codigo || "").trim().toUpperCase()]
   );
   if (!rows[0]) return null;
-  const itensMap = await carregarItensPorPedidos([rows[0].id]);
-  return mapPedido(rows[0], itensMap.get(rows[0].id) || []);
+  const [pedido] = await hidratarPedidos(rows);
+  return pedido;
+}
+
+export async function adicionarFotosPedido(pedidoId, urls) {
+  const id = Number(pedidoId);
+  const lista = (urls || []).map((u) => String(u || "").trim()).filter(Boolean);
+  if (!id || !lista.length) throw new Error("Nenhuma foto enviada");
+  if (lista.length > MAX_FOTOS_PEDIDO) {
+    throw new Error(`Envie no máximo ${MAX_FOTOS_PEDIDO} fotos`);
+  }
+
+  const pedido = await carregarPedidoCompleto(id);
+  if (!pedido) throw new Error("Pedido não encontrado");
+  if (["entregue", "cancelado"].includes(pedido.status)) {
+    throw new Error("Não é possível anexar fotos neste status");
+  }
+
+  const atuais = pedido.fotos?.length || 0;
+  if (atuais + lista.length > MAX_FOTOS_PEDIDO) {
+    throw new Error(`O pedido pode ter no máximo ${MAX_FOTOS_PEDIDO} fotos`);
+  }
+
+  let ordem = atuais;
+  for (const url of lista) {
+    await getPool().query(
+      `INSERT INTO padaria_pedido_foto (pedido_id, url, ordem)
+       VALUES ($1, $2, $3)`,
+      [id, url, ordem]
+    );
+    ordem += 1;
+  }
+
+  return carregarPedidoCompleto(id);
+}
+
+export async function removerFotoPedido(pedidoId, fotoId) {
+  const id = Number(pedidoId);
+  const fid = Number(fotoId);
+  const pedido = await carregarPedidoCompleto(id);
+  if (!pedido) throw new Error("Pedido não encontrado");
+  if (["entregue", "cancelado"].includes(pedido.status)) {
+    throw new Error("Não é possível remover fotos neste status");
+  }
+
+  const { rows } = await getPool().query(
+    `DELETE FROM padaria_pedido_foto
+     WHERE id = $1 AND pedido_id = $2
+     RETURNING url`,
+    [fid, id]
+  );
+  if (!rows[0]) throw new Error("Foto não encontrada");
+
+  return {
+    url: rows[0].url,
+    pedido: await carregarPedidoCompleto(id),
+  };
 }
 
 export async function buscarClientePorTelefone(telefone) {
@@ -592,10 +685,8 @@ export async function listarProducaoDoDia(data) {
     [dataRef]
   );
 
-  const itensMap = await carregarItensPorPedidos(rows.map((r) => r.id));
   const agoraDt = agora();
-  const pedidos = rows.map((row) => {
-    const pedido = mapPedido(row, itensMap.get(row.id) || []);
+  const pedidos = (await hidratarPedidos(rows)).map((pedido) => {
     const retirada = instanteBrasilia(dataRef, pedido.horaRetirada || "00:00");
     const diffMin = retirada
       ? Math.round((retirada.getTime() - agoraDt.getTime()) / 60000)
@@ -632,10 +723,9 @@ export async function listarCanceladosDoDia(data) {
      LIMIT 50`,
     [dataRef]
   );
-  const itensMap = await carregarItensPorPedidos(rows.map((r) => r.id));
   return {
     data: dataRef,
-    pedidos: rows.map((row) => mapPedido(row, itensMap.get(row.id) || [])),
+    pedidos: await hidratarPedidos(rows),
   };
 }
 
