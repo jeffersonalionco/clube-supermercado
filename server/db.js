@@ -1052,6 +1052,63 @@ async function migrarMarketing(db) {
     CREATE INDEX IF NOT EXISTS idx_whatsapp_contato_clube
     ON whatsapp_contato (tem_clube, info_liberada)
   `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS whatsapp_mensagem (
+      id BIGSERIAL PRIMARY KEY,
+      telefone VARCHAR(32) NOT NULL,
+      direcao VARCHAR(3) NOT NULL,
+      origem VARCHAR(20) NOT NULL DEFAULT 'cliente',
+      tipo VARCHAR(40) NOT NULL DEFAULT 'text',
+      texto TEXT,
+      detalhe JSONB,
+      wamid VARCHAR(128),
+      criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await db.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_whatsapp_mensagem_wamid
+    ON whatsapp_mensagem (wamid)
+    WHERE wamid IS NOT NULL
+  `);
+
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_whatsapp_mensagem_tel
+    ON whatsapp_mensagem (telefone, criado_em DESC)
+  `);
+
+  await db.query(`
+    ALTER TABLE whatsapp_mensagem
+    ADD COLUMN IF NOT EXISTS apagada_em TIMESTAMPTZ,
+    ADD COLUMN IF NOT EXISTS oculto_em TIMESTAMPTZ,
+    ADD COLUMN IF NOT EXISTS reacao_loja VARCHAR(32),
+    ADD COLUMN IF NOT EXISTS reacao_cliente VARCHAR(32),
+    ADD COLUMN IF NOT EXISTS atualizado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS whatsapp_atendimento (
+      telefone VARCHAR(32) PRIMARY KEY,
+      admin_usuario VARCHAR(100) NOT NULL,
+      admin_nome VARCHAR(120) NOT NULL,
+      iniciado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      ultima_equipe_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS whatsapp_link_preview (
+      url_hash CHAR(64) PRIMARY KEY,
+      url TEXT NOT NULL,
+      titulo VARCHAR(200),
+      descricao VARCHAR(320),
+      imagem VARCHAR(80),
+      site VARCHAR(120),
+      ok BOOLEAN NOT NULL DEFAULT FALSE,
+      consultado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
 }
 
 async function migrarConfigBackup(db) {

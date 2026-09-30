@@ -790,6 +790,19 @@ async function processarMensagem(msg) {
     return;
   }
 
+  if (msg.type === "reaction") {
+    try {
+      const { aplicarReacaoRecebida } = await import("./whatsappConversaService.js");
+      await aplicarReacaoRecebida({
+        wamidAlvo: msg.raw?.reaction?.message_id,
+        emoji: msg.raw?.reaction?.emoji || "",
+      });
+    } catch (err) {
+      console.warn("[whatsapp/conversa] reação:", err.message);
+    }
+    return;
+  }
+
   // Carteira de contatos (número de ofertas) — ignora mensagens sistema Meta
   if (msg.type !== "unsupported" && msg.type !== "system" && msg.type !== "unknown") {
     try {
@@ -804,6 +817,24 @@ async function processarMensagem(msg) {
     } catch (err) {
       console.warn("[whatsapp/contato] upsert:", err.message);
     }
+    try {
+      const { registrarEntradaWhatsapp } = await import(
+        "./whatsappConversaService.js"
+      );
+      await registrarEntradaWhatsapp(msg, telefone);
+    } catch (err) {
+      console.warn("[whatsapp/conversa] entrada:", err.message);
+    }
+  }
+
+  try {
+    const { atendimentoBloqueiaAuto } = await import("./whatsappAtendimentoService.js");
+    if (await atendimentoBloqueiaAuto(telefone)) {
+      console.log("[whatsapp/auto-reply] pausado, atendimento humano", telefone);
+      return;
+    }
+  } catch (err) {
+    console.warn("[whatsapp/atendimento] pausa:", err.message);
   }
 
   console.log("[whatsapp/auto-reply] inbound", {

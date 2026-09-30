@@ -55,6 +55,7 @@ function humanizar(msg) {
   if (/já possui cadastro|já está cadastrado/i.test(msg)) {
     return "Este CPF já está cadastrado. Faça login para continuar.";
   }
+  if (/atributo|campo /i.test(msg)) return msg;
   if (/não encontrado/i.test(msg)) return "Cadastro não encontrado.";
   if (/datainicial|datafinal|dd-mm-yyyy/i.test(msg)) {
     return "Informe as datas no formato dia/mês/ano.";

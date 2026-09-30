@@ -242,6 +242,432 @@ router.get("/whatsapp/auto-reply/metricas", async (req, res) => {
   }
 });
 
+router.get("/whatsapp/caixa/conversas", async (req, res) => {
+  try {
+    const { listarConversasWhatsapp } = await import(
+      "../services/marketing/whatsappConversaService.js"
+    );
+    const conversas = await listarConversasWhatsapp({
+      busca: req.query.q || "",
+      filtro: req.query.filtro || "todos",
+    });
+    return res.json({ conversas });
+  } catch (error) {
+    console.error("[admin/marketing/whatsapp/caixa]", error.message);
+    return res.status(500).json({ error: mensagemParaCliente(error.message) });
+  }
+});
+
+router.get("/whatsapp/caixa/preview", async (req, res) => {
+  try {
+    const { obterPreviewLink } = await import(
+      "../services/marketing/whatsappPreviewService.js"
+    );
+    const data = await obterPreviewLink(String(req.query.url || ""));
+    return res.json(data);
+  } catch (error) {
+    console.error("[admin/marketing/whatsapp/caixa/preview]", error.message);
+    return res.json({ ok: false });
+  }
+});
+
+router.get("/whatsapp/caixa/previews/:hash/imagem", async (req, res) => {
+  try {
+    const { lerImagemPreview } = await import(
+      "../services/marketing/whatsappPreviewService.js"
+    );
+    const arq = await lerImagemPreview(req.params.hash);
+    if (!arq) return res.sendStatus(404);
+    res.setHeader("Content-Type", arq.mime);
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Cache-Control", "private, max-age=86400");
+    fs.createReadStream(arq.caminho).pipe(res);
+  } catch (error) {
+    console.error("[admin/marketing/whatsapp/caixa/preview-img]", error.message);
+    return res.sendStatus(404);
+  }
+});
+
+router.get("/whatsapp/caixa/mensagens/:id/midia", async (req, res) => {
+  try {
+    const { lerMidiaMensagem } = await import(
+      "../services/marketing/whatsappMidiaCaixaService.js"
+    );
+    const arq = await lerMidiaMensagem(req.params.id);
+    if (!arq) return res.sendStatus(404);
+    const inline =
+      arq.mime.startsWith("image/") ||
+      arq.mime.startsWith("audio/") ||
+      arq.mime.startsWith("video/");
+    const nome =
+      String(arq.nomeArquivo || "arquivo")
+        .replace(/[^\w.\- ()]/g, "")
+        .slice(0, 80) || "arquivo";
+    res.setHeader("Content-Type", arq.mime);
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader(
+      "Content-Disposition",
+      `${inline ? "inline" : "attachment"}; filename="${nome}"`
+    );
+    res.setHeader("Cache-Control", "private, max-age=3600");
+    fs.createReadStream(arq.caminho).pipe(res);
+  } catch (error) {
+    console.error("[admin/marketing/whatsapp/caixa/midia]", error.message);
+    return res.sendStatus(404);
+  }
+});
+
+router.post("/whatsapp/caixa/conversas/:telefone/atendimento/iniciar", async (req, res) => {
+  try {
+    const { iniciarAtendimento } = await import(
+      "../services/marketing/whatsappAtendimentoService.js"
+    );
+    const resultado = await iniciarAtendimento({
+      telefone: req.params.telefone,
+      adminUsuario: req.admin?.usuario,
+    });
+    if (!resultado.ok) {
+      return res.status(409).json({
+        error: resultado.error,
+        codigo: resultado.codigo || null,
+        atendimento: resultado.atendimento || null,
+      });
+    }
+    return res.json(resultado);
+  } catch (error) {
+    console.error("[admin/marketing/whatsapp/caixa/iniciar]", error.message);
+    return res.status(500).json({ error: "Não foi possível iniciar o atendimento." });
+  }
+});
+
+router.post("/whatsapp/caixa/conversas/:telefone/atendimento/finalizar", async (req, res) => {
+  try {
+    const { finalizarAtendimento } = await import(
+      "../services/marketing/whatsappAtendimentoService.js"
+    );
+    const resultado = await finalizarAtendimento({
+      telefone: req.params.telefone,
+      adminUsuario: req.admin?.usuario,
+    });
+    if (!resultado.ok) {
+      return res.status(409).json({
+        error: resultado.error,
+        codigo: resultado.codigo || null,
+        atendimento: resultado.atendimento || null,
+      });
+    }
+    return res.json(resultado);
+  } catch (error) {
+    console.error("[admin/marketing/whatsapp/caixa/finalizar]", error.message);
+    return res.status(500).json({ error: "Não foi possível finalizar o atendimento." });
+  }
+});
+
+router.get("/whatsapp/caixa/conversas/:telefone/pedidos", async (req, res) => {
+  try {
+    const { contextoPedidoCaixa } = await import("../services/marketing/whatsappPedidoCaixaService.js");
+    const contexto = await contextoPedidoCaixa(req.params.telefone);
+    return res.json(contexto);
+  } catch (error) {
+    console.error("[admin/marketing/whatsapp/caixa/pedidos]", error.message);
+    return res.status(500).json({ error: "Não foi possível carregar os pedidos." });
+  }
+});
+
+router.get("/whatsapp/caixa/erp/produtos", async (req, res) => {
+  try {
+    const { buscarProdutosErp } = await import("../services/marketing/whatsappPedidoErpService.js");
+    const resultado = await buscarProdutosErp(req.query.q || "");
+    return res.json(resultado);
+  } catch (error) {
+    console.error("[admin/marketing/whatsapp/caixa/erp/produtos]", error.message);
+    return res.status(500).json({ error: "Não foi possível buscar os produtos do ERP." });
+  }
+});
+
+router.post("/whatsapp/caixa/conversas/:telefone/erp/pedidos", async (req, res) => {
+  try {
+    const { criarPedidoErpCaixa } = await import("../services/marketing/whatsappPedidoErpService.js");
+    const resultado = await criarPedidoErpCaixa({
+      telefone: req.params.telefone,
+      adminUsuario: req.admin?.usuario,
+      nomeCliente: req.body?.nomeCliente,
+      cpfInformado: req.body?.cpf,
+      observacao: req.body?.observacao,
+      itens: req.body?.itens,
+    });
+    if (!resultado.ok) {
+      const status = resultado.codigo === "ocupado" || resultado.codigo === "sem_atendimento" ? 409 : 400;
+      return res.status(status).json({
+        error: resultado.error,
+        codigo: resultado.codigo || null,
+        atendimento: resultado.atendimento || null,
+      });
+    }
+    return res.status(201).json(resultado);
+  } catch (error) {
+    console.error("[admin/marketing/whatsapp/caixa/erp/pedidos]", error.message);
+    return res.status(500).json({ error: "Não foi possível abrir o pedido no ERP." });
+  }
+});
+
+router.get("/whatsapp/caixa/catalogo", async (req, res) => {
+  try {
+    const { categoriasCatalogoCaixa, vitrineCatalogoCaixa } = await import(
+      "../services/marketing/whatsappPedidoCaixaService.js"
+    );
+    const [produtos, categorias] = await Promise.all([
+      vitrineCatalogoCaixa({ busca: req.query.q || "", categoriaId: req.query.categoria }),
+      categoriasCatalogoCaixa(),
+    ]);
+    return res.json({ produtos, categorias });
+  } catch (error) {
+    console.error("[admin/marketing/whatsapp/caixa/catalogo]", error.message);
+    return res.status(500).json({ error: "Não foi possível buscar o catálogo." });
+  }
+});
+
+router.post("/whatsapp/caixa/catalogo/resolver", async (req, res) => {
+  try {
+    const { resolverCatalogoCaixa } = await import("../services/marketing/whatsappPedidoCaixaService.js");
+    const produtos = await resolverCatalogoCaixa(req.body?.codigos || []);
+    return res.json({ produtos });
+  } catch (error) {
+    console.error("[admin/marketing/whatsapp/caixa/catalogo/resolver]", error.message);
+    return res.status(500).json({ error: "Não foi possível ler os itens." });
+  }
+});
+
+router.get("/whatsapp/caixa/catalogo/:codigo/decoracoes", async (req, res) => {
+  try {
+    const { decoracoesCatalogoCaixa } = await import("../services/marketing/whatsappPedidoCaixaService.js");
+    const decoracoes = await decoracoesCatalogoCaixa(req.params.codigo);
+    return res.json({ decoracoes });
+  } catch (error) {
+    console.error("[admin/marketing/whatsapp/caixa/decoracoes]", error.message);
+    return res.status(500).json({ error: "Não foi possível carregar as decorações." });
+  }
+});
+
+router.post("/whatsapp/caixa/conversas/:telefone/pedidos", async (req, res) => {
+  try {
+    const { criarPedidoCaixa } = await import("../services/marketing/whatsappPedidoCaixaService.js");
+    const resultado = await criarPedidoCaixa({
+      telefone: req.params.telefone,
+      adminUsuario: req.admin?.usuario,
+      nomeCliente: req.body?.nomeCliente,
+      dataRetirada: req.body?.dataRetirada,
+      horaRetirada: req.body?.horaRetirada,
+      observacao: req.body?.observacao,
+      itens: req.body?.itens,
+    });
+    if (!resultado.ok) {
+      const status = resultado.codigo === "ocupado" || resultado.codigo === "sem_atendimento" ? 409 : 400;
+      return res.status(status).json({
+        error: resultado.error,
+        codigo: resultado.codigo || null,
+        atendimento: resultado.atendimento || null,
+      });
+    }
+    return res.status(resultado.repetido ? 200 : 201).json(resultado);
+  } catch (error) {
+    console.error("[admin/marketing/whatsapp/caixa/pedidos POST]", error.message);
+    return res.status(500).json({ error: "Não foi possível anotar o pedido." });
+  }
+});
+
+router.post("/whatsapp/caixa/conversas/:telefone/pedidos/:id/resumo", async (req, res) => {
+  try {
+    const { enviarResumoPedidoCaixa } = await import("../services/marketing/whatsappPedidoCaixaService.js");
+    const resultado = await enviarResumoPedidoCaixa({
+      telefone: req.params.telefone,
+      adminUsuario: req.admin?.usuario,
+      pedidoId: req.params.id,
+    });
+    if (!resultado.ok) {
+      const status = resultado.codigo === "janela" || resultado.codigo === "ocupado" || resultado.codigo === "sem_atendimento" ? 409 : 400;
+      return res.status(status).json({
+        error: resultado.error,
+        codigo: resultado.codigo || null,
+        atendimento: resultado.atendimento || null,
+      });
+    }
+    return res.json(resultado);
+  } catch (error) {
+    console.error("[admin/marketing/whatsapp/caixa/resumo]", error.message);
+    return res.status(500).json({ error: "Não foi possível enviar o resumo." });
+  }
+});
+
+const uploadCaixa = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 16 * 1024 * 1024 },
+});
+
+router.post(
+  "/whatsapp/caixa/conversas/:telefone/midia",
+  (req, res) => {
+    uploadCaixa.single("arquivo")(req, res, async (err) => {
+      if (err) {
+        return res.status(400).json({ error: "O arquivo passou de 16 MB." });
+      }
+      try {
+        const { responderMidiaWhatsapp } = await import(
+          "../services/marketing/whatsappConversaService.js"
+        );
+        const resultado = await responderMidiaWhatsapp({
+          telefone: req.params.telefone,
+          buffer: req.file?.buffer,
+          nomeOriginal: req.file?.originalname,
+          legenda: req.body?.legenda,
+          voz: req.body?.voz === "1",
+          adminUsuario: req.admin?.usuario,
+        });
+        if (!resultado.ok) {
+          const status = resultado.codigo === "janela" ? 409 : 400;
+          return res.status(status).json({
+            error: resultado.error,
+            codigo: resultado.codigo || null,
+            atendimento: resultado.atendimento || null,
+          });
+        }
+        return res.json(resultado);
+      } catch (error) {
+        console.error("[admin/marketing/whatsapp/caixa/midia]", error.message);
+        return res.status(500).json({
+          error: "Não foi possível enviar agora. Tente de novo em instantes.",
+        });
+      }
+    });
+  }
+);
+
+router.post("/whatsapp/caixa/conversas/:telefone/responder", async (req, res) => {
+  try {
+    const { responderConversaWhatsapp } = await import(
+      "../services/marketing/whatsappConversaService.js"
+    );
+    const resultado = await responderConversaWhatsapp({
+      telefone: req.params.telefone,
+      texto: req.body?.texto,
+      adminUsuario: req.admin?.usuario,
+    });
+    if (!resultado.ok) {
+      const status = resultado.codigo === "janela" ? 409 : 400;
+      return res.status(status).json({
+        error: resultado.error,
+        codigo: resultado.codigo || null,
+        atendimento: resultado.atendimento || null,
+      });
+    }
+    return res.json(resultado);
+  } catch (error) {
+    console.error("[admin/marketing/whatsapp/caixa/responder]", error.message);
+    return res.status(500).json({ error: "Não foi possível enviar agora. Tente de novo em instantes." });
+  }
+});
+
+function statusAcaoCaixa(resultado) {
+  if (resultado.codigo === "janela" || resultado.codigo === "sem_atendimento") return 409;
+  return 400;
+}
+
+router.post("/whatsapp/caixa/mensagens/:id/apagar", async (req, res) => {
+  try {
+    const alcance = String(req.body?.alcance || "");
+    const { apagarMensagemParaMim, apagarMensagemParaTodos } = await import(
+      "../services/marketing/whatsappConversaService.js"
+    );
+    const resultado =
+      alcance === "todos"
+        ? await apagarMensagemParaTodos({
+            mensagemId: req.params.id,
+            adminUsuario: req.admin?.usuario,
+          })
+        : alcance === "mim"
+          ? await apagarMensagemParaMim({ mensagemId: req.params.id })
+          : { ok: false, error: "Escolha apagar para você ou para todos." };
+    if (!resultado.ok) {
+      return res.status(statusAcaoCaixa(resultado)).json({
+        error: resultado.error,
+        codigo: resultado.codigo || null,
+      });
+    }
+    return res.json(resultado);
+  } catch (error) {
+    console.error("[admin/marketing/whatsapp/caixa/apagar]", error.message);
+    return res.status(500).json({ error: "Não foi possível apagar agora. Tente de novo em instantes." });
+  }
+});
+
+router.post("/whatsapp/caixa/mensagens/:id/reagir", async (req, res) => {
+  try {
+    const { reagirMensagemWhatsapp } = await import(
+      "../services/marketing/whatsappConversaService.js"
+    );
+    const resultado = await reagirMensagemWhatsapp({
+      mensagemId: req.params.id,
+      emoji: req.body?.emoji,
+      adminUsuario: req.admin?.usuario,
+    });
+    if (!resultado.ok) {
+      return res.status(statusAcaoCaixa(resultado)).json({
+        error: resultado.error,
+        codigo: resultado.codigo || null,
+      });
+    }
+    return res.json(resultado);
+  } catch (error) {
+    console.error("[admin/marketing/whatsapp/caixa/reagir]", error.message);
+    return res.status(500).json({ error: "Não foi possível reagir agora. Tente de novo em instantes." });
+  }
+});
+
+router.post("/whatsapp/caixa/mensagens/:id/compartilhar", async (req, res) => {
+  try {
+    const { compartilharMensagemWhatsapp } = await import(
+      "../services/marketing/whatsappConversaService.js"
+    );
+    const resultado = await compartilharMensagemWhatsapp({
+      mensagemId: req.params.id,
+      telefoneDestino: req.body?.telefone,
+      adminUsuario: req.admin?.usuario,
+    });
+    if (!resultado.ok) {
+      return res.status(statusAcaoCaixa(resultado)).json({
+        error: resultado.error,
+        codigo: resultado.codigo || null,
+      });
+    }
+    return res.json(resultado);
+  } catch (error) {
+    console.error("[admin/marketing/whatsapp/caixa/compartilhar]", error.message);
+    return res.status(500).json({ error: "Não foi possível compartilhar agora. Tente de novo em instantes." });
+  }
+});
+
+router.get("/whatsapp/caixa/conversas/:telefone", async (req, res) => {
+  try {
+    const { obterConversaWhatsapp } = await import(
+      "../services/marketing/whatsappConversaService.js"
+    );
+    const conversa = await obterConversaWhatsapp(req.params.telefone, {
+      antes: req.query.antes,
+      depois: req.query.depois,
+      desde: req.query.desde || "",
+      busca: req.query.q || "",
+      adminUsuario: req.admin?.usuario,
+    });
+    if (!conversa) {
+      return res.status(404).json({ error: "Conversa não encontrada" });
+    }
+    return res.json(conversa);
+  } catch (error) {
+    console.error("[admin/marketing/whatsapp/caixa/conversa]", error.message);
+    return res.status(500).json({ error: mensagemParaCliente(error.message) });
+  }
+});
+
 router.get("/whatsapp/contatos", async (req, res) => {
   try {
     const { listarContatosWhatsapp } = await import(

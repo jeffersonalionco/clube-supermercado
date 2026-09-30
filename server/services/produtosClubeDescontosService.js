@@ -140,12 +140,63 @@ function temPrecoClube(produto) {
   return obterPreco2Bruto(produto) > 0;
 }
 
+function precoPositivo(valor) {
+  const n = Number(valor);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
+/**
+ * Preço de prateleira antes da oferta.
+ * Fora de oferta o ERP zera PrecoNormal; PrVendaAnt aí é só o último reajuste.
+ */
+export function precoAnteriorDeProdutoErp(produto) {
+  const emOferta = String(produto?.Oferta ?? "").toUpperCase() === "S";
+  if (!emOferta) return 0;
+  const normal = precoPositivo(produto?.PrecoNormal);
+  if (normal > 0) return arredondarMoeda(normal);
+  const anterior = precoPositivo(produto?.PrVendaAnt);
+  if (anterior > 0) return arredondarMoeda(anterior);
+  return 0;
+}
+
+/**
+ * Base do "de/por": preço 1 fora de oferta; preço anterior quando a oferta
+ * ainda deixa o preço antigo acima do clube.
+ */
+export function calcularDescontoClube(p) {
+  const preco1 = Number(p?.preco1) || 0;
+  const preco2 = Number(p?.preco2) || 0;
+  const anterior = Number(p?.precoAnterior) || 0;
+  const emOferta =
+    p?.oferta === true || String(p?.oferta ?? "").toUpperCase() === "S";
+  const base = emOferta && anterior > preco2 ? anterior : preco1;
+  const economia = arredondarMoeda(Math.max(0, base - preco2));
+  const percentual =
+    base > 0 && economia > 0 ? Math.round((economia / base) * 100) : 0;
+  return { base, preco2, economia, percentual };
+}
+
+export function aplicarDescontoClube(item) {
+  const desconto = calcularDescontoClube(item);
+  return {
+    ...item,
+    precoDe: desconto.base,
+    economia: desconto.economia,
+    percentualDesconto: desconto.percentual,
+  };
+}
+
 function normalizarProduto(produto, unidade) {
   const preco1 = arredondarMoeda(produto.Preco ?? produto.PrecoPDV ?? 0);
   const preco2 = arredondarMoeda(obterPreco2Bruto(produto));
-  const economia = arredondarMoeda(Math.max(0, preco1 - preco2));
-  const percentual =
-    preco1 > 0 ? arredondarMoeda((economia / preco1) * 100) : 0;
+  const oferta = String(produto.Oferta ?? "").toUpperCase() === "S";
+  const precoAnterior = precoAnteriorDeProdutoErp(produto);
+  const desconto = calcularDescontoClube({
+    oferta,
+    preco1,
+    preco2,
+    precoAnterior,
+  });
 
   return {
     codigo: String(produto.Codigo ?? produto.SKU ?? "").trim(),
@@ -155,13 +206,15 @@ function normalizarProduto(produto, unidade) {
     departamentoCodigo: String(produto.CodigoDepartamento ?? "").trim() || null,
     grupo: String(produto.Grupo ?? "").trim() || null,
     marca: String(produto.Marca ?? "").trim() || null,
-    oferta: String(produto.Oferta ?? "").toUpperCase() === "S",
+    oferta,
     estoque: Number(produto.Estoque1 ?? produto.Estoque) || 0,
     unidade,
     preco1,
     preco2,
-    economia,
-    percentualDesconto: percentual,
+    precoAnterior,
+    precoDe: desconto.base,
+    economia: desconto.economia,
+    percentualDesconto: desconto.percentual,
     ativo:
       produto.Ativo !== false &&
       String(produto.Status ?? "").toUpperCase() !== "INATIVO",
@@ -403,9 +456,9 @@ function filtrarProdutos(produtos, busca) {
 }
 
 function montarResposta(catalogo, { busca, pagina, limite, sincronizando, progresso, erroSync }) {
-  const produtosValidos = (catalogo.produtos || []).filter(
-    (p) => Number(p.preco2) > 0
-  );
+  const produtosValidos = (catalogo.produtos || [])
+    .filter((p) => Number(p.preco2) > 0)
+    .map(aplicarDescontoClube);
   const filtrados = filtrarProdutos(produtosValidos, busca);
   const paginaNum = Math.max(1, Number(pagina) || 1);
   const limiteNum = Math.min(200, Math.max(1, Number(limite) || 50));

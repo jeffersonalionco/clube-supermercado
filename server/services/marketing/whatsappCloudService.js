@@ -375,6 +375,15 @@ export async function enviarTemplateWhatsapp({
       return { ok: false, error: detalhe, raw, mediaId: mediaIdFinal || null };
     }
     const messageId = raw?.messages?.[0]?.id || null;
+    gravarSaidaWhatsapp(
+      {
+        to,
+        type: "template",
+        template: { name },
+      },
+      messageId,
+      "campanha"
+    ).catch((err) => console.warn("[whatsapp/conversa] campanha:", err.message));
     return { ok: true, messageId, raw, mediaId: mediaIdFinal || null };
   } catch (err) {
     return {
@@ -557,7 +566,25 @@ export async function listarTemplatesWhatsapp({
   return { ok: true, wabaId: waba.wabaId, templates: lista };
 }
 
-async function postMensagem(payload) {
+async function gravarSaidaWhatsapp(payload, messageId, origem, extra = null) {
+  const { registrarMensagemWhatsapp, textoDePayloadSaida, detalheDePayloadSaida } =
+    await import("./whatsappConversaService.js");
+  const detalhe = {
+    ...(detalheDePayloadSaida(payload) || {}),
+    ...(extra?.detalhe || {}),
+  };
+  await registrarMensagemWhatsapp({
+    telefone: payload.to,
+    direcao: "out",
+    origem,
+    tipo: payload.type || "text",
+    texto: extra?.texto != null ? extra.texto : textoDePayloadSaida(payload),
+    detalhe: Object.keys(detalhe).length ? detalhe : null,
+    wamid: messageId,
+  });
+}
+
+async function postMensagem(payload, origem = "sistema", extra = null) {
   const cfg = obterConfigWhatsappCloud();
   if (!cfg.ok) {
     return {
@@ -587,7 +614,13 @@ async function postMensagem(payload) {
         raw,
       };
     }
-    return { ok: true, messageId: raw?.messages?.[0]?.id || null, raw };
+    const messageId = raw?.messages?.[0]?.id || null;
+    if (payload?.to && !payload.status && !extra?.naoGravar) {
+      await gravarSaidaWhatsapp(payload, messageId, origem, extra).catch((err) =>
+        console.warn("[whatsapp/conversa] saída:", err.message)
+      );
+    }
+    return { ok: true, messageId, raw };
   } catch (err) {
     return {
       ok: false,
@@ -596,18 +629,91 @@ async function postMensagem(payload) {
   }
 }
 
-export async function enviarMensagemTextoWhatsapp({ telefone, texto }) {
+export async function enviarMensagemMidiaWhatsapp({
+  telefone,
+  tipo,
+  buffer,
+  mime,
+  filename,
+  caption = "",
+  voz = false,
+  origem = "atendimento",
+  textoGravado = "",
+  detalheExtra = null,
+}) {
+  const to = normalizarTelefoneWa(telefone);
+  if (!to) return { ok: false, error: "Telefone inválido" };
+  const tipos = new Set(["image", "video", "audio", "document"]);
+  if (!tipos.has(tipo)) return { ok: false, error: "Tipo de mídia inválido" };
+  const cfg = obterConfigWhatsappCloud();
+  if (!cfg.ok) {
+    return { ok: false, error: "WhatsApp Cloud API não configurada" };
+  }
+  const nome = String(filename || `arquivo.${mime.split("/")[1] || "bin"}`).slice(0, 80);
+  const form = new FormData();
+  form.append("messaging_product", "whatsapp");
+  form.append("type", mime);
+  form.append("file", new Blob([buffer], { type: mime }), nome);
+  let mediaId = "";
+  try {
+    const up = await fetch(
+      `https://graph.facebook.com/${cfg.apiVersion}/${cfg.phoneNumberId}/media`,
+      { method: "POST", headers: { Authorization: `Bearer ${cfg.token}` }, body: form }
+    );
+    const upRaw = await up.json().catch(() => ({}));
+    if (!up.ok || !upRaw.id) {
+      return { ok: false, error: upRaw?.error?.message || "A Meta não aceitou o arquivo." };
+    }
+    mediaId = String(upRaw.id);
+  } catch (err) {
+    return { ok: false, error: err.message || "Falha ao enviar o arquivo." };
+  }
+  const bloco = { id: mediaId };
+  const legenda = String(caption || "").trim();
+  if (legenda && tipo !== "audio") bloco.caption = legenda.slice(0, 1024);
+  if (tipo === "audio" && voz) bloco.voice = true;
+  if (tipo === "document") bloco.filename = nome;
+  return postMensagem(
+    {
+      messaging_product: "whatsapp",
+      recipient_type: "individual",
+      to,
+      type: tipo,
+      [tipo]: bloco,
+    },
+    origem,
+    { texto: textoGravado, detalhe: detalheExtra }
+  );
+}
+
+export async function enviarMensagemTextoWhatsapp({
+  telefone,
+  texto,
+  origem = "sistema",
+  textoGravado = null,
+  detalheExtra = null,
+}) {
   const to = normalizarTelefoneWa(telefone);
   if (!to) return { ok: false, error: "Telefone inválido" };
   const body = String(texto || "").trim();
   if (!body) return { ok: false, error: "Texto vazio" };
-  return postMensagem({
-    messaging_product: "whatsapp",
-    recipient_type: "individual",
-    to,
-    type: "text",
-    text: { preview_url: true, body },
-  });
+  const origemOk = ["sistema", "atendimento", "campanha"].includes(origem)
+    ? origem
+    : "sistema";
+  return postMensagem(
+    {
+      messaging_product: "whatsapp",
+      recipient_type: "individual",
+      to,
+      type: "text",
+      text: { preview_url: true, body },
+    },
+    origemOk,
+    {
+      texto: textoGravado,
+      detalhe: detalheExtra,
+    }
+  );
 }
 
 /**
@@ -615,6 +721,39 @@ export async function enviarMensagemTextoWhatsapp({ telefone, texto }) {
  * Some até ~25s ou até a próxima resposta.
  * Docs: https://developers.facebook.com/docs/whatsapp/cloud-api/typing-indicators/
  */
+/** Apaga no WhatsApp uma mensagem enviada por este número. */
+export async function apagarMensagemCloud({ messageId }) {
+  const id = String(messageId || "").trim();
+  if (!id) return { ok: false, error: "Mensagem sem identificador no WhatsApp." };
+  return postMensagem({
+    messaging_product: "whatsapp",
+    status: "deleted",
+    message_id: id,
+  });
+}
+
+/** Reação numa mensagem. Emoji vazio remove a reação da loja. */
+export async function enviarReacaoWhatsapp({ telefone, messageId, emoji }) {
+  const to = normalizarTelefoneWa(telefone);
+  const id = String(messageId || "").trim();
+  if (!to) return { ok: false, error: "Telefone inválido" };
+  if (!id) return { ok: false, error: "Mensagem sem identificador no WhatsApp." };
+  return postMensagem(
+    {
+      messaging_product: "whatsapp",
+      recipient_type: "individual",
+      to,
+      type: "reaction",
+      reaction: {
+        message_id: id,
+        emoji: String(emoji || ""),
+      },
+    },
+    "atendimento",
+    { naoGravar: true }
+  );
+}
+
 export async function enviarIndicadorDigitandoWhatsapp({ messageId }) {
   const id = String(messageId || "").trim();
   if (!id) return { ok: false, error: "message_id ausente" };

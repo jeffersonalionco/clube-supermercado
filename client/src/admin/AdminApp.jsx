@@ -22,6 +22,7 @@ import AdminMarketingEmailPage from "../pages/admin/AdminMarketingEmailPage.jsx"
 import AdminMarketingWhatsAppPage from "../pages/admin/AdminMarketingWhatsAppPage.jsx";
 import AdminMarketingWhatsAppAutoPage from "../pages/admin/AdminMarketingWhatsAppAutoPage.jsx";
 import AdminMarketingWhatsAppContatosPage from "../pages/admin/AdminMarketingWhatsAppContatosPage.jsx";
+import AdminWhatsAppCaixaPage from "../pages/admin/AdminWhatsAppCaixaPage.jsx";
 import AdminVendasPdvPage from "../pages/admin/AdminVendasPdvPage.jsx";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage.jsx";
 import AdminPadariaPage from "../pages/admin/AdminPadariaPage.jsx";
@@ -87,6 +88,7 @@ function adminTabFromHash() {
 function marketingSubFromHash() {
   const path = adminPathFromHash();
   if (path.startsWith("admin/marketing/email")) return "email";
+  if (path.startsWith("admin/marketing/whatsapp-caixa")) return "whatsapp-caixa";
   if (path.startsWith("admin/marketing/whatsapp-auto")) return "whatsapp-auto";
   if (path.startsWith("admin/marketing/whatsapp-contatos")) {
     return "whatsapp-contatos";
@@ -138,6 +140,7 @@ function hashForAdminTab(tab, sub) {
   }
   if (tab === "marketing") {
     if (sub === "email") return "#/admin/marketing/email";
+    if (sub === "whatsapp-caixa") return "#/admin/marketing/whatsapp-caixa";
     if (sub === "whatsapp-auto") return "#/admin/marketing/whatsapp-auto";
     if (sub === "whatsapp-contatos") {
       return "#/admin/marketing/whatsapp-contatos";
@@ -194,6 +197,12 @@ export default function AdminApp() {
     window.location.hash = hashForAdminTab("marketing", "email").slice(1);
     setTab("marketing");
     setMarketingSub("email");
+  }, []);
+
+  const abrirMarketingWhatsappCaixa = useCallback(() => {
+    window.location.hash = hashForAdminTab("marketing", "whatsapp-caixa").slice(1);
+    setTab("marketing");
+    setMarketingSub("whatsapp-caixa");
   }, []);
 
   const abrirMarketingWhatsapp = useCallback(() => {
@@ -323,6 +332,15 @@ export default function AdminApp() {
     );
   }
 
+  if (tab === "marketing" && marketingSub === "whatsapp-caixa") {
+    return (
+      <AdminWhatsAppCaixaPage
+        onVoltar={voltarMarketingHub}
+        onLogout={handleLogout}
+      />
+    );
+  }
+
   if (tab === "marketing") {
     if (marketingSub === "email") {
       return (
@@ -338,6 +356,7 @@ export default function AdminApp() {
           {...layoutProps}
           onVoltarHub={voltarMarketingHub}
           onAbrirAutoReply={abrirMarketingWhatsappAuto}
+          onAbrirCaixa={abrirMarketingWhatsappCaixa}
         />
       );
     }
@@ -366,6 +385,7 @@ export default function AdminApp() {
         onAbrirWhatsapp={abrirMarketingWhatsapp}
         onAbrirWhatsappAuto={abrirMarketingWhatsappAuto}
         onAbrirWhatsappContatos={abrirMarketingWhatsappContatos}
+        onAbrirWhatsappCaixa={abrirMarketingWhatsappCaixa}
       />
     );
   }

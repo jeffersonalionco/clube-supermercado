@@ -418,6 +418,7 @@ export async function listarProdutosAdmin({
   busca = "",
   apenasCatalogo = false,
   filtro = "",
+  categoriaId = null,
   limite = 200,
   offset = 0,
 } = {}) {
@@ -434,6 +435,12 @@ export async function listarProdutosAdmin({
     conds.push("p.ativo_rp = false");
   } else if (filtroNorm === "sem_categoria") {
     conds.push("p.categoria_id IS NULL");
+  }
+  const cat = Number(categoriaId);
+  if (Number.isInteger(cat) && cat > 0) {
+    conds.push(`p.categoria_id = $${i}`);
+    params.push(cat);
+    i += 1;
   }
   if (busca.trim()) {
     conds.push(

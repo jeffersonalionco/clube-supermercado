@@ -27,6 +27,7 @@ export default function AdminMarketingHubPage({
   onAbrirWhatsapp,
   onAbrirWhatsappAuto,
   onAbrirWhatsappContatos,
+  onAbrirWhatsappCaixa,
 }) {
   const [resumo, setResumo] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -142,6 +143,27 @@ export default function AdminMarketingHubPage({
             </span>
             <span className="admin-marketing-canal__cta">Em breve</span>
           </div>
+
+          {onAbrirWhatsappCaixa && (
+            <button
+              type="button"
+              className="admin-marketing-canal"
+              onClick={onAbrirWhatsappCaixa}
+            >
+              <span className="admin-marketing-canal__icone" aria-hidden>
+                ▣
+              </span>
+              <span className="admin-marketing-canal__corpo">
+                <strong>Atendimento WhatsApp</strong>
+                <span>
+                  Tela cheia com as conversas: o que cada cliente pediu e o que o
+                  Superama respondeu.
+                </span>
+                <small>Abre fora do menu do clube</small>
+              </span>
+              <span className="admin-marketing-canal__cta">Abrir</span>
+            </button>
+          )}
 
           <button
             type="button"

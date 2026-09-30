@@ -102,6 +102,7 @@ export default function AdminMarketingWhatsAppPage({
   admin,
   onVoltarHub,
   onAbrirAutoReply,
+  onAbrirCaixa,
 }) {
   const [vista, setVista] = useState("lista");
   const [listaArquivadas, setListaArquivadas] = useState(false);
@@ -622,6 +623,15 @@ export default function AdminMarketingWhatsAppPage({
           </div>
           {vista === "lista" && (
             <div className="admin-form-actions" style={{ margin: 0, gap: "0.5rem" }}>
+              {onAbrirCaixa && (
+                <button
+                  type="button"
+                  className="admin-btn admin-btn--ghost"
+                  onClick={onAbrirCaixa}
+                >
+                  Abrir WhatsApp
+                </button>
+              )}
               {onAbrirAutoReply && (
                 <button
                   type="button"

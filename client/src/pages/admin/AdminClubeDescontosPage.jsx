@@ -259,7 +259,7 @@ export default function AdminClubeDescontosPage({
                     <th>Código</th>
                     <th>Produto</th>
                     <th>EAN</th>
-                    <th>Preço 1</th>
+                    <th>De</th>
                     <th>Preço 2 (clube)</th>
                     <th>Economia</th>
                     <th>Estoque</th>
@@ -282,8 +282,19 @@ export default function AdminClubeDescontosPage({
                       <td className="admin-clube-descontos__ean">
                         {item.codigoBarras || "—"}
                       </td>
-                      <td className="admin-clube-descontos__preco admin-clube-descontos__preco--riscado">
-                        {formatarMoeda(item.preco1)}
+                      <td>
+                        <span className="admin-clube-descontos__preco admin-clube-descontos__preco--riscado">
+                          {formatarMoeda(
+                            Number(item.precoDe) > 0 ? item.precoDe : item.preco1
+                          )}
+                        </span>
+                        {item.oferta &&
+                        Number(item.preco1) > 0 &&
+                        Number(item.precoDe) > Number(item.preco1) ? (
+                          <span className="admin-clube-descontos__marca">
+                            oferta {formatarMoeda(item.preco1)}
+                          </span>
+                        ) : null}
                       </td>
                       <td className="admin-clube-descontos__preco admin-clube-descontos__preco--clube">
                         {formatarMoeda(item.preco2)}
@@ -341,8 +352,9 @@ export default function AdminClubeDescontosPage({
         <p className="admin-clube-descontos__nota admin-muted">
           A varredura usa a lista do ERP (pode atrasar). Cada item do clube é
           confirmado por consulta individual na API para exibir o preço 2
-          atual. Cache local: 30 minutos. Use &quot;Atualizar catálogo&quot; após
-          alterar preços no RP.
+          atual. Em oferta, a coluna De usa o preço anterior e a economia
+          compara esse valor com o preço do clube. Cache local: 30 minutos.
+          Use &quot;Atualizar catálogo&quot; após alterar preços no RP.
         </p>
       </section>
     </AdminLayout>

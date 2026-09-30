@@ -91,6 +91,14 @@ export async function registrarContatoWhatsappInbound({
   return rows[0] || null;
 }
 
+function janelaDoUltimoCliente(ultimo) {
+  if (!ultimo) return { janelaAberta: false, janelaAte: null };
+  const enviada = new Date(ultimo).getTime();
+  if (!Number.isFinite(enviada)) return { janelaAberta: false, janelaAte: null };
+  const ate = new Date(enviada + 24 * 60 * 60 * 1000);
+  return { janelaAberta: ate.getTime() > Date.now(), janelaAte: ate.toISOString() };
+}
+
 export async function listarContatosWhatsapp({
   temClube = null,
   infoLiberada = null,
@@ -144,7 +152,12 @@ export async function listarContatosWhatsapp({
             u.nome AS usuario_nome,
             u.cpf AS usuario_cpf,
             u.cliente_codigo,
-            u.whatsapp_promocional_opt_out_em
+            u.whatsapp_promocional_opt_out_em,
+            (SELECT max(m.criado_em)
+               FROM whatsapp_mensagem m
+              WHERE m.telefone = c.telefone
+                AND m.direcao = 'in'
+                AND m.oculto_em IS NULL) AS ultimo_cliente_em
      FROM whatsapp_contato c
      LEFT JOIN usuario u ON u.id = c.usuario_id
      ${whereSql}
@@ -164,6 +177,7 @@ export async function listarContatosWhatsapp({
 
   return {
     contatos: rows.map((r) => ({
+      ...janelaDoUltimoCliente(r.ultimo_cliente_em),
       telefone: r.telefone,
       telefoneExibicao: formatarTelefoneExibicao(r.telefone),
       nomeWa: r.nome_wa || r.usuario_nome || null,

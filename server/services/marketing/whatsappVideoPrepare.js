@@ -17,6 +17,33 @@ function whichFfprobe() {
   return "ffprobe";
 }
 
+function temFaixaAudio(caminho) {
+  const ffprobe = whichFfprobe();
+  return new Promise((resolve) => {
+    const child = spawn(
+      ffprobe,
+      ["-v", "error", "-select_streams", "a", "-show_entries", "stream=codec_type", "-of", "csv=p=0", caminho],
+      { stdio: ["ignore", "pipe", "pipe"] }
+    );
+    let out = "";
+    const timer = setTimeout(() => {
+      child.kill("SIGKILL");
+      resolve(false);
+    }, 15000);
+    child.stdout.on("data", (d) => {
+      out += d.toString();
+    });
+    child.on("error", () => {
+      clearTimeout(timer);
+      resolve(false);
+    });
+    child.on("close", () => {
+      clearTimeout(timer);
+      resolve(out.includes("audio"));
+    });
+  });
+}
+
 function runCmd(cmd, args, timeoutMs = 180_000) {
   return new Promise((resolve, reject) => {
     const child = spawn(cmd, args, { stdio: ["ignore", "pipe", "pipe"] });
@@ -50,7 +77,7 @@ export async function prepararVideoWhatsapp(caminhoEntrada, { forcar = false } =
   if (!input || !fs.existsSync(input)) {
     return { ok: false, error: "Arquivo de vídeo não encontrado" };
   }
-  if (!/\.(mp4|mov|m4v|webm|mkv|avi)$/i.test(input)) {
+  if (!/\.(mp4|mov|m4v|webm|mkv|avi|3gp)$/i.test(input)) {
     return { ok: true, caminho: input, convertido: false };
   }
 
@@ -130,7 +157,11 @@ export async function prepararVideoWhatsapp(caminhoEntrada, { forcar = false } =
   ];
 
   try {
-    await runCmd(ffmpeg, argsComAudio);
+    const comAudio = await temFaixaAudio(input);
+    await runCmd(ffmpeg, comAudio ? argsComAudio : argsComSilencio);
+    if (!(await temFaixaAudio(saida))) {
+      await runCmd(ffmpeg, argsComSilencio);
+    }
   } catch (err) {
     try {
       await runCmd(ffmpeg, argsComSilencio);
@@ -193,6 +224,44 @@ export async function prepararVideoWhatsapp(caminhoEntrada, { forcar = false } =
   }
 
   return { ok: true, caminho: saida, convertido: true, bytes: finalSize };
+}
+
+/** Converte gravação do navegador (WebM) para OGG Opus, que o celular reproduz como voz. */
+export async function prepararAudioWhatsapp(caminhoEntrada) {
+  const input = String(caminhoEntrada || "");
+  if (!input || !fs.existsSync(input)) {
+    return { ok: false, error: "Arquivo de áudio não encontrado" };
+  }
+  if (!/\.webm$/i.test(input)) {
+    return { ok: true, caminho: input, convertido: false };
+  }
+  const dir = path.dirname(input);
+  const base = path.basename(input, path.extname(input));
+  const saida = path.join(dir, `${base}.wa.ogg`);
+  try {
+    await runCmd(whichFfmpeg(), [
+      "-y",
+      "-i",
+      input,
+      "-vn",
+      "-c:a",
+      "libopus",
+      "-b:a",
+      "32k",
+      "-ac",
+      "1",
+      "-ar",
+      "48000",
+      saida,
+    ]);
+  } catch {
+    return { ok: false, error: "Não foi possível preparar o áudio para o celular." };
+  }
+  const size = fs.statSync(saida).size;
+  if (!size || size > 16 * 1024 * 1024) {
+    return { ok: false, error: "O áudio passou de 16 MB.", caminho: saida };
+  }
+  return { ok: true, caminho: saida, convertido: true, bytes: size };
 }
 
 export function midiaUrlAPartirDoCaminho(caminhoAbsoluto) {

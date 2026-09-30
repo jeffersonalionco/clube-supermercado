@@ -1,4 +1,7 @@
-import { listarProdutosClubeDescontos } from "../produtosClubeDescontosService.js";
+import {
+  calcularDescontoClube,
+  listarProdutosClubeDescontos,
+} from "../produtosClubeDescontosService.js";
 
 function limiteOfertas() {
   return Math.min(
@@ -40,29 +43,25 @@ function tituloProduto(p) {
   return nome;
 }
 
-function linhaOferta(p) {
-  const por = formatarMoedaBr(p.preco2);
-  const preco1 = Number(p.preco1) || 0;
-  const preco2 = Number(p.preco2) || 0;
-  const economia =
-    Number(p.economia) || Math.max(0, arredondar(preco1 - preco2));
-  const pct =
-    Math.round(
-      Number(p.percentualDesconto) ||
-        (preco1 > 0 ? (economia / preco1) * 100 : 0)
-    ) || 0;
+/**
+ * Base do "de/por" no WhatsApp.
+ * Sem oferta: preço 1. Em oferta, o preço anterior quando ele ainda é maior que o clube.
+ */
+export function calcularDescontoWhatsapp(p) {
+  return calcularDescontoClube(p);
+}
 
-  if (preco1 > preco2 && economia > 0) {
-    const de = formatarMoedaBr(preco1);
-    const pctTxt = pct > 0 ? ` (−${pct}%)` : "";
+function linhaOferta(p) {
+  const { base, preco2, economia, percentual } = calcularDescontoWhatsapp(p);
+  const por = formatarMoedaBr(preco2);
+
+  if (base > preco2 && economia > 0) {
+    const de = formatarMoedaBr(base);
+    const pctTxt = percentual > 0 ? ` (−${percentual}%)` : "";
     const ecoTxt = ` · economize ${formatarMoedaBr(economia)}`;
     return `*${tituloProduto(p)}*\nDe ~${de}~ por *${por}*${pctTxt}${ecoTxt}`;
   }
   return `*${tituloProduto(p)}*\nPreço do Clube: *${por}*`;
-}
-
-function arredondar(v) {
-  return Math.round(Number(v) * 100) / 100;
 }
 
 function avisoPreviaOfertas(itensLength, totalClube) {
@@ -159,16 +158,10 @@ export async function obterOfertasParaWhatsapp(opts = {}) {
     const ao = a.oferta ? 1 : 0;
     const bo = b.oferta ? 1 : 0;
     if (bo !== ao) return bo - ao;
-    const ecoA = Number(a.economia) || Math.max(0, Number(a.preco1) - Number(a.preco2));
-    const ecoB = Number(b.economia) || Math.max(0, Number(b.preco1) - Number(b.preco2));
-    const pctA =
-      Number(a.percentualDesconto) ||
-      (Number(a.preco1) > 0 ? (ecoA / Number(a.preco1)) * 100 : 0);
-    const pctB =
-      Number(b.percentualDesconto) ||
-      (Number(b.preco1) > 0 ? (ecoB / Number(b.preco1)) * 100 : 0);
-    if (pctB !== pctA) return pctB - pctA;
-    return ecoB - ecoA;
+    const da = calcularDescontoWhatsapp(a);
+    const db = calcularDescontoWhatsapp(b);
+    if (db.percentual !== da.percentual) return db.percentual - da.percentual;
+    return db.economia - da.economia;
   });
 
   const destaque = itens.slice(0, limite);

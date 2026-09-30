@@ -632,7 +632,9 @@ function HomeDescontosClube({ itens }) {
                 {p.marca && <span className="home-descontos-item__marca">{p.marca}</span>}
               </div>
               <div className="home-descontos-item__precos">
-                <span className="home-descontos-item__preco1">{formatarMoeda(p.preco1)}</span>
+                <span className="home-descontos-item__preco1">
+                  {formatarMoeda(Number(p.precoDe) > 0 ? p.precoDe : p.preco1)}
+                </span>
                 <span className="home-descontos-item__preco2">{formatarMoeda(p.preco2)}</span>
                 {Number(p.economia) > 0 && (
                   <span className="home-descontos-item__eco">
