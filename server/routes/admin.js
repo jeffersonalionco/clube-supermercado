@@ -6,6 +6,8 @@ import {
   validarCredenciaisAdmin,
 } from "../services/adminAuth.js";
 import { requireAdmin } from "../middleware/requireAdmin.js";
+import { guardarEscopo } from "../middleware/guardarEscopo.js";
+import { MODULOS } from "../../shared/permissoesAdmin.js";
 import { adminLoginLimiter } from "../middleware/rateLimit.js";
 import {
   alterarSenhaUsuario,
@@ -37,6 +39,7 @@ import { listarAuditoriaCliente } from "../services/clienteAuditoriaService.js";
 import {
   alterarSenhaAdministrador,
   atualizarAdministrador,
+  carregarAcessoPorUsuario,
   criarAdministrador,
   listarAdministradores,
 } from "../services/painelAdminService.js";
@@ -71,6 +74,10 @@ import {
   obterConfigConteudo,
 } from "../services/conteudoConfigService.js";
 import { listarProdutosClubeDescontos } from "../services/produtosClubeDescontosService.js";
+import {
+  desmarcarOfertaEsgotada,
+  marcarOfertaEsgotada,
+} from "../services/clubeOfertaEsgotadaService.js";
 import { obterRelatorioClube } from "../services/relatorioClubeService.js";
 import { obterRadarCompras } from "../services/radarComprasService.js";
 import { obterSegmentacaoRfm } from "../services/rfmSegmentacaoService.js";
@@ -101,16 +108,46 @@ router.post("/auth/login", adminLoginLimiter, async (req, res) => {
     return res.status(401).json({ error: "Usuário ou senha incorretos" });
   }
 
-  const token = criarTokenAdmin(usuario);
+  const acesso = await carregarAcessoPorUsuario(usuario);
+  if (!acesso?.ativo) {
+    return res.status(401).json({ error: "Usuário ou senha incorretos" });
+  }
+
+  const token = criarTokenAdmin(acesso.usuario);
 
   return res.json({
     success: true,
     token,
-    admin: { usuario },
+    admin: {
+      id: acesso.id,
+      usuario: acesso.usuario,
+      nome: acesso.nome,
+      acessoTotal: acesso.acessoTotal,
+      ferramentas: acesso.ferramentas,
+    },
   });
 });
 
 router.use(requireAdmin);
+
+router.get("/eu", (req, res) => {
+  const acesso = req.adminAcesso;
+  return res.json({
+    admin: {
+      id: acesso.id,
+      usuario: acesso.usuario,
+      nome: acesso.nome,
+      acessoTotal: acesso.acessoTotal,
+      ferramentas: acesso.ferramentas,
+    },
+  });
+});
+
+router.get("/permissoes/catalogo", (_req, res) => {
+  return res.json({ modulos: MODULOS });
+});
+
+router.use(guardarEscopo("admin"));
 
 router.get("/config/programa", async (_req, res) => {
   try {
@@ -320,6 +357,31 @@ router.get("/clube-descontos/produtos", async (req, res) => {
   } catch (error) {
     console.error("[admin/clube-descontos/produtos]", error.message);
     return res.status(500).json({ error: mensagemParaCliente(error.message) });
+  }
+});
+
+router.post("/clube-descontos/produtos/:codigo/esgotado", async (req, res) => {
+  try {
+    const resultado = await marcarOfertaEsgotada(req.params.codigo, {
+      descricao: req.body?.descricao,
+      marcadoPor: req.admin?.usuario,
+    });
+    return res.json(resultado);
+  } catch (error) {
+    console.error("[admin/clube-descontos/esgotado]", error.message);
+    const status = error.status || 500;
+    return res.status(status).json({ error: mensagemParaCliente(error.message) });
+  }
+});
+
+router.delete("/clube-descontos/produtos/:codigo/esgotado", async (req, res) => {
+  try {
+    const resultado = await desmarcarOfertaEsgotada(req.params.codigo);
+    return res.json(resultado);
+  } catch (error) {
+    console.error("[admin/clube-descontos/esgotado]", error.message);
+    const status = error.status || 500;
+    return res.status(status).json({ error: mensagemParaCliente(error.message) });
   }
 });
 
@@ -703,7 +765,7 @@ router.get("/administradores", async (_req, res) => {
 });
 
 router.post("/administradores", async (req, res) => {
-  const { usuario, nome, senha, confirmacaoSenha } = req.body || {};
+  const { usuario, nome, senha, confirmacaoSenha, acessoTotal, ferramentas } = req.body || {};
 
   if (!usuario || !senha) {
     return res.status(400).json({ error: "Informe usuário e senha" });
@@ -714,7 +776,13 @@ router.post("/administradores", async (req, res) => {
   }
 
   try {
-    const admin = await criarAdministrador({ usuario, nome, senha });
+    const admin = await criarAdministrador({
+      usuario,
+      nome,
+      senha,
+      acessoTotal: acessoTotal === true,
+      ferramentas,
+    });
     return res.status(201).json({
       message: `Administrador "${admin.usuario}" criado com sucesso`,
       administrador: admin,
@@ -770,6 +838,8 @@ router.patch("/administradores/:id", async (req, res) => {
       {
         nome: req.body?.nome,
         ativo: req.body?.ativo,
+        acessoTotal: req.body?.acessoTotal,
+        ferramentas: req.body?.ferramentas,
       },
       { usuarioLogado: req.admin.usuario }
     );
@@ -782,7 +852,7 @@ router.patch("/administradores/:id", async (req, res) => {
     });
   } catch (error) {
     console.error("[admin/administradores/:id PATCH]", error.message);
-    const status = /não encontrado|não pode|último/i.test(error.message) ? 400 : 500;
+    const status = /não encontrado|não pode|último|mantenha|ferramenta/i.test(error.message) ? 400 : 500;
     return res.status(status).json({ error: mensagemParaCliente(error.message) });
   }
 });

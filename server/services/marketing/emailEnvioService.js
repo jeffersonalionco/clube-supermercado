@@ -1,5 +1,8 @@
 import { getPool } from "../../db.js";
-import { enviarEmail, smtpDisponivel } from "../mailService.js";
+import {
+  enviarEmailMarketing,
+  smtpMarketingDisponivel,
+} from "../mailService.js";
 import { emailValido } from "../../utils/validacaoCadastro.js";
 import {
   buscarCampanha,
@@ -83,7 +86,7 @@ async function processarFilaCampanha(campanhaId) {
           });
 
           await comTimeout(
-            enviarEmail({
+            enviarEmailMarketing({
               para: envio.email,
               assunto: assuntoReal,
               texto: montado.texto,
@@ -133,7 +136,7 @@ async function processarFilaCampanha(campanhaId) {
 }
 
 export async function enviarTesteCampanha(campanhaId, emailTeste) {
-  if (!smtpDisponivel()) {
+  if (!smtpMarketingDisponivel()) {
     return { ok: false, error: "SMTP não configurado no servidor" };
   }
 
@@ -163,7 +166,7 @@ export async function enviarTesteCampanha(campanhaId, emailTeste) {
     modoTeste: true,
   });
 
-  await enviarEmail({
+  await enviarEmailMarketing({
     para: email,
     assunto: assuntoTeste,
     texto: montado.texto,
@@ -184,7 +187,7 @@ export async function enviarTesteCampanha(campanhaId, emailTeste) {
 }
 
 export async function retomarEnvioCampanha(campanhaId) {
-  if (!smtpDisponivel()) {
+  if (!smtpMarketingDisponivel()) {
     return { ok: false, error: "SMTP não configurado no servidor" };
   }
 
@@ -241,7 +244,7 @@ export async function retomarEnvioCampanha(campanhaId) {
 }
 
 export async function retomarEnviosPendentesNoBoot() {
-  if (!smtpDisponivel()) return;
+  if (!smtpMarketingDisponivel()) return;
 
   const { rows } = await getPool().query(
     `SELECT id FROM marketing_campanha
@@ -260,7 +263,7 @@ export async function retomarEnviosPendentesNoBoot() {
 }
 
 export async function iniciarEnvioCampanha(campanhaId) {
-  if (!smtpDisponivel()) {
+  if (!smtpMarketingDisponivel()) {
     return { ok: false, error: "SMTP não configurado no servidor" };
   }
 

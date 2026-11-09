@@ -5,6 +5,7 @@ import fs from "fs";
 import { fileURLToPath } from "url";
 import { randomUUID } from "crypto";
 import { requireAdmin } from "../middleware/requireAdmin.js";
+import { guardarEscopo } from "../middleware/guardarEscopo.js";
 import { mensagemParaCliente } from "../utils/mensagemCliente.js";
 import {
   atualizarNovidade,
@@ -47,6 +48,7 @@ const upload = multer({
 });
 
 router.use(requireAdmin);
+router.use(guardarEscopo("novidades"));
 
 router.get("/", async (_req, res) => {
   try {

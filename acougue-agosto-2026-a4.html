@@ -1,0 +1,249 @@
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>Açougue agosto 2026</title><style>
+@page { size: A4 portrait; margin: 10mm; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: "Liberation Sans", Arial, sans-serif; color: #1a1a1a; }
+h1 { font-size: 15pt; margin: 0 0 4px; }
+h2 { font-size: 12pt; margin: 12px 0 4px; }
+p { font-size: 9.5pt; margin: 0 0 6px; }
+.sub { color: #333; }
+.totais { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; margin: 8px 0; }
+.totais div { border: 1px solid #ccc; padding: 6px 8px; }
+.totais span { display: block; font-size: 8pt; color: #444; }
+.totais b { font-size: 12pt; }
+table { width: 100%; border-collapse: collapse; margin: 0 0 8px; }
+th, td { border-bottom: 1px solid #ddd; padding: 2px 4px; font-size: 8pt; text-align: left; vertical-align: top; }
+th { border-bottom: 1.5px solid #222; }
+tr.total td { font-weight: 700; border-top: 1.5px solid #222; border-bottom: none; }
+tr.alerta td { background: #f6e8e4; }
+td.num, th:nth-child(n+3) { text-align: right; white-space: nowrap; }
+td.cod { white-space: nowrap; }
+.folha { break-after: page; page-break-after: always; }
+.nota { font-size: 8.5pt; color: #333; }
+.barra { display: flex; height: 22px; width: 100%; margin: 4px 0; }
+.barra span { display: block; height: 22px; }
+.leg { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 8pt; margin: 0 0 8px; }
+.leg i { display: inline-block; width: 9px; height: 9px; margin-right: 4px; vertical-align: -1px; }
+.acougue { background: #7a2e2e; }
+.feira { background: #2f6b4f; }
+.laticinio { background: #3d5a80; }
+.frios { background: #6b5a3e; }
+.congelados { background: #8aa0b4; }
+.peixe { background: #3d6b8a; }
+.outros { background: #b5b5b5; }
+.custo { background: #6b5a3e; }
+.perda { background: #a33b3b; }
+.lucro { background: #2f6b4f; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 8px 0 4px; }
+.col { text-align: center; }
+.pilha { height: 168px; display: flex; flex-direction: column; width: 78px; margin: 0 auto 6px; }
+.pilha span { display: block; width: 100%; }
+.col p { margin: 2px 0; font-size: 8.5pt; }
+@media screen { body { background: #eee; } .folha { width: 190mm; margin: 8px auto; background: #fff; padding: 10mm; } }
+@media print { .folha { width: auto; margin: 0; padding: 0; } .barra span, .leg i, .pilha span, tr.alerta td { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+</style></head><body>
+<section class="folha">
+<h1>Açougue dentro do perecível (004)</h1>
+<p class="sub">Agosto de 2026, unidade 001. O açougue é a classe AÇOUGUE do cadastro. Hortifruti, laticínio, frios, congelados e peixaria continuam no departamento e ficam de fora desta conta.</p>
+<div class="totais">
+  <div><span>Compra que entrou</span><b>R$ 164.482,53</b><span>60,5% da compra do 004</span></div>
+  <div><span>Venda no caixa</span><b>R$ 237.018,01</b><span>59,9% da venda do 004</span></div>
+  <div><span>Venda por NF-e</span><b>R$ 1.408,72</b><span>15,6% da NF-e do 004</span></div>
+  <div><span>Perdas</span><b>R$ 79.813,01</b><span>91,8% da perda do 004</span></div>
+</div>
+<h2>Fatia da venda no caixa do departamento</h2>
+<p class="sub">A barra inteira é a venda do perecível, R$ 395.386,35, documento 7300.</p>
+<div class="barra" role="img" aria-label="Fatia da venda do departamento 004"><span class="acougue" style="width:59.9459%" title="Açougue"></span><span class="feira" style="width:19.3586%" title="Hortifruti"></span><span class="laticinio" style="width:8.2999%" title="Laticínio"></span><span class="frios" style="width:5.0872%" title="Frios"></span><span class="outros" style="width:3.4492%" title="Outros"></span><span class="congelados" style="width:3.3742%" title="Congelados"></span><span class="peixe" style="width:0.4849%" title="Peixaria"></span></div>
+<p class="leg"><span><i class="acougue"></i>Açougue R$ 237.018,01 · 59,9%</span><span><i class="feira"></i>Hortifruti R$ 76.541,45 · 19,4%</span><span><i class="laticinio"></i>Laticínio R$ 32.816,56 · 8,3%</span><span><i class="frios"></i>Frios R$ 20.114,27 · 5,1%</span><span><i class="outros"></i>Outros R$ 13.637,81 · 3,4%</span><span><i class="congelados"></i>Congelados R$ 13.341,20 · 3,4%</span><span><i class="peixe"></i>Peixaria R$ 1.917,05 · 0,5%</span></p>
+<h2>Fatia da compra que entrou no departamento</h2>
+<p class="sub">A barra inteira é a entrada de compra do perecível, R$ 272.086,20, documentos 7100, 7124 e 7381.</p>
+<div class="barra" role="img" aria-label="Fatia da compra do departamento 004"><span class="acougue" style="width:60.4524%" title="Açougue"></span><span class="feira" style="width:19.2682%" title="Hortifruti"></span><span class="laticinio" style="width:9.2360%" title="Laticínio"></span><span class="frios" style="width:4.1257%" title="Frios"></span><span class="congelados" style="width:3.3170%" title="Congelados"></span><span class="outros" style="width:2.9594%" title="Outros"></span><span class="peixe" style="width:0.6414%" title="Peixaria"></span></div>
+<p class="leg"><span><i class="acougue"></i>Açougue R$ 164.482,53 · 60,5%</span><span><i class="feira"></i>Hortifruti R$ 52.426,23 · 19,3%</span><span><i class="laticinio"></i>Laticínio R$ 25.129,78 · 9,2%</span><span><i class="frios"></i>Frios R$ 11.225,34 · 4,1%</span><span><i class="congelados"></i>Congelados R$ 9.025,01 · 3,3%</span><span><i class="outros"></i>Outros R$ 8.052,11 · 3,0%</span><span><i class="peixe"></i>Peixaria R$ 1.745,20 · 0,6%</span></p>
+<p>O açougue vendeu R$ 237.018,01 no caixa, com custo gravado de R$ 139.543,31. A compra que entrou no estoque foi R$ 164.482,53 (líquido da devolução R$ 164.261,19). A perda do açougue, R$ 79.813,01, é quase toda a perda do departamento.</p>
+</section>
+<section class="folha">
+<h1>Venda do açougue por grupo</h1>
+<p class="sub">Documento 7300. Grupos do cadastro dentro da classe açougue.</p>
+<table><thead><tr><th>Grupo</th><th>Produtos</th><th>Qtde</th><th>Venda (R$)</th><th>% do açougue</th></tr></thead><tbody>
+<tr><td>Cortes Dianteiros</td><td class="num">8</td><td class="num">2.120,461</td><td class="num">74.883,24</td><td class="num">31,6%</td></tr>
+<tr><td>Cortes Traseiro</td><td class="num">17</td><td class="num">1.124,984</td><td class="num">61.543,55</td><td class="num">26,0%</td></tr>
+<tr><td>Cortes Costela</td><td class="num">5</td><td class="num">913,896</td><td class="num">30.705,32</td><td class="num">13,0%</td></tr>
+<tr><td>Frango Congelado Cortes</td><td class="num">31</td><td class="num">1.223,753</td><td class="num">19.667,09</td><td class="num">8,3%</td></tr>
+<tr><td>Carnes Suina - Cortes</td><td class="num">16</td><td class="num">845,617</td><td class="num">16.932,81</td><td class="num">7,1%</td></tr>
+<tr><td>Salsichas</td><td class="num">20</td><td class="num">355,03</td><td class="num">9.309,53</td><td class="num">3,9%</td></tr>
+<tr><td>Linguicinhas Toscana</td><td class="num">4</td><td class="num">311,051</td><td class="num">6.394,77</td><td class="num">2,7%</td></tr>
+<tr><td>Miudos Diversos</td><td class="num">10</td><td class="num">338,672</td><td class="num">5.928,94</td><td class="num">2,5%</td></tr>
+<tr><td>Linguicinha Defumada</td><td class="num">2</td><td class="num">60,412</td><td class="num">3.475,05</td><td class="num">1,5%</td></tr>
+<tr><td>Inteiros/Controles</td><td class="num">1</td><td class="num">33,81</td><td class="num">1.660,01</td><td class="num">0,7%</td></tr>
+<tr><td>Calabresa/Paio</td><td class="num">1</td><td class="num">38,722</td><td class="num">1.215,00</td><td class="num">0,5%</td></tr>
+<tr><td>Osso/Cebo</td><td class="num">1</td><td class="num">101,136</td><td class="num">1.097,58</td><td class="num">0,5%</td></tr>
+<tr><td>Miudos/Partes(pe, Orelha)</td><td class="num">4</td><td class="num">91,849</td><td class="num">1.029,75</td><td class="num">0,4%</td></tr>
+<tr><td>Frango Congelado Inteiro</td><td class="num">2</td><td class="num">39,495</td><td class="num">920,70</td><td class="num">0,4%</td></tr>
+<tr><td>Peixes Inteiro</td><td class="num">1</td><td class="num">8,735</td><td class="num">434,54</td><td class="num">0,2%</td></tr>
+<tr><td>Carne Seca / Charque</td><td class="num">1</td><td class="num">9,243</td><td class="num">384,52</td><td class="num">0,2%</td></tr>
+<tr><td>Acougue</td><td class="num">1</td><td class="num">8,384</td><td class="num">356,08</td><td class="num">0,2%</td></tr>
+<tr><td>Apresuntados / Similares</td><td class="num">1</td><td class="num">16,342</td><td class="num">343,17</td><td class="num">0,1%</td></tr>
+<tr><td>Miudos De Frango Congelado</td><td class="num">3</td><td class="num">39,272</td><td class="num">338,02</td><td class="num">0,1%</td></tr>
+<tr><td>Presuntos</td><td class="num">1</td><td class="num">2,89</td><td class="num">148,53</td><td class="num">0,1%</td></tr>
+<tr><td>Defumados</td><td class="num">1</td><td class="num">2,104</td><td class="num">122,91</td><td class="num">0,1%</td></tr>
+<tr><td>Salames</td><td class="num">1</td><td class="num">1,747</td><td class="num">91,21</td><td class="num">0,0%</td></tr>
+<tr><td>Salgado Feijoada</td><td class="num">1</td><td class="num">1</td><td class="num">35,69</td><td class="num">0,0%</td></tr>
+<tr class="total"><td>Total do açougue</td><td class="num">133</td><td class="num">7.688,605</td><td class="num">237.018,01</td><td class="num">100,0%</td></tr>
+</tbody></table>
+</section>
+<section class="folha">
+<h1>Compra do açougue que entrou</h1>
+<p class="sub">Documento 7100, status normal. Os 20 maiores. O total de baixo é dos 68 itens. Custo de compra destas entradas, com a de produtor: R$ 163.411,14.</p>
+<table><thead><tr><th>Código</th><th>Item</th><th>Qtde</th><th>Valor doc. (R$)</th><th>Custo compra</th></tr></thead><tbody>
+<tr><td class="cod">605654</td><td>Carne Bovina Decomposição - Dianteiro</td><td class="num">2.172,03</td><td class="num">48.804,42</td><td class="num">48.804,42</td></tr>
+<tr><td class="cod">151394</td><td>Carne Bovina Decomposição - Traseiro</td><td class="num">1.502,98</td><td class="num">45.197,90</td><td class="num">45.056,90</td></tr>
+<tr><td class="cod">477150</td><td>Carne Bovina Decomposição - Costela</td><td class="num">1.076,9</td><td class="num">25.029,32</td><td class="num">25.029,32</td></tr>
+<tr><td class="cod">257869</td><td>Carne Bovina Moida 2 Kg</td><td class="num">319,325</td><td class="num">5.836,43</td><td class="num">5.836,43</td></tr>
+<tr><td class="cod">507261</td><td>Carne Bovina Pta Peito S/o Kg</td><td class="num">167,31</td><td class="num">4.768,34</td><td class="num">4.768,34</td></tr>
+<tr><td class="cod">335363</td><td>Coxa S/ Coxa Frango Kg Tdos</td><td class="num">576</td><td class="num">3.623,40</td><td class="num">3.623,40</td></tr>
+<tr><td class="cod">879193</td><td>Carne Suina Meia Carcaça C/Pele Resfr C/Osso</td><td class="num">320,738</td><td class="num">2.734,16</td><td class="num">2.734,16</td></tr>
+<tr><td class="cod">136280</td><td>Linguica Frimesa Toscana Kg (070916)</td><td class="num">100</td><td class="num">1.400,00</td><td class="num">1.270,50</td></tr>
+<tr><td class="cod">539724</td><td>Meio Das Asas Kg Todas Interfolhado</td><td class="num">54</td><td class="num">1.080,00</td><td class="num">1.080,00</td></tr>
+<tr><td class="cod">1133977</td><td>File Coxa e Sobrecoxa Kg</td><td class="num">100</td><td class="num">1.000,00</td><td class="num">1.000,00</td></tr>
+<tr><td class="cod">270768</td><td>Carne Suina Bisteca Kg S/ Pele (carré)</td><td class="num">101,2</td><td class="num">910,80</td><td class="num">910,80</td></tr>
+<tr><td class="cod">667501</td><td>Coxinha Da Asa C. Vale Iqf 1kg</td><td class="num">90</td><td class="num">876,00</td><td class="num">876,00</td></tr>
+<tr><td class="cod">491624</td><td>Linguica Friceu Tosc Trad Kg</td><td class="num">45,1</td><td class="num">874,94</td><td class="num">794,00</td></tr>
+<tr><td class="cod">655996</td><td>Carne Suina Costela Com Pele Kg</td><td class="num">43,39</td><td class="num">846,10</td><td class="num">846,10</td></tr>
+<tr><td class="cod">461105</td><td>Coxinha Das Asas Env Kg</td><td class="num">96</td><td class="num">814,80</td><td class="num">814,80</td></tr>
+<tr><td class="cod">201170</td><td>Figado Bovino Kg</td><td class="num">62,9</td><td class="num">805,92</td><td class="num">805,92</td></tr>
+<tr><td class="cod">136271</td><td>Linguica Frimesa Calabr Reta Coz (076 e 125)</td><td class="num">36</td><td class="num">777,24</td><td class="num">705,34</td></tr>
+<tr><td class="cod">450766</td><td>Peito Frango Congelado Kg [todos]</td><td class="num">90</td><td class="num">747,00</td><td class="num">747,00</td></tr>
+<tr><td class="cod">913774</td><td>Frango a Passarinho C-Vale Iqf Kg</td><td class="num">90</td><td class="num">745,35</td><td class="num">745,35</td></tr>
+<tr><td class="cod">270555</td><td>Carne Suina Costela Sem Pele Kg</td><td class="num">42,62</td><td class="num">703,22</td><td class="num">703,22</td></tr>
+<tr class="total"><td></td><td>Total destes 20</td><td class="num">7.086,493</td><td class="num">147.575,34</td><td class="num">147.152,00</td></tr>
+<tr class="total"><td></td><td>Total · 68 itens</td><td class="num">8.373,423</td><td class="num">161.155,58</td><td class="num">160.084,19</td></tr>
+</tbody></table>
+<h2>Entrada de produtor do açougue (7381)</h2>
+<table><thead><tr><th>Código</th><th>Item</th><th>Qtde</th><th>Valor doc. (R$)</th><th>Custo compra</th></tr></thead><tbody>
+<tr><td class="cod">1068571</td><td>Linguica/Salame Kg Ricardo</td><td class="num">52,9</td><td class="num">1.904,40</td><td class="num">1.904,40</td></tr>
+<tr><td class="cod">658090</td><td>Linguica Frigorosa Pura Defumada Kg N.S.R.</td><td class="num">20,17</td><td class="num">680,72</td><td class="num">680,72</td></tr>
+<tr><td class="cod">674141</td><td>Salame Tradição Emb Kg</td><td class="num">7,688</td><td class="num">215,27</td><td class="num">215,27</td></tr>
+<tr><td class="cod">331392</td><td>Toucinho Kg Ricardo</td><td class="num">14,4</td><td class="num">201,60</td><td class="num">201,60</td></tr>
+<tr><td class="cod">242527</td><td>Pés Suino Kg Todos</td><td class="num">20,4</td><td class="num">122,40</td><td class="num">122,40</td></tr>
+<tr><td class="cod">1017225</td><td>Torresmo Kg Ricardo</td><td class="num">4,8</td><td class="num">120,00</td><td class="num">120,00</td></tr>
+<tr><td class="cod">672653</td><td>Torresmo Pururuca N.S.R. Kg</td><td class="num">2,58</td><td class="num">82,56</td><td class="num">82,56</td></tr>
+<tr class="total"><td></td><td>Total · 7 itens</td><td class="num">122,938</td><td class="num">3.326,95</td><td class="num">3.326,95</td></tr>
+</tbody></table>
+<h2>Devolução de compra (7410)</h2>
+<table><thead><tr><th>Código</th><th>Item</th><th>Qtde</th><th>Valor doc. (R$)</th><th>Custo</th></tr></thead><tbody>
+<tr><td class="cod">477150</td><td>Carne Bovina Decomposição - Costela</td><td class="num">10,2</td><td class="num">221,34</td><td class="num">228,59</td></tr>
+<tr class="total"><td></td><td>Total</td><td class="num">10,2</td><td class="num">221,34</td><td class="num">228,59</td></tr>
+</tbody></table>
+</section>
+<section class="folha">
+<h1>Venda no caixa do açougue</h1>
+<p class="sub">Documento 7300. Os 20 maiores. O total é dos 133 produtos da classe açougue.</p>
+<table><thead><tr><th>Código</th><th>Produto</th><th>Qtde</th><th>Venda (R$)</th><th>Custo da venda</th></tr></thead><tbody>
+<tr><td class="cod">257869</td><td>Carne Bovina Moida 2 Kg</td><td class="num">613,665</td><td class="num">19.983,68</td><td class="num">11.547,50</td></tr>
+<tr><td class="cod">513539</td><td>Carne Bovina Paleta Sete Kg</td><td class="num">386,045</td><td class="num">16.383,98</td><td class="num">9.458,11</td></tr>
+<tr><td class="cod">187224</td><td>Carne Bovina Bisteca Kg 2ª</td><td class="num">248,438</td><td class="num">11.680,43</td><td class="num">5.589,86</td></tr>
+<tr><td class="cod">218294</td><td>Carne Bovina File Agulha Kg</td><td class="num">316,6</td><td class="num">10.773,75</td><td class="num">7.756,70</td></tr>
+<tr><td class="cod">555240</td><td>Carne Bovina Costela Precoce Kg</td><td class="num">374,613</td><td class="num">10.573,36</td><td class="num">5.694,11</td></tr>
+<tr><td class="cod">218359</td><td>Carne Bovina Coxao Mole Kg</td><td class="num">178,699</td><td class="num">9.646,93</td><td class="num">4.199,39</td></tr>
+<tr><td class="cod">507261</td><td>Carne Bovina Pta Peito S/o Kg</td><td class="num">243,047</td><td class="num">9.483,80</td><td class="num">6.902,17</td></tr>
+<tr><td class="cod">187216</td><td>Carne Bovina Costela Ripa Kg</td><td class="num">272,304</td><td class="num">9.426,87</td><td class="num">7.488,36</td></tr>
+<tr><td class="cod">257850</td><td>Carne Bovina File Duplo Kg [ Bisteca 1ª]</td><td class="num">144,013</td><td class="num">8.528,07</td><td class="num">5.183,03</td></tr>
+<tr><td class="cod">187178</td><td>Carne Bovina Alcatra C/O Kg</td><td class="num">139,637</td><td class="num">8.249,71</td><td class="num">5.934,57</td></tr>
+<tr><td class="cod">187194</td><td>Carne Bovina Paleta Simples Kg</td><td class="num">198,763</td><td class="num">7.090,61</td><td class="num">4.869,69</td></tr>
+<tr><td class="cod">218332</td><td>Carne Bovina Patinho Kg</td><td class="num">122,355</td><td class="num">6.618,37</td><td class="num">3.903,13</td></tr>
+<tr><td class="cod">218324</td><td>Carne Bovina Posta Vermelha Kg [coxão Duro]</td><td class="num">135,614</td><td class="num">6.459,89</td><td class="num">4.663,79</td></tr>
+<tr><td class="cod">187186</td><td>Carne Bovina Ponta Peito Kg</td><td class="num">217,226</td><td class="num">5.596,60</td><td class="num">5.322,04</td></tr>
+<tr><td class="cod">335363</td><td>Coxa S/ Coxa Frango Kg Tdos</td><td class="num">445,807</td><td class="num">4.960,86</td><td class="num">2.815,99</td></tr>
+<tr><td class="cod">258318</td><td>Carne Bovina Alcatra S/O Kg (coracao 35)</td><td class="num">66,534</td><td class="num">4.899,42</td><td class="num">2.574,86</td></tr>
+<tr><td class="cod">1135481</td><td>Carne Bovina Costela Kg Superama</td><td class="num">98,879</td><td class="num">4.658,88</td><td class="num">0,00</td></tr>
+<tr><td class="cod">324035</td><td>Carne Bovina Costela Minga Kg</td><td class="num">126,874</td><td class="num">4.017,89</td><td class="num">2.144,17</td></tr>
+<tr><td class="cod">136280</td><td>Linguica Frimesa Toscana Kg (070916)</td><td class="num">150,595</td><td class="num">3.567,40</td><td class="num">1.943,62</td></tr>
+<tr><td class="cod">655996</td><td>Carne Suina Costela Com Pele Kg</td><td class="num">136,889</td><td class="num">3.224,73</td><td class="num">1.881,06</td></tr>
+<tr class="total"><td></td><td>Total destes 20</td><td class="num">4.616,597</td><td class="num">165.825,23</td><td class="num">99.872,15</td></tr>
+<tr class="total"><td></td><td>Total · 133 produtos</td><td class="num">7.688,605</td><td class="num">237.018,01</td><td class="num">139.543,31</td></tr>
+</tbody></table>
+<p class="nota">A costela Superama 1135481 vendeu R$ 4.658,88 no caixa com custo gravado zero. Esse valor entra na venda e não entra no custo.</p>
+</section>
+<section class="folha">
+<h1>NF-e e perdas do açougue</h1>
+<p class="sub">NF-e de saída, CFOP 5102, com protocolo. 3 notas. A nota 24272 tem protocolo 141260310131538 e o campo de situação da SEFAZ está em branco; a baixa de estoque dela está no documento 7322.</p>
+<table><thead><tr><th>Nota</th><th>Data</th><th></th><th>Itens</th><th>Valor (R$)</th></tr></thead><tbody>
+<tr><td class="cod">24272</td><td>06/08</td><td></td><td class="num">3</td><td class="num">363,02</td></tr>
+<tr><td class="cod">24317</td><td>18/08</td><td></td><td class="num">1</td><td class="num">836,90</td></tr>
+<tr><td class="cod">24319</td><td>19/08</td><td></td><td class="num">1</td><td class="num">208,80</td></tr>
+<tr class="total"><td></td><td>Total</td><td></td><td class="num">5</td><td class="num">1.408,72</td></tr>
+</tbody></table>
+<table><thead><tr><th>Código</th><th>Produto</th><th>Qtde</th><th>Valor (R$)</th><th></th></tr></thead><tbody>
+<tr><td class="cod">187216</td><td>Carne Bovina Costela Ripa Kg</td><td class="num">23,925</td><td class="num">836,90</td><td></td></tr>
+<tr><td class="cod">335363</td><td>Coxa S/ Coxa Frango Kg Tdos</td><td class="num">25,23</td><td class="num">273,51</td><td></td></tr>
+<tr><td class="cod">450766</td><td>Peito Frango Congelado Kg [todos]</td><td class="num">14,25</td><td class="num">206,62</td><td></td></tr>
+<tr><td class="cod">268534</td><td>Carne Suina Paleta Kg Ofe</td><td class="num">7,08</td><td class="num">91,69</td><td></td></tr>
+<tr class="total"><td></td><td>Total · 4 produtos</td><td class="num">70,485</td><td class="num">1.408,72</td><td></td></tr>
+</tbody></table>
+<h2>Perdas (7618)</h2>
+<table><thead><tr><th>Código</th><th>Produto</th><th>Qtde</th><th>Custo (R$)</th><th>A preço de venda</th></tr></thead><tbody>
+<tr class="alerta"><td class="cod">879193</td><td>Carne Suina Meia Carcaça C/Pele Resfr C/Osso</td><td class="num">4.748,354</td><td class="num">31.915,75</td><td class="num">66.429,47</td></tr>
+<tr><td class="cod">151394</td><td>Carne Bovina Decomposição - Traseiro</td><td class="num">552,064</td><td class="num">16.215,15</td><td class="num">25.947,01</td></tr>
+<tr><td class="cod">605654</td><td>Carne Bovina Decomposição - Dianteiro</td><td class="num">606,739</td><td class="num">13.992,89</td><td class="num">24.384,84</td></tr>
+<tr><td class="cod">477150</td><td>Carne Bovina Decomposição - Costela</td><td class="num">249,454</td><td class="num">5.741,30</td><td class="num">7.977,54</td></tr>
+<tr><td class="cod">335363</td><td>Coxa S/ Coxa Frango Kg Tdos</td><td class="num">772</td><td class="num">4.965,89</td><td class="num">8.839,40</td></tr>
+<tr><td class="cod">491624</td><td>Linguica Friceu Tosc Trad Kg</td><td class="num">124,6</td><td class="num">2.193,65</td><td class="num">3.612,15</td></tr>
+<tr><td class="cod">284521</td><td>Frango Inteiro Cong Kg Tds [coopavel/Copagrill]</td><td class="num">207</td><td class="num">1.801,69</td><td class="num">3.001,50</td></tr>
+<tr><td class="cod">491586</td><td>Linguica Friceu Defumada Kg</td><td class="num">24,43</td><td class="num">747,13</td><td class="num">1.250,57</td></tr>
+<tr><td class="cod">461105</td><td>Coxinha Das Asas Env Kg</td><td class="num">73,924</td><td class="num">621,54</td><td class="num">1.179,09</td></tr>
+<tr><td class="cod">543853</td><td>Torresmo Friceu C/Pele Kg</td><td class="num">18,43</td><td class="num">287,00</td><td class="num">637,49</td></tr>
+<tr><td class="cod">492876</td><td>Rabo Suino Congelado Kg</td><td class="num">20,789</td><td class="num">352,95</td><td class="num">602,67</td></tr>
+<tr><td class="cod">490237</td><td>Orelha Suina Todas Kg</td><td class="num">17,579</td><td class="num">239,18</td><td class="num">344,37</td></tr>
+<tr><td class="cod">1133977</td><td>File Coxa e Sobrecoxa Kg</td><td class="num">14</td><td class="num">173,28</td><td class="num">264,46</td></tr>
+<tr><td class="cod">658090</td><td>Linguica Frigorosa Pura Defumada Kg N.S.R.</td><td class="num">2,7</td><td class="num">90,16</td><td class="num">150,09</td></tr>
+<tr><td class="cod">331392</td><td>Toucinho Kg Ricardo</td><td class="num">6,164</td><td class="num">89,24</td><td class="num">147,94</td></tr>
+<tr><td class="cod">201162</td><td>Bucho Bov Cong Kg</td><td class="num">6,052</td><td class="num">71,76</td><td class="num">174,90</td></tr>
+<tr><td class="cod">266507</td><td>Cabeça Suina Kg</td><td class="num">14,179</td><td class="num">76,80</td><td class="num">182,91</td></tr>
+<tr><td class="cod">201081</td><td>Coracao Bovino Kg</td><td class="num">4,283</td><td class="num">53,79</td><td class="num">74,91</td></tr>
+<tr><td class="cod">1048872</td><td>Linguica Samolle c Suina Def Kg Sem Toucinho</td><td class="num">0,8</td><td class="num">38,84</td><td class="num">68,48</td></tr>
+<tr><td class="cod">201170</td><td>Figado Bovino Kg</td><td class="num">2,659</td><td class="num">34,38</td><td class="num">55,28</td></tr>
+<tr><td class="cod">136603</td><td>Espinhaço Cong Suino Kg</td><td class="num">7,237</td><td class="num">31,68</td><td class="num">46,68</td></tr>
+<tr><td class="cod">209333</td><td>Linguica Friceu Tosc Picante K</td><td class="num">1,292</td><td class="num">27,32</td><td class="num">44,98</td></tr>
+<tr><td class="cod">674133</td><td>Linguica Samolle Carne Suina Def Kg</td><td class="num">0,584</td><td class="num">23,58</td><td class="num">40,82</td></tr>
+<tr><td class="cod">197319</td><td>Rabo Bovino Congelado Kg</td><td class="num">0,906</td><td class="num">23,36</td><td class="num">33,69</td></tr>
+<tr><td class="cod">268011</td><td>Rim Bovino Kg</td><td class="num">1,88</td><td class="num">4,70</td><td class="num">12,22</td></tr>
+<tr class="total"><td></td><td>Total · 25 produtos</td><td class="num">7.478,099</td><td class="num">79.813,01</td><td class="num">145.503,46</td></tr>
+</tbody></table>
+<p class="nota">A linha em destaque, meia carcaça suína 879193, soma dois lançamentos iguais no dia 05/08, cada um com 2.293,816 kg e custo R$ 15.333,01, mais 160,722 kg no dia 18/08 (R$ 1.249,73). Os dois do dia 05 saíram do estoque 1. A nota 7470 repete essa quantidade e não entra de novo. Desta perda de R$ 79.813,01, o preço de venda gravado nas linhas soma R$ 145.503,46.</p>
+</section>
+<section class="folha">
+<h1>Estimativa de lucro do açougue</h1>
+<p class="sub">Agosto de 2026. Venda é o caixa (R$ 237.018,01) mais a NF-e (R$ 1.408,72), no total R$ 238.426,73. Perda é o custo do documento 7618, R$ 79.813,01.</p>
+<div class="cols">
+  <div class="col">
+    <div class="pilha" role="img" aria-label="Pelo custo de compra do mês: custo 163.182,55 e perdas 79.813,01. Resultado negativo 4.568,83">
+      <span class="perda" style="flex:79813.01"></span>
+      <span class="custo" style="flex:163182.55"></span>
+    </div>
+    <p>Pelo custo de compra do mês</p>
+    <p><b>Resultado −R$ 4.568,83</b></p>
+  </div>
+  <div class="col">
+    <div class="pilha" role="img" aria-label="Pelo custo do que foi vendido: sobra 18.065,57, perdas 79.813,01, custo 140.548,15">
+      <span class="lucro" style="flex:18065.57"></span>
+      <span class="perda" style="flex:79813.01"></span>
+      <span class="custo" style="flex:140548.15"></span>
+    </div>
+    <p>Pelo custo do que foi vendido</p>
+    <p><b>Sobra R$ 18.065,57</b></p>
+  </div>
+</div>
+<p class="leg"><span><i class="custo"></i>Custo</span><span><i class="perda"></i>Perdas</span><span><i class="lucro"></i>Sobra</span></p>
+<p>Na coluna da esquerda, o custo é a compra que entrou (R$ 163.411,14) menos a devolução de costela (R$ 228,59), ou seja R$ 163.182,55. Somado à perda, passa a venda em R$ 4.568,83. Essa conta trata como despesa também a carne comprada que ainda pode estar no estoque.</p>
+<p>Na coluna da direita, o custo é o que o caixa gravou na venda (R$ 139.543,31) mais o custo da NF-e que baixou estoque (R$ 1.004,84). A sobra fica em R$ 18.065,57, 7,6% da venda.</p>
+<table>
+<thead><tr><th>Conta</th><th>Pela compra do mês</th><th>Pelo que foi vendido</th></tr></thead>
+<tbody>
+<tr><td>Vendas (caixa + NF-e)</td><td class="num">238.426,73</td><td class="num">238.426,73</td></tr>
+<tr><td>Custo</td><td class="num">163.182,55</td><td class="num">140.548,15</td></tr>
+<tr><td>Perdas</td><td class="num">79.813,01</td><td class="num">79.813,01</td></tr>
+<tr class="total"><td>Estimativa</td><td class="num">−4.568,83</td><td class="num">18.065,57</td></tr>
+</tbody>
+</table>
+<p class="nota">Se um dos dois lançamentos iguais da meia carcaça no dia 05/08 for repetição, a perda fica R$ 64.480,00. O resultado pela compra do mês fica R$ 10.764,18 e a sobra pelo que foi vendido fica R$ 33.398,58. Em setembro a perda foi R$ 37.945,11 e a sobra pelo que foi vendido foi R$ 50.721,76. Folha, aluguel e imposto ficam de fora. A nota 7470 não foi somada de novo sobre o 7618.</p>
+</section>
+</body></html>

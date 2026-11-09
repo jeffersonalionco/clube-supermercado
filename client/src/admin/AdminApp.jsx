@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import AdminLayout from "../components/admin/AdminLayout.jsx";
 import AdminLoginPage from "../pages/admin/AdminLoginPage.jsx";
 import AdminClientesPage from "../pages/admin/AdminClientesPage.jsx";
 import AdminPontosPage from "../pages/admin/AdminPontosPage.jsx";
@@ -23,11 +24,14 @@ import AdminMarketingWhatsAppPage from "../pages/admin/AdminMarketingWhatsAppPag
 import AdminMarketingWhatsAppAutoPage from "../pages/admin/AdminMarketingWhatsAppAutoPage.jsx";
 import AdminMarketingWhatsAppContatosPage from "../pages/admin/AdminMarketingWhatsAppContatosPage.jsx";
 import AdminWhatsAppCaixaPage from "../pages/admin/AdminWhatsAppCaixaPage.jsx";
+import AdminOuvidoriaPage from "../pages/admin/AdminOuvidoriaPage.jsx";
 import AdminVendasPdvPage from "../pages/admin/AdminVendasPdvPage.jsx";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage.jsx";
 import AdminPadariaPage from "../pages/admin/AdminPadariaPage.jsx";
 import AdminBackupPage from "../pages/admin/AdminBackupPage.jsx";
-import { clearAdminSession, loadAdminSession } from "../utils/adminSession.js";
+import { clearAdminSession, fetchAdmin, loadAdminSession, saveAdminSession } from "../utils/adminSession.js";
+import { acessoDaSessao, menuLiberado, primeiroMenu, subLiberado } from "./acessoAdmin.js";
+import { publicarAvisoPermissao } from "./avisoPermissao.js";
 import "../styles/admin.css";
 
 import { adminPathFromHash } from "../utils/adminHash.js";
@@ -93,6 +97,7 @@ function marketingSubFromHash() {
   if (path.startsWith("admin/marketing/whatsapp-contatos")) {
     return "whatsapp-contatos";
   }
+  if (path.startsWith("admin/marketing/ouvidoria")) return "ouvidoria";
   if (path.startsWith("admin/marketing/whatsapp")) return "whatsapp";
   return "hub";
 }
@@ -145,6 +150,7 @@ function hashForAdminTab(tab, sub) {
     if (sub === "whatsapp-contatos") {
       return "#/admin/marketing/whatsapp-contatos";
     }
+    if (sub === "ouvidoria") return "#/admin/marketing/ouvidoria";
     if (sub === "whatsapp") return "#/admin/marketing/whatsapp";
     return "#/admin/marketing";
   }
@@ -166,6 +172,31 @@ export default function AdminApp() {
   const [tab, setTab] = useState(() => adminTabFromHash());
   const [marketingSub, setMarketingSub] = useState(() => marketingSubFromHash());
   const [relatorioSub, setRelatorioSub] = useState(() => relatorioSubFromHash());
+  const [aviso, setAviso] = useState("");
+
+  useEffect(() => {
+    if (!session?.token) return undefined;
+    let cancelado = false;
+    fetchAdmin("/api/admin/eu")
+      .then((data) => {
+        if (cancelado || !data?.admin) return;
+        setSession((atual) => {
+          if (!atual?.token) return atual;
+          const proxima = { ...atual, admin: data.admin };
+          saveAdminSession(proxima);
+          return proxima;
+        });
+      })
+      .catch((err) => {
+        if (!cancelado && err.code === "UNAUTHORIZED") {
+          clearAdminSession();
+          setSession(null);
+        }
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, [session?.token]);
 
   useEffect(() => {
     function onHashChange() {
@@ -187,6 +218,7 @@ export default function AdminApp() {
   }, []);
 
   const handleTabChange = useCallback((novaTab) => {
+    setAviso("");
     window.location.hash = hashForAdminTab(novaTab).slice(1);
     setTab(novaTab);
     if (novaTab === "marketing") setMarketingSub("hub");
@@ -217,6 +249,12 @@ export default function AdminApp() {
     setMarketingSub("whatsapp-auto");
   }, []);
 
+  const abrirMarketingOuvidoria = useCallback(() => {
+    window.location.hash = hashForAdminTab("marketing", "ouvidoria").slice(1);
+    setTab("marketing");
+    setMarketingSub("ouvidoria");
+  }, []);
+
   const abrirMarketingWhatsappContatos = useCallback(() => {
     window.location.hash = hashForAdminTab(
       "marketing",
@@ -244,8 +282,60 @@ export default function AdminApp() {
     setRelatorioSub("hub");
   }, []);
 
+  const acesso = acessoDaSessao(session?.admin);
+  const marketingOk =
+    tab !== "marketing" ||
+    marketingSub === "hub" ||
+    subLiberado(acesso, "marketing", marketingSub) ||
+    (marketingSub === "ouvidoria" &&
+      subLiberado(acesso, "marketing", "whatsapp-caixa"));
+  const relatorioOk =
+    tab !== "relatorio" ||
+    relatorioSub === "hub" ||
+    subLiberado(acesso, "relatorio", relatorioSub);
+  const liberada = Boolean(session?.token) && menuLiberado(acesso, tab) && marketingOk && relatorioOk;
+
+  useEffect(() => {
+    if (!session?.token || liberada) return;
+    setAviso("Essa área não foi liberada para o seu usuário.");
+    if (!menuLiberado(acesso, tab)) {
+      const destino = primeiroMenu(acesso);
+      window.location.hash = hashForAdminTab(destino).slice(1);
+      setTab(destino);
+      setMarketingSub("hub");
+      setRelatorioSub("hub");
+      return;
+    }
+    if (tab === "marketing") {
+      window.location.hash = hashForAdminTab("marketing").slice(1);
+      setMarketingSub("hub");
+      return;
+    }
+    if (tab === "relatorio") {
+      window.location.hash = hashForAdminTab("relatorio").slice(1);
+      setRelatorioSub("hub");
+    }
+  }, [liberada, marketingSub, relatorioSub, session?.admin, session?.token, tab]);
+
+  publicarAvisoPermissao(session?.token ? aviso : "");
+
   if (!session?.token) {
     return <AdminLoginPage onLogin={handleLogin} />;
+  }
+
+  if (!liberada) {
+    return (
+      <AdminLayout
+        tab={primeiroMenu(acesso)}
+        onTabChange={handleTabChange}
+        onLogout={handleLogout}
+        admin={session.admin}
+      >
+        <p className="admin-alert" role="status">
+          Essa área não foi liberada para o seu usuário.
+        </p>
+      </AdminLayout>
+    );
   }
 
   const layoutProps = {
@@ -332,6 +422,15 @@ export default function AdminApp() {
     );
   }
 
+  if (tab === "marketing" && marketingSub === "ouvidoria") {
+    return (
+      <AdminOuvidoriaPage
+        {...layoutProps}
+        onVoltar={voltarMarketingHub}
+      />
+    );
+  }
+
   if (tab === "marketing" && marketingSub === "whatsapp-caixa") {
     return (
       <AdminWhatsAppCaixaPage
@@ -386,6 +485,7 @@ export default function AdminApp() {
         onAbrirWhatsappAuto={abrirMarketingWhatsappAuto}
         onAbrirWhatsappContatos={abrirMarketingWhatsappContatos}
         onAbrirWhatsappCaixa={abrirMarketingWhatsappCaixa}
+        onAbrirOuvidoria={abrirMarketingOuvidoria}
       />
     );
   }

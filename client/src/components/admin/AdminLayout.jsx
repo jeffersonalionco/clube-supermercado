@@ -23,6 +23,8 @@ import {
 import Logo from "../Logo.jsx";
 import MetajiCredit from "../MetajiCredit.jsx";
 import { APP_VERSION } from "../../version.js";
+import { acessoDaSessao, menuLiberado } from "../../admin/acessoAdmin.js";
+import { avisoPermissaoAtual } from "../../admin/avisoPermissao.js";
 
 const NAV_SECTIONS = [
   {
@@ -67,7 +69,13 @@ const ALL_ITEMS = NAV_SECTIONS.flatMap((s) => s.items);
 
 export default function AdminLayout({ tab, onTabChange, onLogout, admin, children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const acesso = acessoDaSessao(admin);
+  const secoes = NAV_SECTIONS.map((section) => ({
+    ...section,
+    items: section.items.filter((item) => menuLiberado(acesso, item.id)),
+  })).filter((section) => section.items.length > 0);
   const pagina = ALL_ITEMS.find((item) => item.id === tab) || ALL_ITEMS[0];
+  const aviso = avisoPermissaoAtual();
 
   const handleNav = (id) => {
     onTabChange(id);
@@ -108,7 +116,7 @@ export default function AdminLayout({ tab, onTabChange, onLogout, admin, childre
 
       <div className="admin-body">
         <aside className={`admin-sidebar ${mobileOpen ? "admin-sidebar--open" : ""}`} aria-label="Menu do painel">
-          {NAV_SECTIONS.map((section) => (
+          {secoes.map((section) => (
             <div key={section.label} className="admin-sidebar__section">
               <p className="admin-sidebar__label">{section.label}</p>
               <nav className="admin-nav">
@@ -139,6 +147,11 @@ export default function AdminLayout({ tab, onTabChange, onLogout, admin, childre
         </aside>
 
         <div className="admin-content">
+          {aviso && (
+            <p className="admin-alert admin-permissoes__aviso" role="status">
+              {aviso}
+            </p>
+          )}
           {tab !== "dashboard" && (
             <header className="admin-page-head">
               <h1>{pagina.label}</h1>

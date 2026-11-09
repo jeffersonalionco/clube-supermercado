@@ -14,6 +14,8 @@ const DISK_CACHE_DIR = path.resolve(__dirname, "../.cache");
 const cachePorUnidade = new Map();
 const syncEmAndamento = new Map();
 const syncStatusPorUnidade = new Map();
+const coletaOfertasLoja = new Map();
+const coletaOfertasLojaFalhouEm = new Map();
 
 function arquivoCacheDisco(chave) {
   const safe = String(chave).replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -221,6 +223,119 @@ function normalizarProduto(produto, unidade) {
   };
 }
 
+/** DataOferta do ERP (dd-mm-aaaa) → YYYY-MM-DD. */
+export function dataOfertaParaIso(valor) {
+  const s = String(valor ?? "").trim();
+  const m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+  if (!m) return null;
+  const dia = Number(m[1]);
+  const mes = Number(m[2]);
+  if (mes < 1 || mes > 12 || dia < 1 || dia > 31) return null;
+  return `${m[3]}-${m[2]}-${m[1]}`;
+}
+
+function dataOfertaCurta(iso) {
+  if (!iso || iso.length < 10) return "";
+  return `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
+}
+
+/** No RP, DataOferta é o dia seguinte ao último dia da oferta. */
+function diaAnteriorIso(iso) {
+  const m = String(iso ?? "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return null;
+  const dt = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
+  dt.setUTCDate(dt.getUTCDate() - 1);
+  const yy = dt.getUTCFullYear();
+  const mm = String(dt.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(dt.getUTCDate()).padStart(2, "0");
+  return `${yy}-${mm}-${dd}`;
+}
+
+function ofertaComFimReal(item) {
+  if (!item || item.fimOfertaAjustado) return item;
+  const fim = diaAnteriorIso(item.dataOferta);
+  if (!fim) return item;
+  return {
+    ...item,
+    dataOferta: fim,
+    dataOfertaBr: dataOfertaCurta(fim),
+    fimOfertaAjustado: true,
+  };
+}
+
+/**
+ * Oferta de gôndola vigente, sem preço de Clube.
+ * Quem tem preço 2 fica só na lista do Clube.
+ */
+export function normalizarOfertaLoja(produto, unidade) {
+  if (String(produto?.Oferta ?? "").toUpperCase() !== "S") return null;
+  if (temPrecoClube(produto)) return null;
+  const dataErp = dataOfertaParaIso(produto?.DataOferta);
+  const dataOferta = dataErp ? diaAnteriorIso(dataErp) : null;
+  if (!dataOferta || dataOferta < diaSpIso()) return null;
+
+  const preco1 = arredondarMoeda(produto.Preco ?? produto.PrecoPDV ?? 0);
+  const precoAnterior = precoAnteriorDeProdutoErp(produto);
+  if (!(preco1 > 0) || !(precoAnterior > preco1)) return null;
+
+  const economia = arredondarMoeda(precoAnterior - preco1);
+  const percentual =
+    precoAnterior > 0 ? Math.round((economia / precoAnterior) * 100) : 0;
+  const codigo = String(produto.Codigo ?? produto.SKU ?? "").trim();
+  if (!codigo) return null;
+
+  return {
+    codigo,
+    descricao: String(produto.Descricao ?? produto.descricao ?? "").trim(),
+    marca: String(produto.Marca ?? "").trim() || null,
+    oferta: true,
+    unidade,
+    preco1,
+    preco2: 0,
+    precoAnterior,
+    precoDe: precoAnterior,
+    economia,
+    percentualDesconto: percentual,
+    dataOferta,
+    dataOfertaBr: dataOfertaCurta(dataOferta),
+    fimOfertaAjustado: true,
+    tipo: "loja",
+  };
+}
+
+function ordenarOfertasLoja(lista) {
+  return [...lista].sort((a, b) => {
+    const pa = Number(a.percentualDesconto) || 0;
+    const pb = Number(b.percentualDesconto) || 0;
+    if (pb !== pa) return pb - pa;
+    return (Number(b.economia) || 0) - (Number(a.economia) || 0);
+  });
+}
+
+export function selecionarOfertasLoja(lista, limite = 8) {
+  const hoje = diaSpIso();
+  const validas = (Array.isArray(lista) ? lista : []).map(ofertaComFimReal).filter((p) => {
+    if (Number(p?.preco2) > 0) return false;
+    if (!p?.dataOferta || String(p.dataOferta) < hoje) return false;
+    if (!(Number(p.precoAnterior) > Number(p.preco1))) return false;
+    return Number(p.preco1) > 0;
+  });
+  const n = Math.max(1, Number(limite) || 8);
+  return ordenarOfertasLoja(validas).slice(0, n);
+}
+
+export function ordenarClubePorDesconto(lista) {
+  return [...(Array.isArray(lista) ? lista : [])].sort((a, b) => {
+    const ao = a?.oferta ? 1 : 0;
+    const bo = b?.oferta ? 1 : 0;
+    if (bo !== ao) return bo - ao;
+    const pa = Number(a?.percentualDesconto) || 0;
+    const pb = Number(b?.percentualDesconto) || 0;
+    if (pb !== pa) return pb - pa;
+    return (Number(b?.economia) || 0) - (Number(a?.economia) || 0);
+  });
+}
+
 function obterProgresso(unidade) {
   const status = syncStatusPorUnidade.get(unidade);
   if (!status) return null;
@@ -267,6 +382,9 @@ function iniciarSincronizacaoBackground(unidade, { forcar = false } = {}) {
     try {
       const candidatos = new Set();
       const provisoriPorCodigo = new Map();
+      const ofertasLojaPorCodigo = new Map();
+      const ofertasLojaAtuais = () =>
+        ordenarOfertasLoja([...ofertasLojaPorCodigo.values()]).slice(0, 40);
       let cursor = 0;
       let totalCatalogo = 0;
       let paginas = 0;
@@ -278,6 +396,7 @@ function iniciarSincronizacaoBackground(unidade, { forcar = false } = {}) {
           unidade,
           apenasAtivos,
           produtos,
+          ofertasLoja: ofertasLojaAtuais(),
           totalClube: produtos.length,
           totalCatalogo,
           paginas,
@@ -306,6 +425,8 @@ function iniciarSincronizacaoBackground(unidade, { forcar = false } = {}) {
 
         for (const produto of pagina) {
           if (apenasAtivos && produto.Ativo === false) continue;
+          const ofertaLoja = normalizarOfertaLoja(produto, unidade);
+          if (ofertaLoja) ofertasLojaPorCodigo.set(ofertaLoja.codigo, ofertaLoja);
           if (!temPrecoClube(produto)) continue;
           const codigo = String(produto.Codigo ?? produto.SKU ?? "").trim();
           if (!codigo) continue;
@@ -377,6 +498,7 @@ function iniciarSincronizacaoBackground(unidade, { forcar = false } = {}) {
             unidade,
             apenasAtivos,
             produtos: [...provisoriPorCodigo.values()],
+            ofertasLoja: ofertasLojaAtuais(),
             totalClube: provisoriPorCodigo.size,
             totalCatalogo,
             paginas,
@@ -402,6 +524,7 @@ function iniciarSincronizacaoBackground(unidade, { forcar = false } = {}) {
         unidade,
         apenasAtivos,
         produtos: finais,
+        ofertasLoja: ofertasLojaAtuais(),
         totalClube: finais.length,
         totalCatalogo,
         paginas,
@@ -455,6 +578,26 @@ function filtrarProdutos(produtos, busca) {
   });
 }
 
+async function anexarEsgotado(dados) {
+  if (!dados?.itens?.length) return dados;
+  try {
+    const { codigosEsgotadosHoje } = await import(
+      "./clubeOfertaEsgotadaService.js"
+    );
+    const codigos = await codigosEsgotadosHoje();
+    return {
+      ...dados,
+      itens: dados.itens.map((item) => ({
+        ...item,
+        esgotado: codigos.has(String(item.codigo)),
+      })),
+    };
+  } catch (err) {
+    console.warn("[clube-esgotado]", err.message);
+    return dados;
+  }
+}
+
 function montarResposta(catalogo, { busca, pagina, limite, sincronizando, progresso, erroSync }) {
   const produtosValidos = (catalogo.produtos || [])
     .filter((p) => Number(p.preco2) > 0)
@@ -475,6 +618,7 @@ function montarResposta(catalogo, { busca, pagina, limite, sincronizando, progre
     pagina: paginaNum,
     limite: limiteNum,
     totalPaginas: Math.max(1, Math.ceil(filtrados.length / limiteNum)),
+    ofertasLoja: Array.isArray(catalogo.ofertasLoja) ? catalogo.ofertasLoja : null,
     sincronizadoEm: catalogo.sincronizadoEm,
     cacheExpiraEm: new Date(catalogo.expiresAt).toISOString(),
     sincronizando: Boolean(sincronizando),
@@ -508,9 +652,18 @@ export async function listarProdutosClubeDescontos({
     syncEmAndamento.has(chave) || progresso?.sincronizando === true;
   const apenasAtivos = consultaApenasAtivos();
   const cacheHoje = cacheValido(emCache);
+  if (
+    emCache?.produtos?.length &&
+    cacheDoDiaAtual(emCache) &&
+    !Array.isArray(emCache.ofertasLoja)
+  ) {
+    iniciarColetaOfertasLoja(codUnidade);
+  }
 
   if (cacheHoje && !emCache.parcial && !forcar && !sincronizando) {
-    return montarResposta(emCache, { busca, pagina, limite });
+    return anexarEsgotado(montarResposta(emCache, { busca, pagina, limite })).then(
+      (dados) => comStatusLoja(chave, dados)
+    );
   }
 
   // Outro dia / forçar: sempre ressincroniza (não reaproveita lista velha)
@@ -523,19 +676,22 @@ export async function listarProdutosClubeDescontos({
 
   // Só serve cache em memória se for do dia atual (stale-while-revalidate no mesmo dia)
   if (emCache?.produtos?.length && cacheDoDiaAtual(emCache)) {
-    return montarResposta(emCache, {
-      busca,
-      pagina,
-      limite,
-      sincronizando: syncEmAndamento.has(chave) || obterProgresso(chave)?.sincronizando,
-      progresso: obterProgresso(chave),
-    });
+    return anexarEsgotado(
+      montarResposta(emCache, {
+        busca,
+        pagina,
+        limite,
+        sincronizando:
+          syncEmAndamento.has(chave) || obterProgresso(chave)?.sincronizando,
+        progresso: obterProgresso(chave),
+      })
+    ).then((dados) => comStatusLoja(chave, dados));
   }
 
   const status = obterProgresso(chave);
 
   if (status?.erro && !syncEmAndamento.has(chave)) {
-    return {
+    return anexarEsgotado(comStatusLoja(chave, {
       unidade: codUnidade,
       apenasAtivos,
       itens: [],
@@ -545,16 +701,17 @@ export async function listarProdutosClubeDescontos({
       pagina: 1,
       limite: Math.min(200, Math.max(1, Number(limite) || 50)),
       totalPaginas: 1,
+      ofertasLoja: null,
       sincronizadoEm: null,
       cacheExpiraEm: null,
       sincronizando: false,
       progresso: status,
       erroSync: status.erro,
       cacheOutroDia: true,
-    };
+    }));
   }
 
-  return {
+  return anexarEsgotado(comStatusLoja(chave, {
     unidade: codUnidade,
     apenasAtivos,
     itens: [],
@@ -564,13 +721,76 @@ export async function listarProdutosClubeDescontos({
     pagina: 1,
     limite: Math.min(200, Math.max(1, Number(limite) || 50)),
     totalPaginas: 1,
+    ofertasLoja: null,
     sincronizadoEm: null,
     cacheExpiraEm: null,
     sincronizando: true,
     progresso: status,
     erroSync: null,
     aguardandoDiaAtual: true,
+  }));
+}
+
+function comStatusLoja(chave, dados) {
+  return {
+    ...dados,
+    lojaColetando: coletaOfertasLoja.has(chave),
+    ofertasLojaProntas: Array.isArray(dados?.ofertasLoja),
   };
+}
+
+function iniciarColetaOfertasLoja(unidade) {
+  const codUnidade = String(unidade ?? unidadePadrao()).trim();
+  const chave = chaveCache(codUnidade);
+  if (syncEmAndamento.has(chave) || coletaOfertasLoja.has(chave)) return;
+  const falha = coletaOfertasLojaFalhouEm.get(chave);
+  if (falha && Date.now() - falha < 60_000) return;
+  const atual = cachePorUnidade.get(chave);
+  if (!atual?.produtos?.length || Array.isArray(atual.ofertasLoja)) return;
+
+  const apenasAtivos = consultaApenasAtivos();
+  const promise = (async () => {
+    try {
+      const mapa = new Map();
+      let cursor = 0;
+      for (let i = 0; i < MAX_PAGINAS; i++) {
+        if (syncEmAndamento.has(chave)) return;
+        const resultado = await listarProdutosUnidadePagina(cursor, codUnidade, {
+          apenasAtivos,
+        });
+        if (!resultado.ok) {
+          throw new Error(resultado.error || "Falha ao consultar ofertas da loja");
+        }
+        const pagina = resultado.produtos;
+        if (!pagina.length) break;
+        for (const produto of pagina) {
+          if (apenasAtivos && produto.Ativo === false) continue;
+          const item = normalizarOfertaLoja(produto, codUnidade);
+          if (item) mapa.set(item.codigo, item);
+        }
+        const ultimo = Number(pagina[pagina.length - 1]?.Codigo) || 0;
+        if (!ultimo || ultimo === cursor) break;
+        cursor = ultimo;
+      }
+      if (syncEmAndamento.has(chave)) return;
+      const emCache = cachePorUnidade.get(chave);
+      if (!emCache?.produtos?.length) return;
+      const ofertasLoja = ordenarOfertasLoja([...mapa.values()]).slice(0, 40);
+      setCacheMemoria(chave, {
+        ...emCache,
+        ofertasLoja,
+        ofertasLojaEm: new Date().toISOString(),
+      });
+      console.log(`[clube-descontos] ofertas da loja: ${ofertasLoja.length}`);
+    } catch (err) {
+      coletaOfertasLojaFalhouEm.set(chave, Date.now());
+      console.warn("[clube-descontos] ofertas da loja:", err.message);
+    } finally {
+      coletaOfertasLoja.delete(chave);
+    }
+  })();
+
+  coletaOfertasLoja.set(chave, promise);
 }
 
 /** Dispara sync em background para deixar o cache quente (WhatsApp / vitrine). */
@@ -590,5 +810,6 @@ export function aquecerCacheClubeDescontos(unidade) {
     );
   }
   iniciarSincronizacaoBackground(codUnidade, { forcar });
+  if (!forcar) iniciarColetaOfertasLoja(codUnidade);
   return { ok: true, unidade: codUnidade, doDisco: Boolean(disco?.produtos?.length && !forcar) };
 }

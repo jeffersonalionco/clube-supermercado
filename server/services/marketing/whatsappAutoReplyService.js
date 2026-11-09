@@ -27,9 +27,15 @@ import {
   limparSessaoCatalogoPedido,
   obterSessaoCatalogoPedido,
 } from "./whatsappCatalogoPedidoService.js";
+import {
+  BTN_OUVIDORIA,
+  TITULO_BOTAO_OUVIDORIA,
+  continuarOuvidoria,
+  iniciarOuvidoria,
+  obterSessaoOuvidoria,
+} from "./whatsappOuvidoriaService.js";
 
 const BTN_OFERTAS = "btn_ofertas";
-const BTN_CONVERSAR = "btn_conversar";
 const BTN_CLUBE = "btn_clube";
 /** Abre o menu completo a partir das boas-vindas (quebra-gelo). */
 const BTN_VER_MENU = "btn_ver_menu";
@@ -148,9 +154,10 @@ export function montarCorpoMenuPadrao(telefoneExibicao, { membro } = {}) {
     `🛒 *OFERTAS DE HOJE*\n\n` +
     `Consulte as ofertas do dia e confira os preços exclusivos do Clube Superama+.\n\n` +
     `👉 Toque em *Ofertas de hoje* para consultar.\n\n` +
-    `💬 *ATENDIMENTO*\n` +
-    `Para dúvidas, pedidos ou atendimento, fale diretamente com nossa equipe:\n\n` +
-    `📞 ${tel}\n\n` +
+    `💬 *SUA OPINIÃO*\n` +
+    `Toque em *${TITULO_BOTAO_OUVIDORIA}* para elogiar, sugerir ou reclamar.\n` +
+    `Pode mandar texto, áudio ou foto.\n\n` +
+    `Urgente na loja: 📞 ${tel}\n\n` +
     `━━━━━━━━━━━━━━\n\n` +
     blocoClube
   );
@@ -367,7 +374,7 @@ async function enviarMenuPadrao(telefone, { wamid } = {}) {
 
   const botoes = [
     { id: BTN_OFERTAS, title: "Ofertas de hoje" },
-    { id: BTN_CONVERSAR, title: "Falar com a loja" },
+    { id: BTN_OUVIDORIA, title: TITULO_BOTAO_OUVIDORIA },
     membro
       ? { id: BTN_MEU_CLUBE, title: "Meu Clube" }
       : { id: BTN_CLUBE, title: "Abrir o Clube" },
@@ -390,7 +397,7 @@ async function enviarMenuPadrao(telefone, { wamid } = {}) {
 
 function acaoPorBotao(buttonId) {
   if (buttonId === BTN_OFERTAS) return "ofertas";
-  if (buttonId === BTN_CONVERSAR) return "conversar";
+  if (buttonId === BTN_OUVIDORIA) return "conversar";
   if (buttonId === BTN_CLUBE) return "clube";
   if (buttonId === BTN_VER_MENU) return "ver_menu";
   return acaoMetricaMeuClube(buttonId);
@@ -582,6 +589,7 @@ async function enviarOfertasDoDia(telefone, { wamid } = {}) {
   // Cache de outro dia / ainda sincronizando o dia atual: NÃO envia lista velha
   const precisaEsperar =
     ofertas.aguardandoDiaAtual ||
+    ofertas.lojaColetando ||
     (ofertas.sincronizando && ofertas.itens.length < MIN_ITENS) ||
     (ofertas.itens.length < MIN_ITENS &&
       (ofertas.sincronizando || !ofertas.itens.length));
@@ -601,6 +609,7 @@ async function enviarOfertasDoDia(telefone, { wamid } = {}) {
       ofertas = await obterOfertasParaWhatsapp();
       if (
         !ofertas.aguardandoDiaAtual &&
+        !ofertas.lojaColetando &&
         ofertas.itens.length >= MIN_ITENS
       ) {
         break;
@@ -608,6 +617,7 @@ async function enviarOfertasDoDia(telefone, { wamid } = {}) {
       if (
         !ofertas.aguardandoDiaAtual &&
         !ofertas.sincronizando &&
+        !ofertas.lojaColetando &&
         ofertas.itens.length > 0
       ) {
         break;
@@ -615,6 +625,7 @@ async function enviarOfertasDoDia(telefone, { wamid } = {}) {
       if (
         !ofertas.aguardandoDiaAtual &&
         !ofertas.sincronizando &&
+        !ofertas.lojaColetando &&
         !ofertas.itens.length
       ) {
         break;
@@ -626,7 +637,7 @@ async function enviarOfertasDoDia(telefone, { wamid } = {}) {
     const r = await enviarMensagemTextoWhatsapp({
       telefone,
       texto:
-        `Ainda não consegui montar a lista de *preço 2*.\n` +
+        `Ainda não consegui montar as *ofertas de hoje*.\n` +
         `O catálogo pode estar sincronizando — toque de novo em *Ofertas de hoje* em 1 minuto.\n\n` +
         `Ou abra o Clube:\n${cfg.links.clube}`,
     });
@@ -689,18 +700,9 @@ async function responderBotao(telefone, buttonId, { wamid } = {}) {
     return enviarOfertasDoDia(telefone, { wamid });
   }
 
-  if (buttonId === BTN_CONVERSAR) {
+  if (buttonId === BTN_OUVIDORIA) {
     await pausaDigitando(wamid);
-    const corpo =
-      `Toque no botão abaixo para abrir o atendimento no WhatsApp ${cfg.telefoneExibicao}.`;
-    return enviarCtaOuTexto({
-      telefone,
-      corpo,
-      url: cfg.links.conversar,
-      displayText: "Abrir WhatsApp",
-      textoFallback:
-        `Toque no link para abrir o atendimento (${cfg.telefoneExibicao}):\n${cfg.links.conversar}`,
-    });
+    return iniciarOuvidoria(telefone);
   }
 
   if (buttonId === BTN_CLUBE) {
@@ -949,6 +951,40 @@ async function processarMensagem(msg) {
     }
   } catch (err) {
     console.warn("[whatsapp/auto-reply] sessão catálogo:", err.message);
+  }
+
+  try {
+    const sessOuv = await obterSessaoOuvidoria(telefone);
+    if (sessOuv.ativa) {
+      const r = await continuarOuvidoria(telefone, msg);
+      if (r?.reabrirMenu) {
+        const menu = await enviarMenuPadrao(telefone, { wamid: msg.wamid });
+        if (menu.ok) {
+          await registrarMetricaAutoReply({
+            acao: menu.metricaAcao || "menu",
+            telefone,
+            wamid: msg.wamid,
+            messageId: menu.messageId,
+          });
+        }
+        return;
+      }
+      if (!r?.seguir) {
+        if (r && !r.ok) {
+          console.warn("[whatsapp/ouvidoria]", r.error);
+        } else if (r?.metricaAcao && !r.skipMetric) {
+          await registrarMetricaAutoReply({
+            acao: r.metricaAcao,
+            telefone,
+            wamid: msg.wamid,
+            messageId: r.messageId,
+          });
+        }
+        return;
+      }
+    }
+  } catch (err) {
+    console.warn("[whatsapp/ouvidoria] sessão:", err.message);
   }
 
   if (msg.buttonId) {

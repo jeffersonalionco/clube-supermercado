@@ -57,7 +57,39 @@ export default function AdminClubeDescontosPage({
   const [loading, setLoading] = useState(true);
   const [atualizando, setAtualizando] = useState(false);
   const [error, setError] = useState("");
+  const [marcandoCodigo, setMarcandoCodigo] = useState("");
   const pollRef = useRef(null);
+
+  const alternarEsgotado = useCallback(async (item) => {
+    const codigo = String(item.codigo || "");
+    if (!codigo || marcandoCodigo) return;
+    setMarcandoCodigo(codigo);
+    setError("");
+    try {
+      const path = `/api/admin/clube-descontos/produtos/${encodeURIComponent(codigo)}/esgotado`;
+      if (item.esgotado) {
+        await fetchAdmin(path, { method: "DELETE" });
+      } else {
+        await fetchAdmin(path, {
+          method: "POST",
+          body: JSON.stringify({ descricao: item.descricao || "" }),
+        });
+      }
+      setDados((prev) => {
+        if (!prev?.itens) return prev;
+        return {
+          ...prev,
+          itens: prev.itens.map((p) =>
+            String(p.codigo) === codigo ? { ...p, esgotado: !item.esgotado } : p
+          ),
+        };
+      });
+    } catch (err) {
+      setError(mensagemParaUsuario(err.message));
+    } finally {
+      setMarcandoCodigo("");
+    }
+  }, [marcandoCodigo]);
 
   const pararPoll = useCallback(() => {
     if (pollRef.current) {
@@ -263,11 +295,12 @@ export default function AdminClubeDescontosPage({
                     <th>Preço 2 (clube)</th>
                     <th>Economia</th>
                     <th>Estoque</th>
+                    <th>Hoje</th>
                   </tr>
                 </thead>
                 <tbody>
                   {itens.map((item) => (
-                    <tr key={item.codigo}>
+                    <tr key={item.codigo} className={item.esgotado ? "is-esgotado" : ""}>
                       <td className="admin-clube-descontos__codigo">{item.codigo}</td>
                       <td>
                         <span className="admin-clube-descontos__nome">
@@ -316,6 +349,20 @@ export default function AdminClubeDescontosPage({
                         )}
                       </td>
                       <td>{item.estoque > 0 ? item.estoque : "—"}</td>
+                      <td>
+                        <button
+                          type="button"
+                          className={`admin-btn admin-btn--sm ${item.esgotado ? "admin-btn--ghost" : "admin-btn--danger"}`}
+                          disabled={marcandoCodigo === String(item.codigo)}
+                          onClick={() => alternarEsgotado(item)}
+                        >
+                          {marcandoCodigo === String(item.codigo)
+                            ? "Salvando…"
+                            : item.esgotado
+                              ? "Voltou"
+                              : "Esgotado"}
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -355,6 +402,8 @@ export default function AdminClubeDescontosPage({
           atual. Em oferta, a coluna De usa o preço anterior e a economia
           compara esse valor com o preço do clube. Cache local: 30 minutos.
           Use &quot;Atualizar catálogo&quot; após alterar preços no RP.
+          Esgotado vale só hoje: o WhatsApp e a home do clube mostram o aviso
+          na hora, sem tirar o produto da lista.
         </p>
       </section>
     </AdminLayout>

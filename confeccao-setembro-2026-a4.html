@@ -1,0 +1,196 @@
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>Confecções setembro 2026</title><style>
+@page { size: A4 portrait; margin: 10mm; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: "Liberation Sans", Arial, sans-serif; color: #1a1a1a; }
+h1 { font-size: 15pt; margin: 0 0 4px; }
+h2 { font-size: 12pt; margin: 12px 0 4px; }
+p { font-size: 9.5pt; margin: 0 0 6px; }
+.sub { color: #333; }
+.totais { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; margin: 8px 0; }
+.totais div { border: 1px solid #ccc; padding: 6px 8px; }
+.totais span { display: block; font-size: 8pt; color: #444; }
+.totais b { font-size: 12pt; }
+table { width: 100%; border-collapse: collapse; margin: 0 0 8px; }
+th, td { border-bottom: 1px solid #ddd; padding: 2px 4px; font-size: 8pt; text-align: left; vertical-align: top; }
+th { border-bottom: 1.5px solid #222; }
+tr.total td { font-weight: 700; border-top: 1.5px solid #222; border-bottom: none; }
+td.num, th:nth-child(n+3) { text-align: right; white-space: nowrap; }
+td.cod { white-space: nowrap; }
+.folha { break-after: page; page-break-after: always; }
+.nota { font-size: 8.5pt; color: #333; }
+.barra { display: flex; height: 22px; width: 100%; margin: 4px 0; }
+.barra span { display: block; height: 22px; }
+.leg { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 8pt; margin: 0 0 8px; }
+.leg i { display: inline-block; width: 9px; height: 9px; margin-right: 4px; vertical-align: -1px; }
+.textil { background: #3d5a80; }
+.resto { background: #b5b5b5; }
+.custo { background: #6b5a3e; }
+.lucro { background: #2f6b4f; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 8px 0 4px; }
+.col { text-align: center; }
+.pilha { height: 168px; display: flex; flex-direction: column; width: 78px; margin: 0 auto 6px; }
+.pilha span { display: block; width: 100%; }
+.col p { margin: 2px 0; font-size: 8.5pt; }
+@media screen { body { background: #eee; } .folha { width: 190mm; margin: 8px auto; background: #fff; padding: 10mm; } }
+@media print { .folha { width: auto; margin: 0; padding: 0; } .barra span, .leg i, .pilha span { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+</style></head><body>
+<section class="folha">
+<h1>Loja / confecções (009)</h1>
+<p class="sub">Setembro de 2026, unidade 001. Entrada é o documento 7100, status normal, estoque 1. Venda é o documento 7300. Devolução de venda sem cupom é o 7261. Não houve lançamento de perda (7618) nem NF-e de venda (5102/5405).</p>
+<div class="totais">
+  <div><span>Compra que entrou</span><b>R$ 7.808,52</b><span>custo de compra R$ 6.662,43</span></div>
+  <div><span>Venda no caixa</span><b>R$ 11.778,84</b><span>custo na venda R$ 4.743,09</span></div>
+  <div><span>Devolução de venda</span><b>R$ 730,00</b><span>4 peças · voltou ao estoque</span></div>
+  <div><span>Perdas (7618)</span><b>R$ 0,00</b><span>não houve lançamento</span></div>
+</div>
+<h2>O que é roupa dentro do departamento</h2>
+<p class="sub">A barra inteira é a venda do caixa, R$ 11.778,84. A classe TEXTIL é a confecção. O restante do 009 é papelaria, material escolar e brinquedo.</p>
+<div class="barra" role="img" aria-label="Têxtil 93,0 por cento da venda do departamento">
+  <span class="textil" style="width:93.00%"></span>
+  <span class="resto" style="width:7.00%"></span>
+</div>
+<p class="leg"><span><i class="textil"></i>Têxtil R$ 10.954,73 · 93,0%</span><span><i class="resto"></i>Outras classes R$ 824,11 · 7,0%</span></p>
+<table><thead><tr><th>Classe</th><th>Produtos</th><th>Qtde</th><th>Venda (R$)</th><th>% do caixa</th></tr></thead><tbody>
+<tr><td>TEXTIL</td><td class="num">64</td><td class="num">77</td><td class="num">10.954,73</td><td class="num">93,0%</td></tr>
+<tr><td>(sem classe)</td><td class="num">20</td><td class="num">53</td><td class="num">578,03</td><td class="num">4,9%</td></tr>
+<tr><td>PAPELARIA</td><td class="num">10</td><td class="num">18</td><td class="num">182,50</td><td class="num">1,5%</td></tr>
+<tr><td>MAT ESCOLAR</td><td class="num">4</td><td class="num">12</td><td class="num">50,39</td><td class="num">0,4%</td></tr>
+<tr><td>MATERIAL ESCOLA</td><td class="num">2</td><td class="num">5</td><td class="num">12,19</td><td class="num">0,1%</td></tr>
+<tr><td>BRINQUEDO</td><td class="num">1</td><td class="num">1</td><td class="num">1,00</td><td class="num">0,0%</td></tr>
+<tr class="total"><td>Total do departamento</td><td class="num">101</td><td class="num">166</td><td class="num">11.778,84</td><td class="num">100,0%</td></tr>
+</tbody></table>
+<p class="nota">O departamento 005 é bazar, têxtil de casa e utilidades. Ficou de fora desta conta. A venda líquida da devolução é R$ 11.048,84.</p>
+</section>
+<section class="folha">
+<h1>Compra que entrou</h1>
+<p class="sub">Documento 7100, status normal. 39 itens. O valor do documento é R$ 7.808,52. O custo de compra da linha é R$ 6.662,43.</p>
+<table><thead><tr><th>Código</th><th>Item</th><th>Qtde</th><th>Valor doc. (R$)</th><th>Custo compra</th></tr></thead><tbody>
+<tr><td class="cod">1147447</td><td>Conjunto Calça Alfaiataria Fem R. 204</td><td class="num">6</td><td class="num">839,40</td><td class="num">685,58</td></tr>
+<tr><td class="cod">1147366</td><td>Conjunto/ Calça Fem R.328</td><td class="num">4</td><td class="num">608,00</td><td class="num">551,76</td></tr>
+<tr><td class="cod">1148028</td><td>Conj Zeena Fem Ref. 1346411</td><td class="num">2</td><td class="num">439,98</td><td class="num">379,31</td></tr>
+<tr><td class="cod">1147480</td><td>Conjunto Com Shorts Fem R. 204</td><td class="num">3</td><td class="num">359,70</td><td class="num">293,79</td></tr>
+<tr><td class="cod">1148079</td><td>Gola Pólo Tamires R.Ca171</td><td class="num">6</td><td class="num">359,40</td><td class="num">326,16</td></tr>
+<tr><td class="cod">1147340</td><td>Blusa Lenita Fem 1076</td><td class="num">5</td><td class="num">349,50</td><td class="num">317,17</td></tr>
+<tr><td class="cod">1147986</td><td>Saia New Linox Fem Ref. 244916</td><td class="num">2</td><td class="num">299,98</td><td class="num">258,62</td></tr>
+<tr><td class="cod">1147331</td><td>Conjunto Lara Fem Ca129</td><td class="num">2</td><td class="num">299,80</td><td class="num">272,07</td></tr>
+<tr><td class="cod">1148087</td><td>Conjunto Lara R.Ca129</td><td class="num">2</td><td class="num">259,80</td><td class="num">235,77</td></tr>
+<tr><td class="cod">1147889</td><td>Calça Malha Elastico Cintura206018</td><td class="num">2</td><td class="num">259,80</td><td class="num">212,19</td></tr>
+<tr><td class="cod">1147455</td><td>Blusa Fem Seis Deis Re. 201</td><td class="num">4</td><td class="num">239,60</td><td class="num">195,69</td></tr>
+<tr><td class="cod">1147358</td><td>Conjunto/Shorts Fem R.328</td><td class="num">2</td><td class="num">228,00</td><td class="num">206,91</td></tr>
+<tr><td class="cod">1148036</td><td>Conj Crush Fem Ref. 1346425</td><td class="num">1</td><td class="num">199,99</td><td class="num">172,42</td></tr>
+<tr><td class="cod">1148010</td><td>Conj Lenny Fem Ref. 1346409</td><td class="num">1</td><td class="num">189,99</td><td class="num">163,79</td></tr>
+<tr><td class="cod">1148095</td><td>Vestido Tricoline R.004</td><td class="num">1</td><td class="num">179,90</td><td class="num">163,26</td></tr>
+<tr><td class="cod">1147897</td><td>Calça Listrada C/ Bolso 206022</td><td class="num">2</td><td class="num">179,80</td><td class="num">146,85</td></tr>
+<tr><td class="cod">1147994</td><td>Conj Denise Fem Ref. 1345031</td><td class="num">1</td><td class="num">169,99</td><td class="num">146,56</td></tr>
+<tr><td class="cod">1147838</td><td>Blusa Malha Renda Chantilly Ref 201128</td><td class="num">2</td><td class="num">159,80</td><td class="num">130,52</td></tr>
+<tr><td class="cod">1147854</td><td>Conjunto Calça Blusa C/Fivela Ref 204139</td><td class="num">1</td><td class="num">154,90</td><td class="num">126,51</td></tr>
+<tr><td class="cod">1147471</td><td>Conjunto Calça e Cinto Fem R. 204110</td><td class="num">1</td><td class="num">149,90</td><td class="num">122,43</td></tr>
+<tr><td class="cod">1147862</td><td>Vestido Longo Gola Ref 205416</td><td class="num">1</td><td class="num">144,90</td><td class="num">118,35</td></tr>
+<tr><td class="cod">1148001</td><td>Conj Cotton Fem Ref. 1346174</td><td class="num">1</td><td class="num">139,99</td><td class="num">120,69</td></tr>
+<tr><td class="cod">1147846</td><td>Conjunto Calça Blusa Q/Caia Ref 204117</td><td class="num">1</td><td class="num">139,90</td><td class="num">114,26</td></tr>
+<tr><td class="cod">1147498</td><td>Vestido Fem R. 205</td><td class="num">1</td><td class="num">134,90</td><td class="num">110,18</td></tr>
+<tr><td class="cod">1147501</td><td>Vestido Fem R. 205419</td><td class="num">1</td><td class="num">129,90</td><td class="num">106,09</td></tr>
+<tr><td class="cod">1147900</td><td>Macacão Assimetrica Botoes 207034</td><td class="num">1</td><td class="num">129,90</td><td class="num">106,09</td></tr>
+<tr><td class="cod">800171</td><td>Envelope Branco Pequeno</td><td class="num">1.000</td><td class="num">124,67</td><td class="num">99,71</td></tr>
+<tr><td class="cod">1147870</td><td>Vestido Longuete Amarraçao Ref 205458</td><td class="num">1</td><td class="num">119,90</td><td class="num">97,93</td></tr>
+<tr><td class="cod">1147528</td><td>Vestido Est Fem R. 205438</td><td class="num">1</td><td class="num">109,90</td><td class="num">89,76</td></tr>
+<tr><td class="cod">1147510</td><td>Vestido Est Fem R. 205433</td><td class="num">1</td><td class="num">99,90</td><td class="num">81,60</td></tr>
+<tr><td class="cod">1147919</td><td>Saia Midi Elastico Na Costa 208023</td><td class="num">1</td><td class="num">89,90</td><td class="num">73,42</td></tr>
+<tr><td class="cod">1147536</td><td>Saia Est Fem R. 208016</td><td class="num">1</td><td class="num">84,90</td><td class="num">69,34</td></tr>
+<tr><td class="cod">1147960</td><td>Blusa Yolanda Fem Ref. 146505</td><td class="num">1</td><td class="num">79,99</td><td class="num">68,96</td></tr>
+<tr><td class="cod">1081926</td><td>Massinha Modelar Pula e Molda 25g</td><td class="num">12</td><td class="num">74,36</td><td class="num">59,39</td></tr>
+<tr><td class="cod">1147927</td><td>Conjunto Calça Blusa Botoes Ref 204048</td><td class="num">1</td><td class="num">70,00</td><td class="num">62,69</td></tr>
+<tr><td class="cod">1147951</td><td>Blusa Zita Fem Ref. 1463345</td><td class="num">1</td><td class="num">69,99</td><td class="num">60,34</td></tr>
+<tr><td class="cod">1147463</td><td>Blusa Prega Fem Seis Deis Re. 201107</td><td class="num">1</td><td class="num">64,90</td><td class="num">53,01</td></tr>
+<tr><td class="cod">1147374</td><td>Regata Fem R.006</td><td class="num">1</td><td class="num">42,75</td><td class="num">38,79</td></tr>
+<tr><td class="cod">874426</td><td>Fita Durex 3m 12mm 30m</td><td class="num">10</td><td class="num">30,64</td><td class="num">24,47</td></tr>
+<tr class="total"><td></td><td>Total · 39 itens</td><td class="num">1.088</td><td class="num">7.808,52</td><td class="num">6.662,43</td></tr>
+</tbody></table>
+</section>
+<section class="folha">
+<h1>Venda no caixa</h1>
+<p class="sub">Documento 7300, status normal. Os 20 maiores. O total é dos 101 produtos e fecha o caixa do departamento.</p>
+<table><thead><tr><th>Código</th><th>Produto</th><th>Qtde</th><th>Venda (R$)</th><th>Custo da venda</th></tr></thead><tbody>
+<tr><td class="cod">1147447</td><td>Conjunto Calça Alfaiataria Fem R. 204</td><td class="num">3</td><td class="num">897,00</td><td class="num">342,79</td></tr>
+<tr><td class="cod">1147340</td><td>Blusa Lenita Fem 1076</td><td class="num">5</td><td class="num">675,00</td><td class="num">317,17</td></tr>
+<tr><td class="cod">1147480</td><td>Conjunto Com Shorts Fem R. 204</td><td class="num">2</td><td class="num">598,00</td><td class="num">195,86</td></tr>
+<tr><td class="cod">1147366</td><td>Conjunto/ Calça Fem R.328</td><td class="num">2</td><td class="num">598,00</td><td class="num">275,88</td></tr>
+<tr><td class="cod">1147358</td><td>Conjunto/Shorts Fem R.328</td><td class="num">2</td><td class="num">568,06</td><td class="num">206,91</td></tr>
+<tr><td class="cod">1097792</td><td>Conjunto Fem Tecido</td><td class="num">2</td><td class="num">399,80</td><td class="num">54,45</td></tr>
+<tr><td class="cod">1147994</td><td>Conj Denise Fem Ref. 1345031</td><td class="num">1</td><td class="num">299,00</td><td class="num">146,56</td></tr>
+<tr><td class="cod">1147986</td><td>Saia New Linox Fem Ref. 244916</td><td class="num">1</td><td class="num">299,00</td><td class="num">129,31</td></tr>
+<tr><td class="cod">1147498</td><td>Vestido Fem R. 205</td><td class="num">1</td><td class="num">299,00</td><td class="num">110,18</td></tr>
+<tr><td class="cod">1148079</td><td>Gola Pólo Tamires R.Ca171</td><td class="num">2</td><td class="num">286,90</td><td class="num">108,72</td></tr>
+<tr><td class="cod">1147331</td><td>Conjunto Lara Fem Ca129</td><td class="num">1</td><td class="num">279,00</td><td class="num">136,04</td></tr>
+<tr><td class="cod">1147455</td><td>Blusa Fem Seis Deis Re. 201</td><td class="num">2</td><td class="num">257,20</td><td class="num">97,84</td></tr>
+<tr><td class="cod">1147528</td><td>Vestido Est Fem R. 205438</td><td class="num">1</td><td class="num">231,76</td><td class="num">89,76</td></tr>
+<tr><td class="cod">1096869</td><td>Calça Jogger Fem P/M Ref. 42617</td><td class="num">1</td><td class="num">228,00</td><td class="num">99,74</td></tr>
+<tr><td class="cod">1147870</td><td>Vestido Longuete Amarraçao Ref 205458</td><td class="num">1</td><td class="num">199,00</td><td class="num">97,93</td></tr>
+<tr><td class="cod">1147536</td><td>Saia Est Fem R. 208016</td><td class="num">1</td><td class="num">189,00</td><td class="num">69,34</td></tr>
+<tr><td class="cod">1147919</td><td>Saia Midi Elastico Na Costa 208023</td><td class="num">1</td><td class="num">189,00</td><td class="num">73,42</td></tr>
+<tr><td class="cod">1074768</td><td>Saia Fenda Fem R. 1597</td><td class="num">1</td><td class="num">171,00</td><td class="num">90,66</td></tr>
+<tr><td class="cod">1125044</td><td>Vestido Fem Midi Ref. Vstmd</td><td class="num">1</td><td class="num">166,67</td><td class="num">13,61</td></tr>
+<tr><td class="cod">1111329</td><td>Kit Cueca Boxer C.5026 T.M R. 1000126654</td><td class="num">2</td><td class="num">164,54</td><td class="num">74,67</td></tr>
+<tr class="total"><td></td><td>Total destes 20</td><td class="num">33</td><td class="num">6.994,93</td><td class="num">2.730,84</td></tr>
+<tr class="total"><td></td><td>Total · 101 produtos</td><td class="num">166</td><td class="num">11.778,84</td><td class="num">4.743,09</td></tr>
+</tbody></table>
+</section>
+<section class="folha">
+<h1>Devolução e outras saídas</h1>
+<p class="sub">Documento 7261, devolução de venda sem cupom. As quatro peças voltaram ao estoque. A NF-e 1202, de R$ 730,00, é a nota dessa mesma devolução. Não é uma segunda saída.</p>
+<table><thead><tr><th>Código</th><th>Produto</th><th>Qtde</th><th>Valor (R$)</th><th>Custo</th></tr></thead><tbody>
+<tr><td class="cod">918040</td><td>Casaco Biamar 7475</td><td class="num">1</td><td class="num">299,00</td><td class="num">122,77</td></tr>
+<tr><td class="cod">1097792</td><td>Conjunto Fem Tecido</td><td class="num">1</td><td class="num">199,90</td><td class="num">27,23</td></tr>
+<tr><td class="cod">1146092</td><td>Blusa Slin Fem C.2143 T.M. R. 1000138886</td><td class="num">1</td><td class="num">141,20</td><td class="num">50,15</td></tr>
+<tr><td class="cod">1146246</td><td>Camiseta Regular F. C.1652t.M. R. 1000140422</td><td class="num">1</td><td class="num">89,90</td><td class="num">31,77</td></tr>
+<tr class="total"><td></td><td>Total · 4 peças</td><td class="num">4</td><td class="num">730,00</td><td class="num">231,92</td></tr>
+</tbody></table>
+<h2>Saídas que não são perda de confecção</h2>
+<p class="sub">Consumo interno de escritório (7609) e auditoria de saída (7520). A nota 5949, de R$ 55,32, repete o consumo interno. Não houve documento 7618.</p>
+<table><thead><tr><th>Código</th><th>Item</th><th>Qtde</th><th>Valor (R$)</th><th>Custo</th></tr></thead><tbody>
+<tr><td class="cod">1053523</td><td>Papel Sulfite A4 Report 500f</td><td class="num">2</td><td class="num">36,44</td><td class="num">36,44</td></tr>
+<tr><td class="cod">1123904</td><td>Bloco Pedido</td><td class="num">9</td><td class="num">15,84</td><td class="num">16,00</td></tr>
+<tr><td class="cod">760544</td><td>Caneta Faber Cristal Azul Trilux</td><td class="num">3</td><td class="num">1,92</td><td class="num">1,91</td></tr>
+<tr><td class="cod">1112260</td><td>Lapis Faber Castel C/Borr Preto Eco</td><td class="num">1</td><td class="num">1,12</td><td class="num">1,12</td></tr>
+<tr><td class="cod">828262</td><td>Zzzmarcador Texto Bic Amarelo</td><td class="num">24</td><td class="num">35,88</td><td class="num">35,88</td></tr>
+<tr class="total"><td></td><td>Total dessas saídas</td><td class="num">39</td><td class="num">91,20</td><td class="num">91,35</td></tr>
+</tbody></table>
+</section>
+<section class="folha">
+<h1>Estimativa depois da devolução</h1>
+<p class="sub">A venda do caixa é R$ 11.778,84. A devolução tira R$ 730,00. A venda que ficou é R$ 11.048,84. Perda de confecção: R$ 0,00.</p>
+<div class="cols">
+  <div class="col">
+    <div class="pilha" role="img" aria-label="Pelo custo de compra: sobra 4.386,41, custo 6.662,43">
+      <span class="lucro" style="flex:4386.41"></span>
+      <span class="custo" style="flex:6662.43"></span>
+    </div>
+    <p>Pelo custo de compra do mês</p>
+    <p><b>Sobra R$ 4.386,41</b></p>
+  </div>
+  <div class="col">
+    <div class="pilha" role="img" aria-label="Pelo custo do que ficou vendido: sobra 6.537,67, custo 4.511,17">
+      <span class="lucro" style="flex:6537.67"></span>
+      <span class="custo" style="flex:4511.17"></span>
+    </div>
+    <p>Pelo custo do que ficou vendido</p>
+    <p><b>Sobra R$ 6.537,67</b></p>
+  </div>
+</div>
+<p class="leg"><span><i class="custo"></i>Custo</span><span><i class="lucro"></i>Sobra</span></p>
+<p>Na coluna da esquerda, o custo é o da compra que entrou, R$ 6.662,43, comparado com a venda depois da devolução. A sobra é R$ 4.386,41. A peça devolvida pode continuar no estoque, e essa coluna trata a compra do mês como despesa.</p>
+<p>Na coluna da direita, o custo é o gravado no caixa (R$ 4.743,09) menos o custo das quatro peças que voltaram (R$ 231,92). A sobra é R$ 6.537,67, 59,2% da venda líquida.</p>
+<table>
+<thead><tr><th>Conta</th><th>Pela compra do mês</th><th>Pelo que ficou vendido</th></tr></thead>
+<tbody>
+<tr><td>Venda no caixa (7300)</td><td class="num">11.778,84</td><td class="num">11.778,84</td></tr>
+<tr><td>Devolução (7261)</td><td class="num">730,00</td><td class="num">730,00</td></tr>
+<tr><td>Venda depois da devolução</td><td class="num">11.048,84</td><td class="num">11.048,84</td></tr>
+<tr><td>Custo</td><td class="num">6.662,43</td><td class="num">4.511,17</td></tr>
+<tr><td>Perdas</td><td class="num">0,00</td><td class="num">0,00</td></tr>
+<tr class="total"><td>Estimativa</td><td class="num">4.386,41</td><td class="num">6.537,67</td></tr>
+</tbody>
+</table>
+<p class="nota">Folha, aluguel e imposto ficam de fora. O consumo de escritório e a auditoria do marcador, juntos R$ 91,35 de custo, também ficam de fora desta sobra.</p>
+</section>
+</body></html>

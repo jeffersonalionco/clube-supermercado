@@ -43,6 +43,20 @@ export async function fetchAdmin(path, options = {}) {
   });
 
   const { data } = await parseApiResponse(response);
+  garantirRespostaAdmin(response, data);
+  return data;
+}
+
+function garantirRespostaAdmin(response, data) {
+  if (response.status === 403 && data?.codigo === "sem_ferramenta") {
+    const err = new Error(
+      mensagemParaUsuario(
+        data.error || "Esta ferramenta não foi liberada para o seu usuário."
+      )
+    );
+    err.code = "SEM_FERRAMENTA";
+    throw err;
+  }
 
   if (response.status === 401) {
     clearAdminSession();
@@ -56,8 +70,6 @@ export async function fetchAdmin(path, options = {}) {
   if (!response.ok) {
     throw new Error(mensagemParaUsuario(data.error));
   }
-
-  return data;
 }
 
 export async function loginAdmin(usuario, senha) {
@@ -103,19 +115,6 @@ export async function uploadAdminImagem(file) {
   });
 
   const { data } = await parseApiResponse(response);
-
-  if (response.status === 401) {
-    clearAdminSession();
-    const err = new Error(
-      mensagemParaUsuario(data.error || "Sessão expirada. Faça login novamente.")
-    );
-    err.code = "UNAUTHORIZED";
-    throw err;
-  }
-
-  if (!response.ok) {
-    throw new Error(mensagemParaUsuario(data.error));
-  }
-
+  garantirRespostaAdmin(response, data);
   return data;
 }

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import AdminLayout from "../../components/admin/AdminLayout.jsx";
 import { clearAdminSession, fetchAdmin } from "../../utils/adminSession.js";
 import { mensagemParaUsuario } from "../../utils/mensagensUsuario.js";
+import { acessoDaSessao, subLiberado } from "../../admin/acessoAdmin.js";
 
 function formatarDataHora(valor) {
   if (!valor) return "—";
@@ -28,6 +29,7 @@ export default function AdminMarketingHubPage({
   onAbrirWhatsappAuto,
   onAbrirWhatsappContatos,
   onAbrirWhatsappCaixa,
+  onAbrirOuvidoria,
 }) {
   const [resumo, setResumo] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -59,6 +61,9 @@ export default function AdminMarketingHubPage({
     clearAdminSession();
     onLogout();
   }
+
+  const acesso = acessoDaSessao(admin);
+  const pode = (sub) => subLiberado(acesso, "marketing", sub);
 
   return (
     <AdminLayout tab={tab} onTabChange={onTabChange} onLogout={handleSair} admin={admin}>
@@ -113,6 +118,7 @@ export default function AdminMarketingHubPage({
         </div>
 
         <div className="admin-marketing-canais">
+          {pode("email") && (
           <button
             type="button"
             className="admin-marketing-canal"
@@ -132,6 +138,7 @@ export default function AdminMarketingHubPage({
             </span>
             <span className="admin-marketing-canal__cta">Abrir</span>
           </button>
+          )}
 
           <div className="admin-marketing-canal admin-marketing-canal--disabled">
             <span className="admin-marketing-canal__icone" aria-hidden>
@@ -144,7 +151,28 @@ export default function AdminMarketingHubPage({
             <span className="admin-marketing-canal__cta">Em breve</span>
           </div>
 
-          {onAbrirWhatsappCaixa && (
+          {(pode("ouvidoria") || pode("whatsapp-caixa")) && onAbrirOuvidoria && (
+            <button
+              type="button"
+              className="admin-marketing-canal"
+              onClick={onAbrirOuvidoria}
+            >
+              <span className="admin-marketing-canal__icone" aria-hidden>
+                ✎
+              </span>
+              <span className="admin-marketing-canal__corpo">
+                <strong>Sugestões e reclamações</strong>
+                <span>
+                  Elogios, sugestões e reclamações que o cliente manda no WhatsApp,
+                  com texto, áudio e foto.
+                </span>
+                <small>Ligado à conta do clube quando o número confere</small>
+              </span>
+              <span className="admin-marketing-canal__cta">Abrir</span>
+            </button>
+          )}
+
+          {pode("whatsapp-caixa") && onAbrirWhatsappCaixa && (
             <button
               type="button"
               className="admin-marketing-canal"
@@ -165,6 +193,7 @@ export default function AdminMarketingHubPage({
             </button>
           )}
 
+          {pode("whatsapp") && (
           <button
             type="button"
             className="admin-marketing-canal"
@@ -191,8 +220,9 @@ export default function AdminMarketingHubPage({
             </span>
             <span className="admin-marketing-canal__cta">Abrir</span>
           </button>
+          )}
 
-          {onAbrirWhatsappContatos && (
+          {pode("whatsapp-contatos") && onAbrirWhatsappContatos && (
             <button
               type="button"
               className="admin-marketing-canal"
@@ -213,7 +243,7 @@ export default function AdminMarketingHubPage({
             </button>
           )}
 
-          {onAbrirWhatsappAuto && (
+          {pode("whatsapp-auto") && onAbrirWhatsappAuto && (
             <button
               type="button"
               className="admin-marketing-canal"

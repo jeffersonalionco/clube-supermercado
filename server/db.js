@@ -612,6 +612,11 @@ async function migrarPainelAdmin(db) {
     ON painel_admin (usuario)
     WHERE ativo = true
   `);
+
+  await db.query(`
+    ALTER TABLE painel_admin
+    ADD COLUMN IF NOT EXISTS ferramentas JSONB
+  `);
 }
 
 async function migrarClienteAuditoria(db) {
@@ -1098,6 +1103,48 @@ async function migrarMarketing(db) {
   `);
 
   await db.query(`
+    CREATE TABLE IF NOT EXISTS ouvidoria_ticket (
+      id BIGSERIAL PRIMARY KEY,
+      telefone VARCHAR(32) NOT NULL,
+      usuario_id INTEGER REFERENCES usuario(id) ON DELETE SET NULL,
+      nome VARCHAR(160),
+      cpf VARCHAR(20),
+      tipo VARCHAR(20) NOT NULL,
+      status VARCHAR(20) NOT NULL DEFAULT 'aberto',
+      criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      atualizado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      concluido_em TIMESTAMPTZ
+    )
+  `);
+
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_ouvidoria_ticket_lista
+    ON ouvidoria_ticket (status, criado_em DESC)
+  `);
+
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_ouvidoria_ticket_usuario
+    ON ouvidoria_ticket (usuario_id, criado_em DESC)
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS ouvidoria_mensagem (
+      id BIGSERIAL PRIMARY KEY,
+      ticket_id BIGINT NOT NULL REFERENCES ouvidoria_ticket(id) ON DELETE CASCADE,
+      tipo VARCHAR(20) NOT NULL,
+      texto TEXT,
+      arquivo VARCHAR(80),
+      mime VARCHAR(80),
+      criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_ouvidoria_mensagem_ticket
+    ON ouvidoria_mensagem (ticket_id, criado_em)
+  `);
+
+  await db.query(`
     CREATE TABLE IF NOT EXISTS whatsapp_link_preview (
       url_hash CHAR(64) PRIMARY KEY,
       url TEXT NOT NULL,
@@ -1207,6 +1254,17 @@ async function migrarConfigBackup(db) {
     UPDATE config_backup_sistema
     SET hora = '02:00', atualizado_em = NOW()
     WHERE id IN ('wrpdv', 'erp') AND hora = '03:00'
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS clube_oferta_esgotada (
+      codigo VARCHAR(40) NOT NULL,
+      dia DATE NOT NULL,
+      descricao VARCHAR(255),
+      marcado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      marcado_por VARCHAR(120),
+      PRIMARY KEY (codigo, dia)
+    )
   `);
 }
 

@@ -15,7 +15,7 @@ const LABELS_ACAO = {
   menu_membro: "Menu (membro)",
   menu_visitante: "Menu (visitante)",
   ofertas: "Ofertas de hoje",
-  conversar: "Falar com a loja",
+  conversar: "Sugestão/reclamação",
   clube: "Abrir o Clube",
   facebook: "Ver Facebook",
   ver_menu: "Abrir o menu",
@@ -302,7 +302,7 @@ export default function AdminMarketingWhatsAppAutoPage({
               />
               <Kpi
                 valor={t.conversar || 0}
-                label="Falar com a loja"
+                label="Sugestão/reclamação"
                 hint={`${c.conversar || 0}% do menu`}
               />
               <Kpi
@@ -322,7 +322,7 @@ export default function AdminMarketingWhatsAppAutoPage({
                   <BarraFunil label="Menu enviado" valor={t.menu || 0} max={maxFunil} tom="menu" />
                   <BarraFunil label="Ofertas de hoje" valor={t.ofertas || 0} max={maxFunil} tom="ofertas" />
                   <BarraFunil label="Meu Clube" valor={t.meu_clube || 0} max={maxFunil} tom="meu-clube" />
-                  <BarraFunil label="Falar com a loja" valor={t.conversar || 0} max={maxFunil} tom="conversar" />
+                  <BarraFunil label="Sugestão/reclamação" valor={t.conversar || 0} max={maxFunil} tom="conversar" />
                   <BarraFunil label="Abrir o Clube" valor={t.clube || 0} max={maxFunil} tom="clube" />
                 </div>
               </section>
@@ -415,7 +415,7 @@ export default function AdminMarketingWhatsAppAutoPage({
                     <i className="wa-dot wa-dot--meu-clube" /> Meu Clube
                   </li>
                   <li>
-                    <i className="wa-dot wa-dot--conversar" /> Loja
+                    <i className="wa-dot wa-dot--conversar" /> Opinião
                   </li>
                   <li>
                     <i className="wa-dot wa-dot--clube" /> Abrir Clube

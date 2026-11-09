@@ -1,0 +1,277 @@
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>Perecíveis setembro 2026</title>
+<style>
+@page { size: A4 portrait; margin: 10mm; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: "Liberation Sans", Arial, sans-serif; color: #1a1a1a; }
+h1 { font-size: 15pt; margin: 0 0 4px; }
+h2 { font-size: 12pt; margin: 12px 0 4px; }
+p { font-size: 9.5pt; margin: 0 0 6px; }
+.sub { color: #333; }
+.totais { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; margin: 8px 0; }
+.totais div { border: 1px solid #ccc; padding: 6px 8px; }
+.totais span { display: block; font-size: 8pt; color: #444; }
+.totais b { font-size: 12pt; }
+table { width: 100%; border-collapse: collapse; margin: 0 0 8px; }
+th, td { border-bottom: 1px solid #ddd; padding: 2px 4px; font-size: 8pt; text-align: left; vertical-align: top; }
+th { border-bottom: 1.5px solid #222; }
+tr.total td { font-weight: 700; border-top: 1.5px solid #222; border-bottom: none; }
+td.num, th:nth-child(n+3) { text-align: right; white-space: nowrap; }
+td.cod { white-space: nowrap; }
+.folha { break-after: page; page-break-after: always; }
+.nota { font-size: 8.5pt; color: #333; }
+.hbar { display: grid; grid-template-columns: 42mm 1fr 32mm; gap: 6px; align-items: center; margin: 3px 0; font-size: 8.5pt; }
+.track { background: #eee; height: 14px; }
+.track span { display: block; height: 14px; }
+.hv { text-align: right; font-weight: 700; }
+.hl { color: #333; }
+.compra { background: #6b5a3e; }
+.caixa { background: #2f6b4f; }
+.nfe { background: #3d5a80; }
+.perda { background: #a33b3b; }
+@media screen { body { background: #eee; } .folha { width: 190mm; margin: 8px auto; background: #fff; padding: 10mm; } }
+@media print { .folha { width: auto; margin: 0; padding: 0; } .compra,.caixa,.nfe,.perda { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+</style></head><body>
+<section class="folha">
+<h1>Perecíveis (004) — compra, venda e perdas</h1>
+<p class="sub">Setembro de 2026, unidade 001. Compra que entrou no estoque: documentos 7100, 7124 e 7381, status normal. Venda de caixa: documento 7300. NF-e: notas autorizadas de venda, CFOP 5102. Perda: documento 7618.</p>
+<div class="totais">
+  <div><span>Compra que entrou</span><b>R$ 325.813,42</b><span>líquido da devolução R$ 324.750,84</span></div>
+  <div><span>Venda no caixa</span><b>R$ 372.489,35</b><span>custo na venda R$ 222.307,96</span></div>
+  <div><span>Venda por NF-e</span><b>R$ 10.258,90</b><span>6 notas · 30 produtos</span></div>
+  <div><span>Perdas do setor</span><b>R$ 38.387,66</b><span>custo · 28 produtos</span></div>
+</div>
+<div class="hbar"><span class="hl">Compra que entrou</span><span class="track"><span class="compra" style="width:87.47%"></span></span><span class="hv">R$ 325.813,42</span></div>
+<div class="hbar"><span class="hl">Venda no caixa</span><span class="track"><span class="caixa" style="width:100.00%"></span></span><span class="hv">R$ 372.489,35</span></div>
+<div class="hbar"><span class="hl">Venda por NF-e</span><span class="track"><span class="nfe" style="width:2.75%"></span></span><span class="hv">R$ 10.258,90</span></div>
+<div class="hbar"><span class="hl">Perdas (custo)</span><span class="track"><span class="perda" style="width:10.31%"></span></span><span class="hv">R$ 38.387,66</span></div>
+<p>Entrou no estoque R$ 292.601,29 de compra de mercadoria (7100, 471 itens), R$ 32.687,93 de entrada de produtor (7381, 52 itens) e R$ 524,20 de compra de produtor rural com entrada (7124). A devolução de compra (7410) tirou R$ 1.062,58. O líquido que ficou é R$ 324.750,84.</p>
+<p>O custo de compra dessas entradas, somado na linha, é R$ 320.075,42. O valor acima é o valor do documento.</p>
+<p class="nota">O vale de compra (7101) soma R$ 21.171,33 e a DANFE de produtor sem entrada (7126) soma R$ 12.955,61. Os dois não deram entrada no estoque, então ficam fora do total. Bonificação (7130) entrou R$ 967,66 e também fica fora da compra.</p>
+</section>
+<section class="folha">
+<h1>Compra de mercadorias que entrou</h1>
+<p class="sub">Documento 7100, status normal, estoque 1. Os 20 maiores pelo valor do documento. O total de baixo é dos 471 itens, não só destes 20.</p>
+<table><thead><tr><th>Código</th><th>Item</th><th>Qtde</th><th>Valor doc. (R$)</th><th>Custo compra</th></tr></thead><tbody>
+<tr><td class="cod">605654</td><td>Carne Bovina Decomposição - Dianteiro</td><td class="num">2.656,14</td><td class="num">57.354,42</td><td class="num">57.354,42</td></tr>
+<tr><td class="cod">151394</td><td>Carne Bovina Decomposição - Traseiro</td><td class="num">1.574,4</td><td class="num">50.066,35</td><td class="num">50.066,35</td></tr>
+<tr><td class="cod">477150</td><td>Carne Bovina Decomposição - Costela</td><td class="num">1.965,296</td><td class="num">47.507,98</td><td class="num">47.432,38</td></tr>
+<tr><td class="cod">218324</td><td>Carne Bovina Posta Vermelha Kg [coxão Duro]</td><td class="num">194,821</td><td class="num">6.630,97</td><td class="num">6.630,97</td></tr>
+<tr><td class="cod">879193</td><td>Carne Suina Meia Carcaça C/Pele Resfr C/Osso</td><td class="num">950</td><td class="num">6.427,80</td><td class="num">6.427,80</td></tr>
+<tr><td class="cod">199346</td><td>Tomate Kg</td><td class="num">562</td><td class="num">5.098,10</td><td class="num">4.830,54</td></tr>
+<tr><td class="cod">200611</td><td>Batatinha Inglesa/monalisa Kg</td><td class="num">897,8</td><td class="num">4.467,75</td><td class="num">4.467,75</td></tr>
+<tr><td class="cod">186562</td><td>Cebola Nacional Kg</td><td class="num">740,43</td><td class="num">3.360,00</td><td class="num">3.360,00</td></tr>
+<tr><td class="cod">556491</td><td>Queijo Mussarela Vale Ita/Aurora/Verê/New Kg Diversos</td><td class="num">99,378</td><td class="num">3.262,66</td><td class="num">3.262,66</td></tr>
+<tr><td class="cod">202630</td><td>Laranja Pera Kg</td><td class="num">1.473</td><td class="num">3.191,00</td><td class="num">3.038,65</td></tr>
+<tr><td class="cod">335363</td><td>Coxa S/ Coxa Frango Kg Tdos</td><td class="num">468</td><td class="num">3.148,20</td><td class="num">3.148,20</td></tr>
+<tr><td class="cod">605379</td><td>Linguica Friella Toscana Kg</td><td class="num">260</td><td class="num">2.930,00</td><td class="num">2.658,97</td></tr>
+<tr><td class="cod">258318</td><td>Carne Bovina Alcatra S/O Kg (coracao 35)</td><td class="num">56,242</td><td class="num">2.586,57</td><td class="num">2.586,57</td></tr>
+<tr><td class="cod">136280</td><td>Linguica Frimesa Toscana Kg (070916)</td><td class="num">200</td><td class="num">2.422,00</td><td class="num">2.197,96</td></tr>
+<tr><td class="cod">450766</td><td>Peito Frango Congelado Kg [todos]</td><td class="num">252</td><td class="num">2.383,20</td><td class="num">2.383,20</td></tr>
+<tr><td class="cod">1081080</td><td>Queijo Frimesa Mussar Fat 150g</td><td class="num">297</td><td class="num">1.915,65</td><td class="num">1.915,65</td></tr>
+<tr><td class="cod">507261</td><td>Carne Bovina Pta Peito S/o Kg</td><td class="num">61,6</td><td class="num">1.755,60</td><td class="num">1.755,60</td></tr>
+<tr><td class="cod">201170</td><td>Figado Bovino Kg</td><td class="num">135,4</td><td class="num">1.730,91</td><td class="num">1.730,91</td></tr>
+<tr><td class="cod">199249</td><td>Batata Doce Kg</td><td class="num">582</td><td class="num">1.605,00</td><td class="num">1.596,42</td></tr>
+<tr><td class="cod">539724</td><td>Meio Das Asas Kg Todas Interfolhado</td><td class="num">72</td><td class="num">1.582,92</td><td class="num">1.582,92</td></tr>
+<tr class="total"><td></td><td>Total destes 20</td><td class="num">13.497,507</td><td class="num">209.427,08</td><td class="num">208.427,92</td></tr>
+<tr class="total"><td></td><td>Total · 471 itens</td><td class="num">24.038,721</td><td class="num">292.601,29</td><td class="num">286.863,29</td></tr>
+</tbody></table>
+</section>
+<section class="folha">
+<h1>Entrada de produtor e devolução de compra</h1>
+<p class="sub">Documento 7381, status normal. Entrou no estoque 1. É entrada de produtor, separada da compra 7100.</p>
+<table><thead><tr><th>Código</th><th>Item</th><th>Qtde</th><th>Valor doc. (R$)</th><th>Custo compra</th></tr></thead><tbody>
+<tr><td class="cod">274062</td><td>Mexirica Kg</td><td class="num">965</td><td class="num">5.232,00</td><td class="num">5.232,00</td></tr>
+<tr><td class="cod">1059610</td><td>Ovos Ceu Azul Verm Gde Duzia</td><td class="num">420</td><td class="num">2.800,00</td><td class="num">2.800,00</td></tr>
+<tr><td class="cod">139670</td><td>Banana Nanica / Caturra</td><td class="num">976,8</td><td class="num">2.616,52</td><td class="num">2.616,52</td></tr>
+<tr><td class="cod">194689</td><td>Alface Un</td><td class="num">695</td><td class="num">2.432,50</td><td class="num">2.432,50</td></tr>
+<tr><td class="cod">1068571</td><td>Linguica/Salame Kg Ricardo</td><td class="num">56,3</td><td class="num">2.026,80</td><td class="num">2.026,80</td></tr>
+<tr><td class="cod">669717</td><td>Pao Caseiro Master Pão Un</td><td class="num">153</td><td class="num">1.071,00</td><td class="num">1.071,00</td></tr>
+<tr><td class="cod">200590</td><td>Banana Prata Kg</td><td class="num">225</td><td class="num">1.012,50</td><td class="num">1.012,50</td></tr>
+<tr><td class="cod">199362</td><td>Moranguinho Bandeja</td><td class="num">120</td><td class="num">994,00</td><td class="num">994,00</td></tr>
+<tr><td class="cod">1147161</td><td>Pao Forma Master Pão Un</td><td class="num">138</td><td class="num">966,00</td><td class="num">966,00</td></tr>
+<tr><td class="cod">194700</td><td>Brocolis Un</td><td class="num">132</td><td class="num">924,00</td><td class="num">924,00</td></tr>
+<tr><td class="cod">658090</td><td>Linguica Frigorosa Pura Defumada Kg N.S.R.</td><td class="num">28,272</td><td class="num">919,59</td><td class="num">919,59</td></tr>
+<tr><td class="cod">199230</td><td>Repolho Verde Kg</td><td class="num">301,8</td><td class="num">893,15</td><td class="num">893,15</td></tr>
+<tr><td class="cod">861553</td><td>Pao Caseiro Da Cida 650g</td><td class="num">90</td><td class="num">765,00</td><td class="num">765,00</td></tr>
+<tr><td class="cod">924679</td><td>Tomate Cereja 350g Bdj São Mateus [celia]</td><td class="num">90</td><td class="num">630,00</td><td class="num">630,00</td></tr>
+<tr><td class="cod">331392</td><td>Toucinho Kg Ricardo</td><td class="num">43,8</td><td class="num">613,20</td><td class="num">613,20</td></tr>
+<tr><td class="cod">141739</td><td>Maça Eva Kg</td><td class="num">160,2</td><td class="num">602,00</td><td class="num">602,00</td></tr>
+<tr><td class="cod">144681</td><td>Couve-Flor Un</td><td class="num">72</td><td class="num">542,00</td><td class="num">542,00</td></tr>
+<tr><td class="cod">258989</td><td>Almeirao Un</td><td class="num">143</td><td class="num">500,50</td><td class="num">500,50</td></tr>
+<tr><td class="cod">199605</td><td>Tempero Verde Un</td><td class="num">143</td><td class="num">500,50</td><td class="num">500,50</td></tr>
+<tr><td class="cod">668168</td><td>Laranja Bahia/Valencia Kg</td><td class="num">159,8</td><td class="num">494,00</td><td class="num">494,00</td></tr>
+<tr><td class="cod">143979</td><td>Alho Argentino/ Nacional Kg</td><td class="num">30</td><td class="num">480,00</td><td class="num">480,00</td></tr>
+<tr><td class="cod">221651</td><td>Mandioca S/ Casca Kg [ Sergio Madeira ]</td><td class="num">59,4</td><td class="num">415,80</td><td class="num">415,80</td></tr>
+<tr><td class="cod">145025</td><td>Castanha C/ Casca Kg</td><td class="num">12,2</td><td class="num">329,40</td><td class="num">329,40</td></tr>
+<tr><td class="cod">199273</td><td>Laranja Lima/Ceu Kg</td><td class="num">100,9</td><td class="num">325,00</td><td class="num">325,00</td></tr>
+<tr><td class="cod">199559</td><td>Rucula Un</td><td class="num">87</td><td class="num">304,50</td><td class="num">304,50</td></tr>
+<tr><td class="cod">681687</td><td>Limao Rosa Kg</td><td class="num">151,1</td><td class="num">302,20</td><td class="num">302,20</td></tr>
+<tr><td class="cod">674141</td><td>Salame Tradição Emb Kg</td><td class="num">10,704</td><td class="num">299,72</td><td class="num">299,72</td></tr>
+<tr><td class="cod">199630</td><td>Chicoria Un</td><td class="num">81</td><td class="num">283,50</td><td class="num">283,50</td></tr>
+<tr><td class="cod">1024701</td><td>Cabotia São Mateus 400g Bdj [celia]</td><td class="num">47</td><td class="num">282,00</td><td class="num">282,00</td></tr>
+<tr><td class="cod">202649</td><td>Couve Folhas Un</td><td class="num">78</td><td class="num">273,00</td><td class="num">273,00</td></tr>
+<tr><td class="cod">199354</td><td>Abobrinha Italia / Menina Kg</td><td class="num">68</td><td class="num">255,50</td><td class="num">255,50</td></tr>
+<tr><td class="cod">194670</td><td>Mamao Formosa/Bahia Kg</td><td class="num">32,3</td><td class="num">254,29</td><td class="num">254,29</td></tr>
+<tr><td class="cod">276260</td><td>Broto Bambu Kg</td><td class="num">30,5</td><td class="num">244,00</td><td class="num">244,00</td></tr>
+<tr><td class="cod">199532</td><td>Cabotia Kg</td><td class="num">96,9</td><td class="num">232,56</td><td class="num">232,56</td></tr>
+<tr><td class="cod">1020552</td><td>Couve Picada São Mateus Bdj 200g [celia]</td><td class="num">41</td><td class="num">212,00</td><td class="num">212,00</td></tr>
+<tr><td class="cod">199613</td><td>Acelga Un</td><td class="num">31</td><td class="num">201,50</td><td class="num">201,50</td></tr>
+<tr><td class="cod">199346</td><td>Tomate Kg</td><td class="num">21,7</td><td class="num">190,96</td><td class="num">190,96</td></tr>
+<tr><td class="cod">668028</td><td>Pera Nacional Kg</td><td class="num">40,2</td><td class="num">180,00</td><td class="num">180,00</td></tr>
+<tr><td class="cod">1017225</td><td>Torresmo Kg Ricardo</td><td class="num">6,5</td><td class="num">162,50</td><td class="num">162,50</td></tr>
+<tr><td class="cod">194697</td><td>Agriao Un</td><td class="num">42</td><td class="num">147,00</td><td class="num">147,00</td></tr>
+<tr><td class="cod">1018019</td><td>Tomate Kg Rasteiro</td><td class="num">21</td><td class="num">115,00</td><td class="num">115,00</td></tr>
+<tr><td class="cod">201227</td><td>Morgote Kg</td><td class="num">20,3</td><td class="num">115,00</td><td class="num">115,00</td></tr>
+<tr><td class="cod">880035</td><td>Tempero Verde Picado São Mateus 70g [celia]</td><td class="num">30</td><td class="num">105,00</td><td class="num">105,00</td></tr>
+<tr><td class="cod">201154</td><td>Rabanete Kg</td><td class="num">14,2</td><td class="num">99,40</td><td class="num">99,40</td></tr>
+<tr><td class="cod">254428</td><td>Maça Fuji/Gala Kg</td><td class="num">18</td><td class="num">72,00</td><td class="num">72,00</td></tr>
+<tr><td class="cod">555266</td><td>Pimentao Amar/Verm Kg</td><td class="num">8,2</td><td class="num">65,60</td><td class="num">65,60</td></tr>
+<tr><td class="cod">1120409</td><td>Banha Embutidos Tradição 1,4kg</td><td class="num">3</td><td class="num">54,00</td><td class="num">54,00</td></tr>
+<tr><td class="cod">1035932</td><td>Milho Verde São Mateus Bdj [celia]</td><td class="num">6</td><td class="num">36,00</td><td class="num">36,00</td></tr>
+<tr><td class="cod">199249</td><td>Batata Doce Kg</td><td class="num">12,6</td><td class="num">35,28</td><td class="num">35,28</td></tr>
+<tr><td class="cod">658111</td><td>Bacon Frigorosa Embalado Kg N.S.R.</td><td class="num">0,62</td><td class="num">29,76</td><td class="num">29,76</td></tr>
+<tr><td class="cod">297445</td><td>Repolho Roxo Kg</td><td class="num">3,6</td><td class="num">25,20</td><td class="num">25,20</td></tr>
+<tr><td class="cod">199257</td><td>Chuchu Kg</td><td class="num">10</td><td class="num">25,00</td><td class="num">25,00</td></tr>
+<tr class="total"><td></td><td>Total · 52 itens</td><td class="num">6.327,896</td><td class="num">32.687,93</td><td class="num">32.687,93</td></tr>
+</tbody></table>
+<h2>Compra de produtor rural com entrada (7124)</h2>
+<table><thead><tr><th>Código</th><th>Item</th><th>Qtde</th><th>Valor doc. (R$)</th><th>Custo compra</th></tr></thead><tbody>
+<tr><td class="cod">370037</td><td>Frango C.C. Amaral Kg</td><td class="num">21,9</td><td class="num">394,20</td><td class="num">394,20</td></tr>
+<tr><td class="cod">1097849</td><td>Amendoim Torrado Só Frit's 500g Sem Pele</td><td class="num">20</td><td class="num">130,00</td><td class="num">130,00</td></tr>
+<tr class="total"><td></td><td>Total · 2 itens</td><td class="num">41,9</td><td class="num">524,20</td><td class="num">524,20</td></tr>
+</tbody></table>
+<h2>Devolução de compra (7410)</h2>
+<p class="sub">Saiu do estoque. Este valor já foi tirado do líquido da primeira página.</p>
+<table><thead><tr><th>Código</th><th>Item</th><th>Qtde</th><th>Valor doc. (R$)</th><th>Custo</th></tr></thead><tbody>
+<tr><td class="cod">477150</td><td>Carne Bovina Decomposição - Costela</td><td class="num">11,6</td><td class="num">299,17</td><td class="num">283,78</td></tr>
+<tr><td class="cod">821187</td><td>Margarina Doriana C/Sal 500g [vigor]</td><td class="num">24</td><td class="num">126,72</td><td class="num">128,97</td></tr>
+<tr><td class="cod">1060619</td><td>Sorvete Gebon 2lts Passas Ao Rum</td><td class="num">4</td><td class="num">107,40</td><td class="num">88,93</td></tr>
+<tr><td class="cod">144665</td><td>Manga Hadem/Tommy Kg</td><td class="num">12,1</td><td class="num">102,85</td><td class="num">95,04</td></tr>
+<tr><td class="cod">1081055</td><td>Picole Bombom Morango 78g Gebon</td><td class="num">20</td><td class="num">99,76</td><td class="num">82,61</td></tr>
+<tr><td class="cod">1060724</td><td>Sorvete Gebon 1,5lts Big Sundae Iorgute/Amarena</td><td class="num">2</td><td class="num">55,96</td><td class="num">46,34</td></tr>
+<tr><td class="cod">1059220</td><td>Requeijao Sta Clara Bisn 400g</td><td class="num">5</td><td class="num">45,50</td><td class="num">43,79</td></tr>
+<tr><td class="cod">1064347</td><td>Gmax Cookies e Cream Gebon 65g</td><td class="num">4</td><td class="num">35,64</td><td class="num">29,51</td></tr>
+<tr><td class="cod">1072854</td><td>Sorvete Gebon 2lts Doce De Leite Argentino</td><td class="num">1</td><td class="num">32,41</td><td class="num">26,84</td></tr>
+<tr><td class="cod">1105043</td><td>Sorv Gebon Napolitano 110g</td><td class="num">6</td><td class="num">29,93</td><td class="num">24,78</td></tr>
+<tr><td class="cod">1060759</td><td>Sorvete Gebon 1,5lts Big Sundae Leitinho Trufado</td><td class="num">1</td><td class="num">27,98</td><td class="num">23,17</td></tr>
+<tr><td class="cod">199265</td><td>Abacaxi Un</td><td class="num">3</td><td class="num">22,50</td><td class="num">23,05</td></tr>
+<tr><td class="cod">1064401</td><td>Pote 1lt Zero Açucar Napolitano Gebon</td><td class="num">1</td><td class="num">20,85</td><td class="num">17,27</td></tr>
+<tr><td class="cod">1130285</td><td>Pote 1 l Zero Acucar e Zero Lactose-Trufa Do Bosque</td><td class="num">1</td><td class="num">20,85</td><td class="num">17,27</td></tr>
+<tr><td class="cod">1060708</td><td>Sorvete Gebon 1,5lts Creme</td><td class="num">1</td><td class="num">15,87</td><td class="num">13,14</td></tr>
+<tr><td class="cod">1064320</td><td>Gefrutti Gebon 60g Abacaxi</td><td class="num">4</td><td class="num">11,00</td><td class="num">9,10</td></tr>
+<tr><td class="cod">1091107</td><td>G-Konne Gebon 85g Dois Amores</td><td class="num">1</td><td class="num">8,19</td><td class="num">6,78</td></tr>
+<tr class="total"><td></td><td>Total · 17 itens</td><td class="num">101,7</td><td class="num">1.062,58</td><td class="num">960,37</td></tr>
+</tbody></table>
+</section>
+<section class="folha">
+<h1>Venda no caixa</h1>
+<p class="sub">Documento 7300, status normal. Os 20 maiores. O total é dos 755 produtos do departamento e fecha o caixa.</p>
+<table><thead><tr><th>Código</th><th>Produto</th><th>Qtde</th><th>Venda (R$)</th><th>Custo da venda</th></tr></thead><tbody>
+<tr><td class="cod">257869</td><td>Carne Bovina Moida 2 Kg</td><td class="num">554,088</td><td class="num">17.888,38</td><td class="num">10.250,63</td></tr>
+<tr><td class="cod">513539</td><td>Carne Bovina Paleta Sete Kg</td><td class="num">323,551</td><td class="num">13.699,20</td><td class="num">7.927,00</td></tr>
+<tr><td class="cod">218359</td><td>Carne Bovina Coxao Mole Kg</td><td class="num">207,705</td><td class="num">10.532,86</td><td class="num">4.881,02</td></tr>
+<tr><td class="cod">218294</td><td>Carne Bovina File Agulha Kg</td><td class="num">296,277</td><td class="num">10.064,81</td><td class="num">7.258,79</td></tr>
+<tr><td class="cod">187224</td><td>Carne Bovina Bisteca Kg 2ª</td><td class="num">202,192</td><td class="num">9.483,33</td><td class="num">4.549,32</td></tr>
+<tr><td class="cod">187216</td><td>Carne Bovina Costela Ripa Kg</td><td class="num">265,778</td><td class="num">9.167,45</td><td class="num">7.308,90</td></tr>
+<tr><td class="cod">218324</td><td>Carne Bovina Posta Vermelha Kg [coxão Duro]</td><td class="num">195,007</td><td class="num">8.245,39</td><td class="num">6.686,64</td></tr>
+<tr><td class="cod">257850</td><td>Carne Bovina File Duplo Kg [ Bisteca 1ª]</td><td class="num">135,449</td><td class="num">8.025,96</td><td class="num">4.874,81</td></tr>
+<tr><td class="cod">324035</td><td>Carne Bovina Costela Minga Kg</td><td class="num">227,262</td><td class="num">7.160,12</td><td class="num">3.840,72</td></tr>
+<tr><td class="cod">199346</td><td>Tomate Kg</td><td class="num">521,785</td><td class="num">7.125,44</td><td class="num">4.195,12</td></tr>
+<tr><td class="cod">187178</td><td>Carne Bovina Alcatra C/O Kg</td><td class="num">103,082</td><td class="num">6.097,50</td><td class="num">4.380,98</td></tr>
+<tr><td class="cod">555240</td><td>Carne Bovina Costela Precoce Kg</td><td class="num">186,604</td><td class="num">5.536,72</td><td class="num">2.836,38</td></tr>
+<tr><td class="cod">507261</td><td>Carne Bovina Pta Peito S/o Kg</td><td class="num">132,848</td><td class="num">5.218,03</td><td class="num">3.786,17</td></tr>
+<tr><td class="cod">187194</td><td>Carne Bovina Paleta Simples Kg</td><td class="num">139,406</td><td class="num">4.980,43</td><td class="num">3.415,45</td></tr>
+<tr><td class="cod">218332</td><td>Carne Bovina Patinho Kg</td><td class="num">90,306</td><td class="num">4.867,61</td><td class="num">2.880,76</td></tr>
+<tr><td class="cod">335363</td><td>Coxa S/ Coxa Frango Kg Tdos</td><td class="num">403,03</td><td class="num">4.661,79</td><td class="num">2.652,46</td></tr>
+<tr><td class="cod">258318</td><td>Carne Bovina Alcatra S/O Kg (coracao 35)</td><td class="num">63,313</td><td class="num">4.657,16</td><td class="num">2.861,30</td></tr>
+<tr><td class="cod">200611</td><td>Batatinha Inglesa/monalisa Kg</td><td class="num">594,355</td><td class="num">4.632,70</td><td class="num">2.648,15</td></tr>
+<tr><td class="cod">139670</td><td>Banana Nanica / Caturra</td><td class="num">1.095,849</td><td class="num">4.215,23</td><td class="num">3.001,28</td></tr>
+<tr><td class="cod">556491</td><td>Queijo Mussarela Vale Ita/Aurora/Verê/New Kg Diversos</td><td class="num">75,78</td><td class="num">4.208,44</td><td class="num">2.512,02</td></tr>
+<tr class="total"><td></td><td>Total destes 20</td><td class="num">5.813,667</td><td class="num">150.468,55</td><td class="num">92.747,90</td></tr>
+<tr class="total"><td></td><td>Total · 755 produtos</td><td class="num">24.400,858</td><td class="num">372.489,35</td><td class="num">222.307,96</td></tr>
+</tbody></table>
+</section>
+<section class="folha">
+<h1>Venda por NF-e</h1>
+<p class="sub">Notas autorizadas, modelo 55, CFOP 5102, natureza de venda. Seis notas. A nota 24406, de R$ 297,54, está autorizada; o movimento de estoque 7322 desses dois itens foi cancelado.</p>
+<table><thead><tr><th>Nota</th><th>Data</th><th></th><th>Itens</th><th>Valor (R$)</th></tr></thead><tbody>
+<tr><td class="cod">24358</td><td>02/09</td><td></td><td class="num">18</td><td class="num">2.345,06</td></tr>
+<tr><td class="cod">24367</td><td>03/09</td><td></td><td class="num">2</td><td class="num">19,68</td></tr>
+<tr><td class="cod">24385</td><td>11/09</td><td></td><td class="num">12</td><td class="num">6.130,45</td></tr>
+<tr><td class="cod">24403</td><td>17/09</td><td></td><td class="num">9</td><td class="num">1.138,19</td></tr>
+<tr><td class="cod">24406</td><td>17/09</td><td></td><td class="num">2</td><td class="num">297,54</td></tr>
+<tr><td class="cod">24407</td><td>17/09</td><td></td><td class="num">3</td><td class="num">327,98</td></tr>
+<tr class="total"><td></td><td>Total · 6 notas</td><td></td><td class="num">46</td><td class="num">10.258,90</td></tr>
+</tbody></table>
+<table><thead><tr><th>Código</th><th>Produto</th><th>Qtde</th><th>Valor (R$)</th><th></th></tr></thead><tbody>
+<tr><td class="cod">218359</td><td>Carne Bovina Coxao Mole Kg</td><td class="num">30</td><td class="num">1.630,50</td><td></td></tr>
+<tr><td class="cod">258318</td><td>Carne Bovina Alcatra S/O Kg (coracao 35)</td><td class="num">15</td><td class="num">1.109,25</td><td></td></tr>
+<tr><td class="cod">187178</td><td>Carne Bovina Alcatra C/O Kg</td><td class="num">15</td><td class="num">893,70</td><td></td></tr>
+<tr><td class="cod">187216</td><td>Carne Bovina Costela Ripa Kg</td><td class="num">20</td><td class="num">699,60</td><td></td></tr>
+<tr><td class="cod">335363</td><td>Coxa S/ Coxa Frango Kg Tdos</td><td class="num">60,72</td><td class="num">667,64</td><td></td></tr>
+<tr><td class="cod">491586</td><td>Linguica Friceu Defumada Kg</td><td class="num">10</td><td class="num">511,90</td><td></td></tr>
+<tr><td class="cod">268534</td><td>Carne Suina Paleta Kg Ofe</td><td class="num">37,759</td><td class="num">480,39</td><td></td></tr>
+<tr><td class="cod">200611</td><td>Batatinha Inglesa/monalisa Kg</td><td class="num">67,435</td><td class="num">473,48</td><td></td></tr>
+<tr><td class="cod">199346</td><td>Tomate Kg</td><td class="num">42,615</td><td class="num">448,58</td><td></td></tr>
+<tr><td class="cod">450766</td><td>Peito Frango Congelado Kg [todos]</td><td class="num">27,63</td><td class="num">403,20</td><td></td></tr>
+<tr><td class="cod">257869</td><td>Carne Bovina Moida 2 Kg</td><td class="num">12</td><td class="num">395,34</td><td></td></tr>
+<tr><td class="cod">143979</td><td>Alho Argentino/ Nacional Kg</td><td class="num">11</td><td class="num">357,39</td><td></td></tr>
+<tr><td class="cod">145149</td><td>Cenoura Kg</td><td class="num">42,355</td><td class="num">298,83</td><td></td></tr>
+<tr><td class="cod">186562</td><td>Cebola Nacional Kg</td><td class="num">42,007</td><td class="num">261,03</td><td></td></tr>
+<tr><td class="cod">700061</td><td>Leite Lactobom Pact 1l</td><td class="num">40</td><td class="num">199,20</td><td></td></tr>
+<tr><td class="cod">199354</td><td>Abobrinha Italia / Menina Kg</td><td class="num">27,802</td><td class="num">185,67</td><td></td></tr>
+<tr><td class="cod">270547</td><td>Carne Suina Pernil Kg Ofe</td><td class="num">10</td><td class="num">179,90</td><td></td></tr>
+<tr><td class="cod">801054</td><td>Pao Pullman Forma 480g</td><td class="num">15</td><td class="num">161,90</td><td></td></tr>
+<tr><td class="cod">556491</td><td>Queijo Mussarela Vale Ita/Aurora/Verê/New Kg Diversos</td><td class="num">3,281</td><td class="num">150,41</td><td></td></tr>
+<tr><td class="cod">461105</td><td>Coxinha Das Asas Env Kg</td><td class="num">12,55</td><td class="num">149,35</td><td></td></tr>
+<tr><td class="cod">199230</td><td>Repolho Verde Kg</td><td class="num">27,835</td><td class="num">131,20</td><td></td></tr>
+<tr><td class="cod">199257</td><td>Chuchu Kg</td><td class="num">16,735</td><td class="num">113,79</td><td></td></tr>
+<tr><td class="cod">199249</td><td>Batata Doce Kg</td><td class="num">21,311</td><td class="num">111,08</td><td></td></tr>
+<tr><td class="cod">199214</td><td>Beterraba Kg</td><td class="num">12,519</td><td class="num">81,37</td><td></td></tr>
+<tr><td class="cod">199532</td><td>Cabotia Kg</td><td class="num">11,727</td><td class="num">48,13</td><td></td></tr>
+<tr><td class="cod">1065416</td><td>Pao Bauducco Tradicional 390g</td><td class="num">3</td><td class="num">34,50</td><td></td></tr>
+<tr><td class="cod">949426</td><td>Margarina Claybom C/S 1kg</td><td class="num">2</td><td class="num">30,98</td><td></td></tr>
+<tr><td class="cod">144975</td><td>Pimentao Verde Kg</td><td class="num">2,384</td><td class="num">30,91</td><td></td></tr>
+<tr><td class="cod">1081080</td><td>Queijo Frimesa Mussar Fat 150g</td><td class="num">1</td><td class="num">10,99</td><td></td></tr>
+<tr><td class="cod">294900</td><td>Mortadela Perd Bolo Fat200 Mbf214</td><td class="num">1</td><td class="num">8,69</td><td></td></tr>
+<tr class="total"><td></td><td>Total · 30 produtos</td><td class="num">641,665</td><td class="num">10.258,90</td><td></td></tr>
+</tbody></table>
+<p class="nota">O documento 7322 com status normal soma R$ 9.961,36. A diferença de R$ 297,54 é a nota 24406, carne moída 2 kg e leite Lactobom, cujo estoque foi cancelado.</p>
+</section>
+<section class="folha">
+<h1>Perdas do setor</h1>
+<p class="sub">Documento 7618, lançamento de perdas. Custo é o custo médio da linha. A preço de venda é o valor gravado na própria linha de perda.</p>
+<table><thead><tr><th>Código</th><th>Produto</th><th>Qtde</th><th>Custo (R$)</th><th>A preço de venda</th></tr></thead><tbody>
+<tr><td class="cod">151394</td><td>Carne Bovina Decomposição - Traseiro</td><td class="num">579,037</td><td class="num">17.747,95</td><td class="num">27.214,74</td></tr>
+<tr><td class="cod">605654</td><td>Carne Bovina Decomposição - Dianteiro</td><td class="num">680,249</td><td class="num">15.028,15</td><td class="num">27.339,21</td></tr>
+<tr><td class="cod">477150</td><td>Carne Bovina Decomposição - Costela</td><td class="num">167,354</td><td class="num">4.045,75</td><td class="num">5.351,98</td></tr>
+<tr><td class="cod">879193</td><td>Carne Suina Meia Carcaça C/Pele Resfr C/Osso</td><td class="num">61,447</td><td class="num">368,68</td><td class="num">1.198,22</td></tr>
+<tr><td class="cod">492876</td><td>Rabo Suino Congelado Kg</td><td class="num">19,967</td><td class="num">357,84</td><td class="num">578,84</td></tr>
+<tr><td class="cod">201170</td><td>Figado Bovino Kg</td><td class="num">13,68</td><td class="num">171,01</td><td class="num">284,41</td></tr>
+<tr><td class="cod">201162</td><td>Bucho Bov Cong Kg</td><td class="num">12,919</td><td class="num">153,17</td><td class="num">373,36</td></tr>
+<tr><td class="cod">1125230</td><td>Sorv Nestle Chokito Mini Bites 78g</td><td class="num">8</td><td class="num">65,29</td><td class="num">124,00</td></tr>
+<tr><td class="cod">1053787</td><td>Picole Nestle La Fruta Coco</td><td class="num">12</td><td class="num">64,36</td><td class="num">99,00</td></tr>
+<tr><td class="cod">1091018</td><td>Picole Nestle La Frutta Manga 66g</td><td class="num">11</td><td class="num">58,91</td><td class="num">90,75</td></tr>
+<tr><td class="cod">595691</td><td>Queijo Minas Santa Clara Frescal Kg</td><td class="num">1,07</td><td class="num">45,80</td><td class="num">64,19</td></tr>
+<tr><td class="cod">1099930</td><td>Picole Nestle Kit Kat 61g</td><td class="num">3</td><td class="num">33,05</td><td class="num">56,97</td></tr>
+<tr><td class="cod">1020552</td><td>Couve Picada São Mateus Bdj 200g [celia]</td><td class="num">6</td><td class="num">32,63</td><td class="num">43,50</td></tr>
+<tr><td class="cod">1118129</td><td>Queijo Processsado Uti 140g President</td><td class="num">3</td><td class="num">34,53</td><td class="num">48,45</td></tr>
+<tr><td class="cod">199265</td><td>Abacaxi Un</td><td class="num">4</td><td class="num">30,37</td><td class="num">47,96</td></tr>
+<tr><td class="cod">275395</td><td>Picole Nestle Chamb Mgo 45g</td><td class="num">4</td><td class="num">19,61</td><td class="num">35,96</td></tr>
+<tr><td class="cod">1081888</td><td>Sorvete Cremoso 1,5l Prem. Banoffee</td><td class="num">1</td><td class="num">18,85</td><td class="num">35,55</td></tr>
+<tr><td class="cod">136603</td><td>Espinhaço Cong Suino Kg</td><td class="num">3,706</td><td class="num">16,46</td><td class="num">23,90</td></tr>
+<tr><td class="cod">1148389</td><td>Frango a Passarinho Levo Iqf 800g</td><td class="num">2</td><td class="num">15,49</td><td class="num">25,98</td></tr>
+<tr><td class="cod">1145762</td><td>Pao Massa Cong Cervejinha Kg Marquespan</td><td class="num">1,96</td><td class="num">15,11</td><td class="num">30,38</td></tr>
+<tr><td class="cod">605484</td><td>Pao D/D Mini Centeio Bol 6,5kg</td><td class="num">0,966</td><td class="num">9,37</td><td class="num">21,73</td></tr>
+<tr><td class="cod">266507</td><td>Cabeça Suina Kg</td><td class="num">2,235</td><td class="num">12,11</td><td class="num">28,83</td></tr>
+<tr><td class="cod">331392</td><td>Toucinho Kg Ricardo</td><td class="num">0,785</td><td class="num">11,18</td><td class="num">18,84</td></tr>
+<tr><td class="cod">1073257</td><td>Iogurte Batavo 450g Pense Ggo Mgo Zero</td><td class="num">1</td><td class="num">10,35</td><td class="num">14,99</td></tr>
+<tr><td class="cod">350672</td><td>Mocoto (pata Bovina) Kg</td><td class="num">0,681</td><td class="num">8,84</td><td class="num">15,65</td></tr>
+<tr><td class="cod">490237</td><td>Orelha Suina Todas Kg</td><td class="num">0,315</td><td class="num">4,39</td><td class="num">6,17</td></tr>
+<tr><td class="cod">1026992</td><td>Pao Baguete Kg Marquespan</td><td class="num">0,56</td><td class="num">4,32</td><td class="num">8,84</td></tr>
+<tr><td class="cod">268011</td><td>Rim Bovino Kg</td><td class="num">1,392</td><td class="num">4,09</td><td class="num">9,05</td></tr>
+<tr class="total"><td></td><td>Total · 28 produtos</td><td class="num">1.603,323</td><td class="num">38.387,66</td><td class="num">63.191,45</td></tr>
+</tbody></table>
+<p class="nota">A nota fiscal de perda (7470) acompanha este lançamento e soma R$ 38.151,88. Não é uma segunda perda. A auditoria de saída (7520) do departamento é R$ 104,06 e ficou de fora desta conta.</p>
+</section>
+</body></html>

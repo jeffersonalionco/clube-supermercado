@@ -1,5 +1,9 @@
+import path from "path";
+import { fileURLToPath } from "url";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+
+const raizCliente = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   plugins: [react()],
@@ -15,6 +19,9 @@ export default defineConfig({
       "10.1.1.100",
       "localhost",
     ],
+    fs: {
+      allow: [raizCliente, path.resolve(raizCliente, "..")],
+    },
     proxy: {
       "/api": {
         target: "http://127.0.0.1:3001",

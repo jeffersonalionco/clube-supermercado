@@ -1,0 +1,189 @@
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>Lucro setembro 2026</title><style>
+@page { size: A4 portrait; margin: 9mm; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: "Liberation Sans", Arial, sans-serif; color: #1a1a1a; }
+h1 { font-size: 16pt; margin: 0 0 2px; }
+h2 { font-size: 11pt; margin: 8px 0 3px; }
+p { font-size: 8.5pt; margin: 0 0 4px; }
+.sub { color: #333; }
+.resultado { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1.5px solid #222; padding-bottom: 6px; margin-bottom: 6px; }
+.resultado b { font-size: 22pt; line-height: 1; }
+.resultado span { display: block; font-size: 8pt; color: #444; }
+.totais { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px; margin: 6px 0; }
+.totais div { border: 1px solid #ccc; padding: 4px 6px; }
+.totais span { display: block; font-size: 7.5pt; color: #444; }
+.totais b { font-size: 11pt; }
+.barra { display: flex; height: 26px; width: 100%; margin: 3px 0 4px; }
+.barra span { display: block; height: 26px; }
+.leg { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 7.5pt; margin: 0 0 6px; }
+.leg i { display: inline-block; width: 8px; height: 8px; margin-right: 3px; vertical-align: -1px; }
+.custo { background: #6b5a3e; }
+.serv { background: #3d5a80; }
+.cons { background: #8aa0b4; }
+.dup { background: #c47b2b; }
+.folha { background: #7a2e2e; }
+.lucro { background: #2f6b4f; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+table { width: 100%; border-collapse: collapse; margin: 0 0 6px; }
+th, td { border-bottom: 1px solid #ddd; padding: 1px 3px; font-size: 7.5pt; text-align: left; vertical-align: top; }
+th { border-bottom: 1.5px solid #222; }
+tr.total td { font-weight: 700; border-top: 1.5px solid #222; border-bottom: none; }
+tr.obra td { color: #6a4a12; }
+td.num, th.num { text-align: right; white-space: nowrap; }
+.nota { font-size: 7.5pt; color: #333; }
+.pagina { break-after: page; page-break-after: always; }
+@media screen { body { background: #eee; } .pagina { width: 190mm; min-height: 277mm; margin: 8px auto; background: #fff; padding: 8mm; } }
+@media print {
+  .pagina { width: auto; margin: 0; padding: 0; min-height: 0; }
+  .custo, .serv, .cons, .dup, .folha, .lucro, .leg i { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style></head><body>
+<section class="pagina">
+<div class="resultado">
+  <div>
+    <h1>Lucro de setembro, unidade 001</h1>
+    <p class="sub">Venda do caixa menos o custo do que foi vendido, as despesas lançadas e R$ 60 mil de funcionários. Perda e imposto ficaram de fora.</p>
+  </div>
+  <div style="text-align:right"><span>Sobra do mês</span><b>R$ 185.182,87</b><span>23,3% da venda do caixa</span></div>
+</div>
+<div class="totais">
+  <div><span>Venda no caixa (7300)</span><b>R$ 795.302,92</b></div>
+  <div><span>Custo do que foi vendido</span><b>R$ 450.426,28</b></div>
+  <div><span>Lucro da venda</span><b>R$ 344.876,64</b><span>43,4% da venda</span></div>
+  <div><span>Despesas + funcionários</span><b>R$ 159.693,77</b></div>
+</div>
+<h2>Como a venda de R$ 795.302,92 se reparte</h2>
+<div class="barra" role="img" aria-label="Custo 56,6%, serviços 4,9%, consumo 3,1%, duplicatas 4,5%, funcionários 7,5%, sobra 23,3%">
+  <span class="custo" style="width:56.64%"></span>
+  <span class="serv" style="width:4.90%"></span>
+  <span class="cons" style="width:3.11%"></span>
+  <span class="dup" style="width:4.53%"></span>
+  <span class="folha" style="width:7.54%"></span>
+  <span class="lucro" style="width:23.28%"></span>
+</div>
+<p class="leg">
+  <span><i class="custo"></i>Custo do vendido R$ 450.426,28</span>
+  <span><i class="serv"></i>Serviços R$ 38.953,60</span>
+  <span><i class="cons"></i>Consumo R$ 24.714,41</span>
+  <span><i class="dup"></i>Duplicatas R$ 36.025,76</span>
+  <span><i class="folha"></i>Funcionários R$ 60.000,00</span>
+  <span><i class="lucro"></i>Sobra R$ 185.182,87</span>
+</p>
+<div class="cols">
+  <div>
+    <h2>Da venda até a sobra</h2>
+    <table>
+      <tbody>
+        <tr><td>Venda no caixa</td><td class="num">795.302,92</td></tr>
+        <tr><td>Custo do que foi vendido</td><td class="num">450.426,28</td></tr>
+        <tr class="total"><td>Lucro da venda</td><td class="num">344.876,64</td></tr>
+        <tr><td>Fornecedores de serviços</td><td class="num">38.953,60</td></tr>
+        <tr><td>Material de consumo</td><td class="num">24.714,41</td></tr>
+        <tr><td>Duplicatas a pagar</td><td class="num">36.025,76</td></tr>
+        <tr><td>Funcionários (estimativa)</td><td class="num">60.000,00</td></tr>
+        <tr class="total"><td>Sobra</td><td class="num">185.182,87</td></tr>
+      </tbody>
+    </table>
+    <p>Desses R$ 36.025,76 de duplicatas, R$ 13.892,72 são material de obra. Sem a obra, a sobra do mês fica em <b>R$ 199.075,59</b>.</p>
+  </div>
+  <div>
+    <h2>O que a conta ainda não tem</h2>
+    <table>
+      <thead><tr><th>Item</th><th>Situação em setembro</th></tr></thead>
+      <tbody>
+        <tr><td>Taxa dos cartões</td><td>A venda entrou pelo valor bruto. A taxa não foi lançada.</td></tr>
+        <tr><td>Aluguel</td><td>Não há uma conta com esse nome. H.E. Bonamigo, R$ 14.448,00, está nas duplicatas.</td></tr>
+        <tr><td>Energia e água</td><td>Já estão nos serviços: Copel R$ 9.525,91 e Sanepar R$ 1.451,77.</td></tr>
+        <tr><td>Contabilidade e sistema</td><td>Já estão nos serviços: Brunetto e RP Info.</td></tr>
+        <tr><td>Depreciação</td><td>Não há lançamento.</td></tr>
+        <tr><td>Pró-labore</td><td>Só entra se já estiver dentro dos R$ 60 mil.</td></tr>
+        <tr><td>Perda e imposto</td><td>Ficaram de fora, como pedido. Funrural e Senar somam R$ 207,65 e não entraram.</td></tr>
+      </tbody>
+    </table>
+    <p class="nota">Fonte: ERP, unidade 001, setembro de 2026. Venda e custo são o documento 7300. Despesas são as contas a pagar 211104, 211102 e 211109, status em aberto ou baixado. Fornecedor de mercadoria para revenda não entra de novo, porque o custo já está na venda. A folha de pagamento não está lançada no ERP.</p>
+  </div>
+</div>
+</section>
+<section class="pagina">
+<h1>Despesas lançadas em setembro</h1>
+<p class="sub">Unidade 001. Cada linha é o fornecedor na conta a pagar. A obra está marcada para separar do custo corrente do mês.</p>
+<div class="cols">
+  <div>
+    <h2>Serviços · R$ 38.953,60</h2>
+    <table>
+      <thead><tr><th>Fornecedor</th><th class="num">Valor (R$)</th></tr></thead>
+      <tbody>
+        <tr><td>Brunetto Consultoria</td><td class="num">12.873,36</td></tr>
+        <tr><td>Copel</td><td class="num">9.525,91</td></tr>
+        <tr><td>Brunetto Contadores</td><td class="num">4.250,00</td></tr>
+        <tr><td>RP Info Sistemas</td><td class="num">2.179,05</td></tr>
+        <tr><td>Graci Aparecida Utikoski</td><td class="num">1.616,00</td></tr>
+        <tr><td>Sanepar</td><td class="num">1.451,77</td></tr>
+        <tr><td>Marcio de Carvalho Barbosa</td><td class="num">950,00</td></tr>
+        <tr><td>Virtual Super Soluções</td><td class="num">938,50</td></tr>
+        <tr><td>Ksnet</td><td class="num">796,96</td></tr>
+        <tr><td>E2R Garbin</td><td class="num">772,33</td></tr>
+        <tr><td>Filivel, balanças</td><td class="num">730,00</td></tr>
+        <tr><td>Global Dedetizadora</td><td class="num">690,00</td></tr>
+        <tr><td>Lucas Ranzan</td><td class="num">600,00</td></tr>
+        <tr><td>Rogerio Ferreira Rosa</td><td class="num">380,00</td></tr>
+        <tr><td>Matceu Monitoramento</td><td class="num">350,00</td></tr>
+        <tr><td>Genusclin, segurança do trabalho</td><td class="num">305,12</td></tr>
+        <tr><td>Crme Sistemas</td><td class="num">287,20</td></tr>
+        <tr><td>Ana Carolina Leal, medicina do trabalho</td><td class="num">157,50</td></tr>
+        <tr><td>Turbo Mais Informática</td><td class="num">99,90</td></tr>
+        <tr class="total"><td>Total · 19 fornecedores</td><td class="num">38.953,60</td></tr>
+      </tbody>
+    </table>
+    <h2>Material de consumo · R$ 24.714,41</h2>
+    <table>
+      <thead><tr><th>Item</th><th class="num">Valor (R$)</th></tr></thead>
+      <tbody>
+        <tr><td>Sacola impressa Superama</td><td class="num">19.085,22</td></tr>
+        <tr><td>Carga de gás 45 kg</td><td class="num">2.150,00</td></tr>
+        <tr><td>Sacola plástica Volte Sempre</td><td class="num">790,00</td></tr>
+        <tr><td>Sapato e bota de açougue</td><td class="num">937,96</td></tr>
+        <tr><td>Disco, bandeja e saco</td><td class="num">1.082,05</td></tr>
+        <tr><td>Leva-doce, touca, gancho e calço</td><td class="num">669,18</td></tr>
+        <tr class="total"><td>Total · documento 7121</td><td class="num">24.714,41</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div>
+    <h2>Duplicatas a pagar · R$ 36.025,76</h2>
+    <table>
+      <thead><tr><th>Fornecedor</th><th class="num">Valor (R$)</th></tr></thead>
+      <tbody>
+        <tr><td>H.E. Bonamigo</td><td class="num">14.448,00</td></tr>
+        <tr class="obra"><td>Paresul, material de construção</td><td class="num">8.628,00</td></tr>
+        <tr><td>Auto Posto Celante</td><td class="num">6.144,22</td></tr>
+        <tr class="obra"><td>Silva &amp; Santana, construção</td><td class="num">2.213,52</td></tr>
+        <tr class="obra"><td>Barcarolo, pré-fabricados</td><td class="num">1.555,20</td></tr>
+        <tr class="obra"><td>Norte Sul Mad</td><td class="num">1.496,00</td></tr>
+        <tr><td>Ivone Piva Berkembrock</td><td class="num">750,00</td></tr>
+        <tr><td>Thiago H. Nascimento</td><td class="num">318,00</td></tr>
+        <tr><td>ACEVE</td><td class="num">250,00</td></tr>
+        <tr><td>Tatosa, cartões</td><td class="num">119,91</td></tr>
+        <tr><td>Elite Gráfica</td><td class="num">100,00</td></tr>
+        <tr><td>JRM2</td><td class="num">2,91</td></tr>
+        <tr class="total"><td>Total</td><td class="num">36.025,76</td></tr>
+        <tr class="obra"><td>Soma da obra, dentro do total</td><td class="num">13.892,72</td></tr>
+      </tbody>
+    </table>
+    <p>A linha em destaque é obra. Sem ela, as duplicatas do mês ficam em R$ 22.133,04 e a sobra sobe de R$ 185.182,87 para R$ 199.075,59.</p>
+    <h2>Fechamento</h2>
+    <table>
+      <tbody>
+        <tr><td>Lucro da venda</td><td class="num">344.876,64</td></tr>
+        <tr><td>Serviços</td><td class="num">38.953,60</td></tr>
+        <tr><td>Material de consumo</td><td class="num">24.714,41</td></tr>
+        <tr><td>Duplicatas, com a obra</td><td class="num">36.025,76</td></tr>
+        <tr><td>Funcionários</td><td class="num">60.000,00</td></tr>
+        <tr class="total"><td>Sobra</td><td class="num">185.182,87</td></tr>
+      </tbody>
+    </table>
+    <p class="nota">Sapato e bota somam R$ 937,96 (R$ 576,28 + R$ 361,68). Disco, bandeja e saco somam R$ 1.082,05. Leva-doce, touca, gancho e calço somam R$ 669,18. A compra de mercadoria para revenda, R$ 570.729,66, ficou de fora: esse custo já está na venda.</p>
+  </div>
+</div>
+</section>
+</body></html>

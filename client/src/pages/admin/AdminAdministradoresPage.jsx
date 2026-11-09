@@ -3,6 +3,9 @@ import AdminLayout from "../../components/admin/AdminLayout.jsx";
 import Field from "../../components/Field.jsx";
 import { clearAdminSession, fetchAdmin } from "../../utils/adminSession.js";
 import { mensagemParaUsuario } from "../../utils/mensagensUsuario.js";
+import SeletorPermissoes from "../../components/admin/SeletorPermissoes.jsx";
+import JanelaAdmin from "../../components/admin/JanelaAdmin.jsx";
+import { MODULOS } from "../../admin/acessoAdmin.js";
 
 function formatarDataHora(valor) {
   if (!valor) return "—";
@@ -35,7 +38,34 @@ const FORM_VAZIO = {
   nome: "",
   senha: "",
   confirmacaoSenha: "",
+  acessoTotal: false,
+  ferramentas: [],
 };
+
+function resumoAcesso(item) {
+  if (!item || item.acessoTotal !== false) {
+    return { titulo: "Acesso completo", grupos: [] };
+  }
+  const ids = new Set(item.ferramentas || []);
+  const grupos = MODULOS.map((modulo) => ({
+    label: modulo.label,
+    ferramentas: modulo.ferramentas.filter((itemFerramenta) => ids.has(itemFerramenta.id)),
+  })).filter((grupo) => grupo.ferramentas.length);
+  return {
+    titulo: grupos.length ? "Acesso personalizado" : "Somente o Manual",
+    grupos,
+  };
+}
+
+function permissaoDe(item) {
+  if (item?.acessoTotal === false) {
+    return {
+      acessoTotal: false,
+      ferramentas: Array.isArray(item.ferramentas) ? item.ferramentas : [],
+    };
+  }
+  return { acessoTotal: true, ferramentas: [] };
+}
 
 export default function AdminAdministradoresPage({ tab, onTabChange, onLogout, admin }) {
   const [lista, setLista] = useState([]);
@@ -48,8 +78,11 @@ export default function AdminAdministradoresPage({ tab, onTabChange, onLogout, a
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [loadingSenha, setLoadingSenha] = useState(false);
   const [loadingStatus, setLoadingStatus] = useState(false);
+  const [permissao, setPermissao] = useState({ acessoTotal: true, ferramentas: [] });
+  const [loadingPermissao, setLoadingPermissao] = useState(false);
   const [error, setError] = useState("");
   const [sucesso, setSucesso] = useState("");
+  const [janela, setJanela] = useState(null);
   const detalheRef = useRef(null);
 
   const loginAtual = String(admin?.usuario || "").toLowerCase();
@@ -86,21 +119,35 @@ export default function AdminAdministradoresPage({ tab, onTabChange, onLogout, a
     carregarLista();
   }, [carregarLista]);
 
+  useEffect(() => {
+    if (selecionado) setPermissao(permissaoDe(selecionado));
+  }, [selecionado]);
+
   function atualizarCampo(campo, valor) {
     setForm((prev) => ({ ...prev, [campo]: valor }));
   }
 
-  function selecionarAdmin(item, { focarSenha = false } = {}) {
+  function fecharJanela() {
+    if (loadingCriar || loadingSenha || loadingPermissao) return;
+    setJanela(null);
+    setError("");
+  }
+
+  function abrirCriar() {
+    setForm(FORM_VAZIO);
+    setError("");
+    setSucesso("");
+    setJanela("criar");
+  }
+
+  function selecionarAdmin(item, { abrirSenha = false, abrirAcesso = false } = {}) {
     setSelecionado(item);
+    setPermissao(permissaoDe(item));
     setNovaSenha("");
     setConfirmacaoSenha("");
     setError("");
-    if (focarSenha) {
-      setTimeout(() => {
-        detalheRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-        document.getElementById("admin-senha-nova")?.focus();
-      }, 100);
-    }
+    if (abrirSenha) setJanela("senha");
+    else if (abrirAcesso) setJanela("acesso");
   }
 
   async function handleCriar(event) {
@@ -116,6 +163,8 @@ export default function AdminAdministradoresPage({ tab, onTabChange, onLogout, a
       });
       setSucesso(resultado.message || "Administrador criado");
       setForm(FORM_VAZIO);
+      setJanela(null);
+      setPermissao(permissaoDe(resultado.administrador));
       await carregarLista();
       if (resultado.administrador) {
         selecionarAdmin(resultado.administrador);
@@ -154,6 +203,7 @@ export default function AdminAdministradoresPage({ tab, onTabChange, onLogout, a
       setSucesso(resultado.message || "Senha atualizada");
       setNovaSenha("");
       setConfirmacaoSenha("");
+      setJanela(null);
       await carregarLista();
     } catch (err) {
       if (err.code === "UNAUTHORIZED") {
@@ -164,6 +214,41 @@ export default function AdminAdministradoresPage({ tab, onTabChange, onLogout, a
       setError(mensagemParaUsuario(err.message));
     } finally {
       setLoadingSenha(false);
+    }
+  }
+
+  async function handleSalvarPermissao(event) {
+    event.preventDefault();
+    if (!selecionado) return;
+
+    setError("");
+    setSucesso("");
+    setLoadingPermissao(true);
+
+    try {
+      const resultado = await fetchAdmin(`/api/admin/administradores/${selecionado.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          acessoTotal: permissao.acessoTotal,
+          ferramentas: permissao.acessoTotal ? [] : permissao.ferramentas,
+        }),
+      });
+      setJanela(null);
+      setSucesso(resultado.message || "Permissões atualizadas");
+      if (resultado.administrador) {
+        setSelecionado(resultado.administrador);
+        setPermissao(permissaoDe(resultado.administrador));
+      }
+      await carregarLista();
+    } catch (err) {
+      if (err.code === "UNAUTHORIZED") {
+        clearAdminSession();
+        onLogout();
+        return;
+      }
+      setError(mensagemParaUsuario(err.message));
+    } finally {
+      setLoadingPermissao(false);
     }
   }
 
@@ -202,9 +287,9 @@ export default function AdminAdministradoresPage({ tab, onTabChange, onLogout, a
   return (
     <AdminLayout tab={tab} onTabChange={onTabChange} onLogout={handleSair} admin={admin}>
       <div className="admin-admins-stack">
-        {(error || sucesso) && (
+        {((error && !janela) || sucesso) && (
           <div className="admin-feedback">
-            {error && (
+            {error && !janela && (
               <p className="admin-alert" role="alert">
                 {error}
               </p>
@@ -217,60 +302,15 @@ export default function AdminAdministradoresPage({ tab, onTabChange, onLogout, a
           </div>
         )}
 
-        <section className="admin-card">
-          <h2>Novo administrador</h2>
-          <p className="admin-resgate-hint">
-            Cada pessoa do time terá seu próprio usuário e senha para acessar o painel.
+        <div className="admin-admins-topo">
+          <p>
+            Quem já está cadastrado continua com acesso completo até você alterar.
+            Novas pessoas entram só com o que for marcado na janela.
           </p>
-          <form className="admin-form admin-form--inline admin-admins-form-novo" onSubmit={handleCriar}>
-            <Field label="Usuário de login" id="admin-novo-usuario">
-              <input
-                id="admin-novo-usuario"
-                value={form.usuario}
-                onChange={(e) => atualizarCampo("usuario", e.target.value)}
-                placeholder="ex.: maria.gerente"
-                autoComplete="off"
-                required
-              />
-            </Field>
-            <Field label="Nome" id="admin-novo-nome">
-              <input
-                id="admin-novo-nome"
-                value={form.nome}
-                onChange={(e) => atualizarCampo("nome", e.target.value)}
-                placeholder="ex.: Maria Silva"
-                autoComplete="name"
-              />
-            </Field>
-            <Field label="Senha" id="admin-novo-senha">
-              <input
-                id="admin-novo-senha"
-                type="password"
-                value={form.senha}
-                onChange={(e) => atualizarCampo("senha", e.target.value)}
-                autoComplete="new-password"
-                required
-              />
-            </Field>
-            <Field label="Confirmar senha" id="admin-novo-conf">
-              <input
-                id="admin-novo-conf"
-                type="password"
-                value={form.confirmacaoSenha}
-                onChange={(e) => atualizarCampo("confirmacaoSenha", e.target.value)}
-                autoComplete="new-password"
-                required
-              />
-            </Field>
-            <button
-              type="submit"
-              className="admin-btn admin-btn--primary"
-              disabled={loadingCriar}
-            >
-              {loadingCriar ? "Criando…" : "Adicionar"}
-            </button>
-          </form>
-        </section>
+          <button type="button" className="admin-btn admin-btn--primary" onClick={abrirCriar}>
+            Novo administrador
+          </button>
+        </div>
 
         <div className="admin-admins-layout-detalhe">
           <section className="admin-card admin-admins-layout__lista">
@@ -304,7 +344,13 @@ export default function AdminAdministradoresPage({ tab, onTabChange, onLogout, a
                       >
                         <strong>{item.nome || item.usuario}</strong>
                         <span>@{item.usuario}</span>
-                        <small>Desde {formatarDataHora(item.criadoEm)}</small>
+                        <small>
+                          Desde {formatarDataHora(item.criadoEm)}
+                          {" · "}
+                          {item.acessoTotal === false
+                            ? `${item.ferramentas?.length || 0} ferramenta${item.ferramentas?.length === 1 ? "" : "s"}`
+                            : "Acesso completo"}
+                        </small>
                       </button>
                       <div className="admin-admins-item__side">
                         {eu && <span className="admin-admins-item__eu">Você</span>}
@@ -316,9 +362,16 @@ export default function AdminAdministradoresPage({ tab, onTabChange, onLogout, a
                         <button
                           type="button"
                           className="admin-btn admin-btn--ghost admin-btn--sm"
-                          onClick={() => selecionarAdmin(item, { focarSenha: true })}
+                          onClick={() => selecionarAdmin(item, { abrirAcesso: true })}
                         >
-                          Alterar senha
+                          Acesso
+                        </button>
+                        <button
+                          type="button"
+                          className="admin-btn admin-btn--ghost admin-btn--sm"
+                          onClick={() => selecionarAdmin(item, { abrirSenha: true })}
+                        >
+                          Senha
                         </button>
                         <button
                           type="button"
@@ -344,8 +397,7 @@ export default function AdminAdministradoresPage({ tab, onTabChange, onLogout, a
                 </span>
                 <h3>Selecione um administrador</h3>
                 <p>
-                  Escolha alguém na lista ou clique em <strong>Alterar senha</strong> para definir uma
-                  nova senha de acesso ao painel.
+                  Escolha alguém na lista para ver o acesso, alterar a senha ou desativar a conta.
                 </p>
               </div>
             ) : (
@@ -381,68 +433,249 @@ export default function AdminAdministradoresPage({ tab, onTabChange, onLogout, a
                   </div>
                 </dl>
 
-                <form className="admin-usuarios-senha-card" onSubmit={handleAlterarSenha}>
-                  <div className="admin-usuarios-senha-card__head">
-                    <span className="admin-usuarios-senha-card__icone" aria-hidden>
-                      S
-                    </span>
-                    <div>
-                      <h3>Alterar senha de acesso</h3>
-                      <p>
-                        Mínimo de 8 caracteres. Qualquer administrador ativo pode redefinir a senha de
-                        outro — inclusive a sua própria.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="admin-form__row">
-                    <Field label="Nova senha" id="admin-senha-nova">
-                      <input
-                        id="admin-senha-nova"
-                        type={mostrarSenha ? "text" : "password"}
-                        autoComplete="new-password"
-                        value={novaSenha}
-                        onChange={(e) => setNovaSenha(e.target.value)}
-                        minLength={8}
-                        required
-                      />
-                    </Field>
-                    <Field label="Confirmar senha" id="admin-senha-conf">
-                      <input
-                        id="admin-senha-conf"
-                        type={mostrarSenha ? "text" : "password"}
-                        autoComplete="new-password"
-                        value={confirmacaoSenha}
-                        onChange={(e) => setConfirmacaoSenha(e.target.value)}
-                        minLength={8}
-                        required
-                      />
-                    </Field>
-                  </div>
-
-                  <div className="admin-usuarios-senha-card__acoes">
-                    <label className="admin-usuarios-mostrar-senha">
-                      <input
-                        type="checkbox"
-                        checked={mostrarSenha}
-                        onChange={(e) => setMostrarSenha(e.target.checked)}
-                      />
-                      Mostrar senhas
-                    </label>
-                    <button
-                      type="submit"
-                      className="admin-btn admin-btn--primary"
-                      disabled={loadingSenha}
-                    >
-                      {loadingSenha ? "Salvando…" : "Salvar nova senha"}
-                    </button>
-                  </div>
-                </form>
+                <ResumoAcessoCard
+                  item={selecionado}
+                  onEditar={() => {
+                    setPermissao(permissaoDe(selecionado));
+                    setError("");
+                    setJanela("acesso");
+                  }}
+                  onSenha={() => {
+                    setNovaSenha("");
+                    setConfirmacaoSenha("");
+                    setError("");
+                    setJanela("senha");
+                  }}
+                />
               </>
             )}
           </section>
         </div>
+
+        {janela === "criar" && (
+          <JanelaAdmin
+            larga
+            titulo="Novo administrador"
+            subtitulo="Dados de acesso de um lado, ferramentas do outro."
+            onFechar={fecharJanela}
+            rodape={
+              <>
+                <button type="button" className="admin-btn admin-btn--ghost" onClick={fecharJanela}>
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  form="admin-form-novo"
+                  className="admin-btn admin-btn--primary"
+                  disabled={loadingCriar}
+                >
+                  {loadingCriar ? "Criando…" : "Criar administrador"}
+                </button>
+              </>
+            }
+          >
+            {error && (
+              <p className="admin-alert" role="alert">
+                {error}
+              </p>
+            )}
+            <form id="admin-form-novo" className="admin-janela__criar" onSubmit={handleCriar}>
+              <section className="admin-janela__bloco">
+                <h3>Dados de acesso</h3>
+                <div className="admin-form">
+                  <Field label="Usuário de login" id="admin-novo-usuario">
+                    <input
+                      id="admin-novo-usuario"
+                      value={form.usuario}
+                      onChange={(e) => atualizarCampo("usuario", e.target.value)}
+                      placeholder="ex.: maria.gerente"
+                      autoComplete="off"
+                      required
+                    />
+                  </Field>
+                  <Field label="Nome" id="admin-novo-nome">
+                    <input
+                      id="admin-novo-nome"
+                      value={form.nome}
+                      onChange={(e) => atualizarCampo("nome", e.target.value)}
+                      placeholder="ex.: Maria Silva"
+                      autoComplete="name"
+                    />
+                  </Field>
+                  <Field label="Senha" id="admin-novo-senha">
+                    <input
+                      id="admin-novo-senha"
+                      type="password"
+                      value={form.senha}
+                      onChange={(e) => atualizarCampo("senha", e.target.value)}
+                      autoComplete="new-password"
+                      minLength={8}
+                      required
+                    />
+                  </Field>
+                  <Field label="Confirmar senha" id="admin-novo-conf">
+                    <input
+                      id="admin-novo-conf"
+                      type="password"
+                      value={form.confirmacaoSenha}
+                      onChange={(e) => atualizarCampo("confirmacaoSenha", e.target.value)}
+                      autoComplete="new-password"
+                      minLength={8}
+                      required
+                    />
+                  </Field>
+                </div>
+              </section>
+              <section className="admin-janela__bloco">
+                <h3>Ferramentas</h3>
+                <SeletorPermissoes
+                  idPrefix="admin-novo"
+                  acessoTotal={form.acessoTotal}
+                  ferramentas={form.ferramentas}
+                  onChange={(proxima) => setForm((prev) => ({ ...prev, ...proxima }))}
+                />
+              </section>
+            </form>
+          </JanelaAdmin>
+        )}
+
+        {janela === "acesso" && selecionado && (
+          <JanelaAdmin
+            larga
+            titulo={`Acesso de ${selecionado.nome || selecionado.usuario}`}
+            subtitulo={`@${selecionado.usuario}`}
+            onFechar={fecharJanela}
+            rodape={
+              <>
+                <button type="button" className="admin-btn admin-btn--ghost" onClick={fecharJanela}>
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  form="admin-form-acesso"
+                  className="admin-btn admin-btn--primary"
+                  disabled={loadingPermissao}
+                >
+                  {loadingPermissao ? "Salvando…" : "Salvar acesso"}
+                </button>
+              </>
+            }
+          >
+            {error && (
+              <p className="admin-alert" role="alert">
+                {error}
+              </p>
+            )}
+            <form id="admin-form-acesso" onSubmit={handleSalvarPermissao}>
+              <SeletorPermissoes
+                idPrefix={`admin-${selecionado.id}`}
+                acessoTotal={permissao.acessoTotal}
+                ferramentas={permissao.ferramentas}
+                onChange={setPermissao}
+              />
+            </form>
+          </JanelaAdmin>
+        )}
+
+        {janela === "senha" && selecionado && (
+          <JanelaAdmin
+            titulo={`Senha de ${selecionado.nome || selecionado.usuario}`}
+            subtitulo="Mínimo de 8 caracteres. Vale para o próximo login."
+            onFechar={fecharJanela}
+            rodape={
+              <>
+                <button type="button" className="admin-btn admin-btn--ghost" onClick={fecharJanela}>
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  form="admin-form-senha"
+                  className="admin-btn admin-btn--primary"
+                  disabled={loadingSenha}
+                >
+                  {loadingSenha ? "Salvando…" : "Salvar senha"}
+                </button>
+              </>
+            }
+          >
+            {error && (
+              <p className="admin-alert" role="alert">
+                {error}
+              </p>
+            )}
+            <form id="admin-form-senha" className="admin-form" onSubmit={handleAlterarSenha}>
+              <Field label="Nova senha" id="admin-senha-nova">
+                <input
+                  id="admin-senha-nova"
+                  type={mostrarSenha ? "text" : "password"}
+                  autoComplete="new-password"
+                  value={novaSenha}
+                  onChange={(e) => setNovaSenha(e.target.value)}
+                  minLength={8}
+                  required
+                />
+              </Field>
+              <Field label="Confirmar senha" id="admin-senha-conf">
+                <input
+                  id="admin-senha-conf"
+                  type={mostrarSenha ? "text" : "password"}
+                  autoComplete="new-password"
+                  value={confirmacaoSenha}
+                  onChange={(e) => setConfirmacaoSenha(e.target.value)}
+                  minLength={8}
+                  required
+                />
+              </Field>
+              <label className="admin-usuarios-mostrar-senha">
+                <input
+                  type="checkbox"
+                  checked={mostrarSenha}
+                  onChange={(e) => setMostrarSenha(e.target.checked)}
+                />
+                Mostrar senhas
+              </label>
+            </form>
+          </JanelaAdmin>
+        )}
       </div>
     </AdminLayout>
+  );
+}
+
+function ResumoAcessoCard({ item, onEditar, onSenha }) {
+  const resumo = resumoAcesso(item);
+  return (
+    <section className="admin-admins-acesso">
+      <header>
+        <div>
+          <h3>{resumo.titulo}</h3>
+          <p>
+            {resumo.titulo === "Acesso completo"
+              ? "Todas as ferramentas do painel estão liberadas."
+              : resumo.grupos.length
+                ? "Só as ferramentas abaixo estão liberadas."
+                : "Nenhuma ferramenta além do Manual."}
+          </p>
+        </div>
+        <div className="admin-admins-acesso__acoes">
+          <button type="button" className="admin-btn admin-btn--primary admin-btn--sm" onClick={onEditar}>
+            Editar acesso
+          </button>
+          <button type="button" className="admin-btn admin-btn--ghost admin-btn--sm" onClick={onSenha}>
+            Alterar senha
+          </button>
+        </div>
+      </header>
+      {resumo.grupos.length > 0 && (
+        <ul className="admin-admins-acesso__grupos">
+          {resumo.grupos.map((grupo) => (
+            <li key={grupo.label}>
+              <strong>{grupo.label}</strong>
+              <span>{grupo.ferramentas.map((ferramenta) => ferramenta.label).join(" · ")}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }

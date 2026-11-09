@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Vendas por departamento — setembro de 2026</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 12mm;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #fff;
+      color: #1a1a1a;
+      font-family: "Liberation Sans", "Nimbus Sans", Arial, sans-serif;
+      font-size: 11pt;
+      line-height: 1.35;
+    }
+    .folha {
+      width: 186mm;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 16pt;
+      line-height: 1.2;
+      margin: 0 0 4px;
+    }
+    .sub {
+      margin: 0 0 10px;
+      color: #333;
+      font-size: 10pt;
+    }
+    .totais {
+      display: grid;
+      grid-template-columns: 1.3fr 1.2fr 1fr;
+      gap: 8px;
+      margin: 0 0 12px;
+    }
+    .total {
+      border: 1px solid #ccc;
+      padding: 8px 10px;
+    }
+    .total b {
+      display: block;
+      font-size: 13pt;
+      margin-top: 2px;
+    }
+    .total span {
+      font-size: 8.5pt;
+      color: #444;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0 0 10px;
+    }
+    th, td {
+      border-bottom: 1px solid #ccc;
+      padding: 4px 6px;
+      text-align: right;
+      font-size: 9.5pt;
+    }
+    th {
+      border-bottom: 1.5px solid #222;
+      font-size: 8.5pt;
+      text-align: right;
+      font-weight: 700;
+    }
+    th:first-child, td:first-child { text-align: left; }
+    tr.total td {
+      border-bottom: none;
+      border-top: 1.5px solid #222;
+      font-weight: 700;
+      padding-top: 6px;
+    }
+    .nota {
+      border: 1px solid #ccc;
+      padding: 8px 10px;
+      font-size: 9pt;
+      color: #222;
+    }
+    .nota strong { display: block; margin-bottom: 3px; }
+    .rodape {
+      margin-top: 8px;
+      font-size: 8pt;
+      color: #555;
+    }
+    @media screen {
+      body { background: #e8e8e8; padding: 16px 0; }
+      .folha {
+        background: #fff;
+        min-height: 273mm;
+        padding: 12mm;
+        box-shadow: none;
+      }
+    }
+    @media print {
+      body { background: #fff; }
+      .folha { width: auto; min-height: 0; padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  <article class="folha">
+    <h1>Vendas por departamento — setembro de 2026</h1>
+    <p class="sub">Unidade 001. Emissão de 01/09/2026 a 30/09/2026. NFC-e alinhada ao fechamento de caixa. NF-e de venda à parte.</p>
+
+    <div class="totais">
+      <div class="total"><span>Venda fiscal (NFC-e + NF-e)</span><b>R$ 885.780,16</b></div>
+      <div class="total"><span>Fechamento de caixa / NFC-e</span><b>R$ 795.302,92</b></div>
+      <div class="total"><span>NF-e de venda (48 notas)</span><b>R$ 90.477,24</b></div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Departamento</th>
+          <th>NFC-e / caixa</th>
+          <th>NF-e</th>
+          <th>Total</th>
+          <th>Parte</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>004 Perecíveis</td><td>372.489,35</td><td>40.426,90</td><td>412.916,25</td><td>46,6%</td></tr>
+        <tr><td>003 Mercearia Doce</td><td>105.499,69</td><td>4.686,60</td><td>110.186,29</td><td>12,4%</td></tr>
+        <tr><td>010 Padaria</td><td>92.135,69</td><td>5.685,87</td><td>97.821,56</td><td>11,0%</td></tr>
+        <tr><td>002 Mercearia Alto Giro</td><td>57.369,35</td><td>13.541,28</td><td>70.910,63</td><td>8,0%</td></tr>
+        <tr><td>001 Bebidas</td><td>51.726,96</td><td>790,95</td><td>52.517,91</td><td>5,9%</td></tr>
+        <tr><td>005 Bazar/Têxtil/Utilidades</td><td>39.796,27</td><td>6.640,25</td><td>46.436,52</td><td>5,2%</td></tr>
+        <tr><td>006 Higiene/Saúde/Beleza</td><td>35.386,76</td><td>7.783,12</td><td>43.169,88</td><td>4,9%</td></tr>
+        <tr><td>007 Limpeza</td><td>28.952,91</td><td>10.922,27</td><td>39.875,18</td><td>4,5%</td></tr>
+        <tr><td>009 Loja / Confecções / Outros</td><td>11.778,84</td><td>—</td><td>11.778,84</td><td>1,3%</td></tr>
+        <tr><td>098 Uso e consumo / Embalagens</td><td>167,10</td><td>—</td><td>167,10</td><td>0,0%</td></tr>
+        <tr class="total"><td>Total</td><td>795.302,92</td><td>90.477,24</td><td>885.780,16</td><td>100%</td></tr>
+      </tbody>
+    </table>
+
+    <div class="nota">
+      <strong>Como o valor foi fechado</strong>
+      Os R$ 795.302,92 são o produto líquido do fechamento de caixa e batem com os itens da NFC-e autorizada (CFOP 5102 e 5405), já com cancelamento de R$ 13.005,73 e desconto de R$ 7.565,68. A NF-e de venda, modelo 55, são 48 notas de CFOP 5102 e 5405 e não entra no caixa.
+    </div>
+    <p class="rodape">Fonte: ERP, unidade 001, setembro de 2026. Nomes de departamento pelo código do cadastro.</p>
+  </article>
+</body>
+</html>

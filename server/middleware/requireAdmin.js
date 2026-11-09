@@ -1,6 +1,7 @@
 import { verificarTokenAdmin } from "../services/adminToken.js";
+import { carregarAcessoPorUsuario } from "../services/painelAdminService.js";
 
-export function requireAdmin(req, res, next) {
+export async function requireAdmin(req, res, next) {
   const header = req.headers.authorization;
 
   if (!header?.startsWith("Bearer ")) {
@@ -11,12 +12,25 @@ export function requireAdmin(req, res, next) {
 
   try {
     const payload = verificarTokenAdmin(token);
-    req.admin = { usuario: payload.usuario };
-    next();
+    const acesso = await carregarAcessoPorUsuario(payload.usuario);
+    if (!acesso?.ativo) {
+      return res.status(401).json({ error: "Sessão de administrador inválida" });
+    }
+    req.admin = {
+      usuario: acesso.usuario,
+      id: acesso.id,
+      nome: acesso.nome,
+    };
+    req.adminAcesso = acesso;
+    return next();
   } catch (error) {
     if (error.name === "TokenExpiredError") {
       return res.status(401).json({ error: "Sessão expirada. Faça login novamente." });
     }
-    return res.status(401).json({ error: "Sessão de administrador inválida" });
+    if (error.name === "JsonWebTokenError" || error.message === "Token sem permissão de administrador") {
+      return res.status(401).json({ error: "Sessão de administrador inválida" });
+    }
+    console.error("[requireAdmin]", error.message);
+    return res.status(500).json({ error: "Não foi possível confirmar o acesso" });
   }
 }

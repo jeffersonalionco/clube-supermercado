@@ -5,6 +5,7 @@ import fs from "fs";
 import { fileURLToPath } from "url";
 import { randomUUID } from "crypto";
 import { requireAdmin } from "../middleware/requireAdmin.js";
+import { guardarEscopo } from "../middleware/guardarEscopo.js";
 import { mensagemParaCliente } from "../utils/mensagemCliente.js";
 import { smtpDisponivel } from "../services/mailService.js";
 import {
@@ -96,6 +97,7 @@ const upload = multer({
 });
 
 router.use(requireAdmin);
+router.use(guardarEscopo("marketing"));
 
 router.post("/upload", (req, res) => {
   upload.fields([
@@ -942,6 +944,66 @@ router.get("/campanhas/:id/progresso", async (req, res) => {
     return res.json(resultado);
   } catch (error) {
     console.error("[admin/marketing/progresso]", error.message);
+    return res.status(500).json({ error: mensagemParaCliente(error.message) });
+  }
+});
+
+router.get("/ouvidoria", async (req, res) => {
+  try {
+    const { listarTicketsOuvidoria } = await import(
+      "../services/marketing/whatsappOuvidoriaService.js"
+    );
+    const dados = await listarTicketsOuvidoria({
+      tipo: req.query.tipo,
+      status: req.query.status,
+    });
+    return res.json(dados);
+  } catch (error) {
+    console.error("[admin/ouvidoria]", error.message);
+    return res.status(500).json({ error: mensagemParaCliente(error.message) });
+  }
+});
+
+router.get("/ouvidoria/:id/mensagens/:mensagemId/arquivo", async (req, res) => {
+  try {
+    const { lerArquivoOuvidoria } = await import(
+      "../services/marketing/whatsappOuvidoriaService.js"
+    );
+    const arquivo = await lerArquivoOuvidoria(req.params.id, req.params.mensagemId);
+    if (!arquivo) return res.status(404).end();
+    res.setHeader("Content-Type", arquivo.mime);
+    res.setHeader("Cache-Control", "private, max-age=3600");
+    return res.sendFile(arquivo.caminho);
+  } catch (error) {
+    console.error("[admin/ouvidoria/arquivo]", error.message);
+    return res.status(500).end();
+  }
+});
+
+router.get("/ouvidoria/:id", async (req, res) => {
+  try {
+    const { obterTicketOuvidoria } = await import(
+      "../services/marketing/whatsappOuvidoriaService.js"
+    );
+    const ticket = await obterTicketOuvidoria(req.params.id);
+    if (!ticket) return res.status(404).json({ error: "Registro não encontrado" });
+    return res.json({ ticket });
+  } catch (error) {
+    console.error("[admin/ouvidoria/id]", error.message);
+    return res.status(500).json({ error: mensagemParaCliente(error.message) });
+  }
+});
+
+router.patch("/ouvidoria/:id", async (req, res) => {
+  try {
+    const { atualizarStatusOuvidoria } = await import(
+      "../services/marketing/whatsappOuvidoriaService.js"
+    );
+    const resultado = await atualizarStatusOuvidoria(req.params.id, req.body?.status);
+    if (!resultado.ok) return res.status(400).json({ error: resultado.error });
+    return res.json(resultado);
+  } catch (error) {
+    console.error("[admin/ouvidoria/status]", error.message);
     return res.status(500).json({ error: mensagemParaCliente(error.message) });
   }
 });

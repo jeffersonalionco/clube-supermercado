@@ -35,6 +35,7 @@ import { imprimirPedidoPadaria } from "../../utils/padariaImpressao.js";
 import PadariaStatusBadge from "../../components/padaria/PadariaStatusBadge.jsx";
 import { mensagemParaUsuario } from "../../utils/mensagensUsuario.js";
 import "../../styles/padaria.css";
+import { acessoDaSessao, subLiberado } from "../../admin/acessoAdmin.js";
 
 const SUBS = [
   { id: "dashboard", label: "Operação", icon: LayoutDashboard },
@@ -93,7 +94,9 @@ function Badge({ ok, sim = "Sim", nao = "Não" }) {
 }
 
 export default function AdminPadariaPage({ tab, onTabChange, onLogout, admin }) {
-  const [sub, setSub] = useState("dashboard");
+  const acesso = acessoDaSessao(admin);
+  const subsVisiveis = SUBS.filter((item) => subLiberado(acesso, "padaria", item.id));
+  const [sub, setSub] = useState(() => subsVisiveis[0]?.id || "dashboard");
   const [produtos, setProdutos] = useState([]);
   const [total, setTotal] = useState(0);
   const [stats, setStats] = useState({
@@ -209,6 +212,11 @@ export default function AdminPadariaPage({ tab, onTabChange, onLogout, admin }) 
     setHistorico(data.pedidos || []);
     setHistoricoTotal(data.total || 0);
   }
+
+  useEffect(() => {
+    if (subsVisiveis.some((item) => item.id === sub)) return;
+    if (subsVisiveis[0]) setSub(subsVisiveis[0].id);
+  }, [sub, subsVisiveis]);
 
   useEffect(() => {
     setErro("");
@@ -869,7 +877,7 @@ export default function AdminPadariaPage({ tab, onTabChange, onLogout, admin }) 
     <AdminLayout tab={tab} onTabChange={onTabChange} onLogout={onLogout} admin={admin}>
       <div className="admin-padaria">
         <div className="admin-padaria__nav">
-          {SUBS.map(({ id, label, icon: Icon }) => (
+          {subsVisiveis.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               type="button"

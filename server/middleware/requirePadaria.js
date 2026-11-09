@@ -1,5 +1,8 @@
 import { verificarTokenPadaria } from "../services/padariaToken.js";
 import { verificarTokenAdmin } from "../services/adminToken.js";
+import { carregarAcessoPorUsuario } from "../services/painelAdminService.js";
+import { temFerramenta } from "../../shared/permissoesAdmin.js";
+import { ferramentasExigidas } from "../services/permissoesRotas.js";
 
 function extrairBearer(req) {
   const header = req.headers.authorization;
@@ -79,15 +82,35 @@ export function requirePadariaAdmin(req, res, next) {
     /* tenta admin do clube */
   }
 
+  let adminPayload;
   try {
-    const adminPayload = verificarTokenAdmin(token);
-    req.admin = { usuario: adminPayload.usuario };
-    req.padariaAdminVia = "admin-clube";
-    return next();
+    adminPayload = verificarTokenAdmin(token);
   } catch (error) {
     if (error.name === "TokenExpiredError") {
       return res.status(401).json({ error: "Sessão expirada. Faça login novamente." });
     }
     return res.status(401).json({ error: "Sessão inválida para gestão da padaria" });
   }
+
+  carregarAcessoPorUsuario(adminPayload.usuario)
+    .then((acesso) => {
+      if (!acesso?.ativo) {
+        return res.status(401).json({ error: "Sessão inválida para gestão da padaria" });
+      }
+      const exigidas = ferramentasExigidas("padaria", req.method, req.path);
+      if (!temFerramenta(acesso, exigidas)) {
+        return res.status(403).json({
+          error: "Esta ferramenta não foi liberada para o seu usuário.",
+          codigo: "sem_ferramenta",
+        });
+      }
+      req.admin = { usuario: acesso.usuario, id: acesso.id, nome: acesso.nome };
+      req.adminAcesso = acesso;
+      req.padariaAdminVia = "admin-clube";
+      return next();
+    })
+    .catch((error) => {
+      console.error("[padaria/admin]", error.message);
+      return res.status(500).json({ error: "Não foi possível confirmar o acesso" });
+    });
 }

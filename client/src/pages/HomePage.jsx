@@ -19,7 +19,7 @@ import {
   IconSupport,
   IconUser,
 } from "../components/icons/ClientIcons.jsx";
-import { clearSession, fetchAutenticado } from "../utils/session.js";
+import { clearSession, fetchAutenticado, loadSession } from "../utils/session.js";
 import { resolveImagemUrl } from "../utils/imagem.js";
 import { mensagemParaUsuario } from "../utils/mensagensUsuario.js";
 import { formatarMoeda } from "../utils/moeda.js";
@@ -91,6 +91,69 @@ function iniciaisDoNome(nome) {
   if (!partes.length) return "C";
   if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase();
   return `${partes[0][0]}${partes[partes.length - 1][0]}`.toUpperCase();
+}
+
+const FRASES_AGUARDO = [
+  "Buscando suas compras no caixa",
+  "Conferindo o que já é seu",
+  "Separando pontos e cupons",
+  "Quase lá",
+];
+
+function HomeAguardando({ titulo = "Preparando seu painel", compact = false }) {
+  const [indice, setIndice] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setIndice((atual) => (atual + 1) % FRASES_AGUARDO.length);
+    }, 2200);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <section
+      className={`home-aguardando${compact ? " home-aguardando--compact" : ""}`}
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <div className="home-aguardando__cena" aria-hidden>
+        <span className="home-aguardando__icone home-aguardando__icone--1">
+          <IconCart size={22} />
+        </span>
+        <span className="home-aguardando__icone home-aguardando__icone--2">
+          <IconStar size={22} filled />
+        </span>
+        <span className="home-aguardando__icone home-aguardando__icone--3">
+          <IconReceipt size={22} />
+        </span>
+      </div>
+      <p className="home-aguardando__titulo">{titulo}</p>
+      <p className="home-aguardando__frase">{FRASES_AGUARDO[indice]}</p>
+      <div className="home-aguardando__trilho" aria-hidden>
+        <span />
+      </div>
+    </section>
+  );
+}
+
+function HomeEsperaBloco({ linhas = 3 }) {
+  return (
+    <div className="home-espera" aria-hidden>
+      {Array.from({ length: linhas }, (_, i) => (
+        <span key={i} className="home-espera__linha" style={{ width: `${88 - i * 12}%` }} />
+      ))}
+    </div>
+  );
+}
+
+function HomeNivelPlaceholder({ claro = false }) {
+  return (
+    <span className={`home-nivel-aguardando${claro ? " home-nivel-aguardando--claro" : ""}`} aria-hidden>
+      <span className="home-nivel-aguardando__bolha" />
+      <span className="home-nivel-aguardando__linha" />
+    </span>
+  );
 }
 
 function formatarMembroDesde(dataStr) {
@@ -607,44 +670,101 @@ function HomeDicasClube({ onPerfil, onContato }) {
   );
 }
 
-function HomeDescontosClube({ itens }) {
-  const lista = Array.isArray(itens) ? itens.slice(0, 6) : [];
+function HomeOfertaItem({ item, variante }) {
+  const loja = variante === "loja";
+  const de = loja
+    ? item.precoAnterior
+    : Number(item.precoDe) > 0
+      ? item.precoDe
+      : item.preco1;
+  const por = loja ? item.preco1 : item.preco2;
+  const mostrarDe = Number(de) > Number(por);
 
   return (
-    <section className="home-dash-card home-dash-card--descontos" aria-label="Descontos do clube">
-      <div className="home-descontos-badge">Clube Superama+</div>
-      <div className="home-dash-card__head">
-        <h3 className="home-dash-card__titulo">Descontos em produtos</h3>
-        <span className="home-dash-card__periodo">Exclusivo para membros</span>
+    <li
+      className={`home-descontos-item home-descontos-item--${variante}${
+        !loja && item.esgotado ? " is-esgotado" : ""
+      }`}
+    >
+      <div className="home-descontos-item__top">
+        <strong className="home-descontos-item__nome">
+          {item.descricao || `Produto ${item.codigo}`}
+        </strong>
+        {!loja && item.esgotado && (
+          <span className="home-descontos-item__esgotado">Esgotado</span>
+        )}
       </div>
-      {lista.length === 0 ? (
+      {item.marca && <span className="home-descontos-item__marca">{item.marca}</span>}
+      <div className="home-descontos-item__precos">
+        {mostrarDe && (
+          <span className="home-descontos-item__preco1">{formatarMoeda(de)}</span>
+        )}
+        <span className="home-descontos-item__preco2">{formatarMoeda(por)}</span>
+        {loja && item.dataOfertaBr && (
+          <span className="home-descontos-item__ate">até {item.dataOfertaBr}</span>
+        )}
+        {!loja && Number(item.economia) > 0 && (
+          <span className="home-descontos-item__eco">
+            economize {formatarMoeda(item.economia)}
+          </span>
+        )}
+      </div>
+    </li>
+  );
+}
+
+function HomeBlocoOfertas({ variante, selo, titulo, nota, itens }) {
+  if (!itens.length) return null;
+
+  return (
+    <div className={`home-ofertas-bloco home-ofertas-bloco--${variante}`}>
+      <span className="home-ofertas-bloco__selo">{selo}</span>
+      <h4 className="home-ofertas-bloco__titulo">{titulo}</h4>
+      <p className="home-ofertas-bloco__nota">{nota}</p>
+      <ul className="home-descontos-lista">
+        {itens.map((item) => (
+          <HomeOfertaItem
+            key={`${variante}-${item.codigo}-${item.unidade || ""}`}
+            item={item}
+            variante={variante}
+          />
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function HomeDescontosClube({ loja = [], clube = [] }) {
+  const ofertasLoja = Array.isArray(loja) ? loja.slice(0, 4) : [];
+  const precosClube = Array.isArray(clube) ? clube.slice(0, 4) : [];
+  const vazio = ofertasLoja.length === 0 && precosClube.length === 0;
+
+  return (
+    <section className="home-dash-card home-dash-card--descontos" aria-label="Ofertas de hoje">
+      <div className="home-dash-card__head">
+        <h3 className="home-dash-card__titulo">Ofertas de hoje</h3>
+      </div>
+      {vazio ? (
         <p className="home-dash-card__vazio">
-          Em breve vamos destacar aqui produtos com preço especial para membros do clube.
+          Em breve vamos destacar aqui as ofertas da loja e os preços do Clube.
         </p>
       ) : (
-        <ul className="home-descontos-lista">
-          {lista.map((p) => (
-            <li key={`${p.codigo}-${p.unidade}`} className="home-descontos-item">
-              <div className="home-descontos-item__top">
-                <strong className="home-descontos-item__nome">
-                  {p.descricao || `Produto ${p.codigo}`}
-                </strong>
-                {p.marca && <span className="home-descontos-item__marca">{p.marca}</span>}
-              </div>
-              <div className="home-descontos-item__precos">
-                <span className="home-descontos-item__preco1">
-                  {formatarMoeda(Number(p.precoDe) > 0 ? p.precoDe : p.preco1)}
-                </span>
-                <span className="home-descontos-item__preco2">{formatarMoeda(p.preco2)}</span>
-                {Number(p.economia) > 0 && (
-                  <span className="home-descontos-item__eco">
-                    economize {formatarMoeda(p.economia)}
-                  </span>
-                )}
-              </div>
-            </li>
-          ))}
-        </ul>
+        <>
+          <HomeBlocoOfertas
+            variante="loja"
+            selo="Para todos"
+            titulo="Ofertas da loja"
+            nota="Vale até a data de cada item."
+            itens={ofertasLoja}
+          />
+          <HomeBlocoOfertas
+            variante="clube"
+            selo="Só com CPF"
+            titulo="Preços do Clube"
+            nota="Informe o CPF no caixa."
+            itens={precosClube}
+          />
+        </>
       )}
     </section>
   );
@@ -932,12 +1052,15 @@ export default function HomePage({
   onExclusao,
   onClubeReady,
 }) {
-  const [loading, setLoading] = useState(true);
+  const [carregandoConta, setCarregandoConta] = useState(true);
+  const [carregandoPainel, setCarregandoPainel] = useState(true);
   const [atualizando, setAtualizando] = useState(false);
   const [error, setError] = useState("");
   const [dados, setDados] = useState(null);
   const [videoHome, setVideoHome] = useState(null);
+  const [ofertasLoja, setOfertasLoja] = useState([]);
   const [descontosClube, setDescontosClube] = useState([]);
+  const [lojaColetando, setLojaColetando] = useState(false);
   const nivelCtx = useNivelClube();
   const abrirDetalheNivel = nivelCtx?.abrirDetalhe;
 
@@ -945,28 +1068,47 @@ export default function HomePage({
     if (silencioso) {
       setAtualizando(true);
     } else {
-      setLoading(true);
+      setCarregandoConta(true);
+      setCarregandoPainel(true);
     }
     setError("");
 
     try {
       const perfilRes = await fetchAutenticado("/api/cliente/me");
-      const conteudoRes = await fetchAutenticado("/api/cliente/conteudo");
-      setVideoHome(conteudoRes.videoHome ?? null);
+      setDados((prev) => ({
+        ...(prev || {}),
+        ...perfilRes,
+      }));
+      onClubeReady?.(perfilRes.clube);
+      if (!silencioso) setCarregandoConta(false);
 
-      // Em modo sem pontos, substitui os avisos por vitrine de descontos.
-      if (!pontosAtivo) {
-        try {
-          const descRes = await fetchAutenticado(
-            "/api/cliente/clube-descontos/produtos?limite=6"
-          );
-          setDescontosClube(descRes.itens ?? []);
-        } catch {
-          setDescontosClube([]);
-        }
-      } else {
-        setDescontosClube([]);
-      }
+      const conteudoPromise = fetchAutenticado("/api/cliente/conteudo")
+        .then((conteudoRes) => {
+          setVideoHome(conteudoRes.videoHome ?? null);
+        })
+        .catch((err) => {
+          if (err?.code === "UNAUTHORIZED") throw err;
+          setVideoHome(null);
+        });
+
+      const descontosPromise = !pontosAtivo
+        ? fetchAutenticado("/api/cliente/clube-descontos/produtos")
+            .then((descRes) => {
+              setOfertasLoja(descRes.loja ?? []);
+              setDescontosClube(descRes.clube ?? descRes.itens ?? []);
+              setLojaColetando(Boolean(descRes.lojaColetando));
+            })
+            .catch((err) => {
+              if (err?.code === "UNAUTHORIZED") throw err;
+              setOfertasLoja([]);
+              setDescontosClube([]);
+              setLojaColetando(false);
+            })
+        : Promise.resolve().then(() => {
+            setOfertasLoja([]);
+            setDescontosClube([]);
+            setLojaColetando(false);
+          });
 
       if (pontosAtivo) {
         const [historicoRes, brindesRes, vendasRes] = await Promise.all([
@@ -987,7 +1129,6 @@ export default function HomePage({
           brindes: brindesRes.brindes ?? [],
           cuponsProcessados: historicoRes.resumo?.totalCompras ?? 0,
         });
-        onClubeReady?.(perfilRes.clube);
       } else {
         const vendasRes = await buscarVendasInsights();
 
@@ -1002,8 +1143,9 @@ export default function HomePage({
           brindes: [],
           cuponsProcessados: 0,
         });
-        onClubeReady?.(perfilRes.clube);
       }
+
+      await Promise.all([conteudoPromise, descontosPromise]);
     } catch (err) {
       if (err.code === "UNAUTHORIZED") {
         onLogout();
@@ -1011,7 +1153,8 @@ export default function HomePage({
       }
       setError(mensagemParaUsuario(err.message));
     } finally {
-      setLoading(false);
+      setCarregandoConta(false);
+      setCarregandoPainel(false);
       setAtualizando(false);
     }
   }, [onLogout, onClubeReady, pontosAtivo]);
@@ -1019,6 +1162,26 @@ export default function HomePage({
   useEffect(() => {
     carregar();
   }, [carregar]);
+
+  useEffect(() => {
+    if (!lojaColetando || pontosAtivo) return undefined;
+    let ativo = true;
+    const id = setInterval(async () => {
+      try {
+        const descRes = await fetchAutenticado("/api/cliente/clube-descontos/produtos");
+        if (!ativo) return;
+        setOfertasLoja(descRes.loja ?? []);
+        setDescontosClube(descRes.clube ?? descRes.itens ?? []);
+        if (!descRes.lojaColetando) setLojaColetando(false);
+      } catch {
+        if (ativo) setLojaColetando(false);
+      }
+    }, 12000);
+    return () => {
+      ativo = false;
+      clearInterval(id);
+    };
+  }, [lojaColetando, pontosAtivo]);
 
   const atualizarSilencioso = useCallback(
     () => carregar({ silencioso: true }),
@@ -1086,23 +1249,6 @@ export default function HomePage({
     [dados]
   );
 
-  if (loading) {
-    return (
-      <div className="home-app">
-        <div className="home-loading home-loading--dashboard">
-          <Logo variant="compact" className="home-loading__logo" />
-          <div className="home-skeleton-dashboard" aria-hidden>
-            <div className="home-skeleton-dashboard__hero" />
-            <div className="home-skeleton-dashboard__grid">
-              <div />
-              <div />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className="home-app">
@@ -1120,19 +1266,29 @@ export default function HomePage({
     );
   }
 
-  const { perfil, clube } = dados;
+  const sessaoUsuario = loadSession()?.usuario;
+  const perfil = dados?.perfil ?? {
+    nome: sessaoUsuario?.nome || "",
+    codigoCliente: sessaoUsuario?.clienteCodigo || "",
+  };
+  const clube = dados?.clube ?? null;
   const primeiroNome = perfil.nome?.split(" ")[0] || "Cliente";
   const saldoPontos = dados?.saldo ?? 0;
   const membroDesde = formatarMembroDesde(dados?.dataInicioPlataforma);
   const temComprasRecentes = (dados?.comprasRecentes?.length ?? 0) > 0;
-  const clienteNovo = pontosAtivo
-    ? saldoPontos === 0 && (dados?.timeline?.length ?? 0) === 0
-    : !temComprasRecentes;
+  const clienteNovo =
+    !carregandoPainel &&
+    (pontosAtivo
+      ? saldoPontos === 0 && (dados?.timeline?.length ?? 0) === 0
+      : !temComprasRecentes);
   const periodoComprasLabel = dados?.comprasPeriodoLabel || "Este mês";
 
   return (
     <div className="home-app">
-      <PullToRefresh onRefresh={atualizarSilencioso} disabled={loading || atualizando}>
+      <PullToRefresh
+        onRefresh={atualizarSilencioso}
+        disabled={carregandoPainel || atualizando}
+      >
         <header className="home-header home-header--dashboard">
           <div className="home-header__brand">
             <div className="home-header__mobile-brand">
@@ -1199,15 +1355,26 @@ export default function HomePage({
                 <p className="home-hero__desde">Cliente desde {membroDesde}</p>
               )}
             </div>
-            <NivelBadge
-              clube={clube}
-              size="md"
-              className="home-hero__nivel home-hero__nivel--corner"
-            />
+            {carregandoConta || !clube ? (
+              <span className="home-hero__nivel home-hero__nivel--corner">
+                <HomeNivelPlaceholder claro />
+              </span>
+            ) : (
+              <NivelBadge
+                clube={clube}
+                size="md"
+                className="home-hero__nivel home-hero__nivel--corner"
+              />
+            )}
           </section>
 
           <div className={`home-stats home-stats--rich${!pontosAtivo ? " home-stats--sem-pontos" : ""}`}>
-            {pontosAtivo ? (
+            {carregandoPainel ? (
+              <HomeAguardando
+                compact
+                titulo={pontosAtivo ? "Seus pontos estão a caminho" : "Suas compras estão a caminho"}
+              />
+            ) : pontosAtivo ? (
               <HomePainelPontos
                 saldo={saldoPontos}
                 progressoPontos={progressoPontos}
@@ -1216,7 +1383,7 @@ export default function HomePage({
               />
             ) : (
               <HomePainelCompras
-                resumo={dados.comprasResumo}
+                resumo={dados?.comprasResumo}
                 periodoLabel={periodoComprasLabel}
                 onCompras={onCompras}
               />
@@ -1224,19 +1391,28 @@ export default function HomePage({
             <button
               type="button"
               className="home-stat home-stat--nivel"
-              onClick={abrirDetalheNivel}
-              aria-label={`Seu nível ${clube.nivel || ""}. Toque para ver detalhes`}
+              onClick={carregandoConta || !clube ? undefined : abrirDetalheNivel}
+              disabled={carregandoConta || !clube}
+              aria-label={
+                carregandoConta || !clube
+                  ? "Carregando seu nível"
+                  : `Seu nível ${clube.nivel || ""}. Toque para ver detalhes`
+              }
             >
               <span className="home-stat__nivel-wrap">
-                <NivelBadge
-                  clube={clube}
-                  size="sm"
-                  clickable={false}
-                  className="nivel-badge--compact"
-                />
+                {carregandoConta || !clube ? (
+                  <HomeNivelPlaceholder />
+                ) : (
+                  <NivelBadge
+                    clube={clube}
+                    size="sm"
+                    clickable={false}
+                    className="nivel-badge--compact"
+                  />
+                )}
               </span>
               <span className="home-stat__label">Seu nível</span>
-              {clube.anoReferencia && (
+              {clube?.anoReferencia && (
                 <span className="home-stat__hint">{clube.anoReferencia}</span>
               )}
             </button>
@@ -1248,17 +1424,23 @@ export default function HomePage({
             )}
           </div>
 
-          {dados.vendasPorData && (
-            <div
-              className={`home-insights-slot home-insights-slot--mobile${
-                atualizando ? " home-insights-slot--atualizando" : ""
-              }`}
-            >
-              <ClienteInsightsPanel
-                {...propsInsights}
-                className={atualizando ? "cinsights--atualizando" : ""}
-              />
+          {carregandoPainel ? (
+            <div className="home-insights-slot home-insights-slot--mobile">
+              <HomeEsperaBloco linhas={4} />
             </div>
+          ) : (
+            dados?.vendasPorData && (
+              <div
+                className={`home-insights-slot home-insights-slot--mobile${
+                  atualizando ? " home-insights-slot--atualizando" : ""
+                }`}
+              >
+                <ClienteInsightsPanel
+                  {...propsInsights}
+                  className={atualizando ? "cinsights--atualizando" : ""}
+                />
+              </div>
+            )
           )}
 
           {pontosAtivo && videoHome && (
@@ -1358,7 +1540,9 @@ export default function HomePage({
                   </p>
                 )}
 
-                {clienteNovo ? (
+                {carregandoPainel ? (
+                  <HomeEsperaBloco />
+                ) : clienteNovo ? (
                   <HomeOnboarding onCompras={onCompras} pontosAtivo={false} />
                 ) : (
                   <HomeComprasRecentes
@@ -1400,7 +1584,7 @@ export default function HomePage({
                 </nav>
 
                 <div className="home-mobile-pausa">
-                  <HomeDescontosClube itens={descontosClube} />
+                  <HomeDescontosClube loja={ofertasLoja} clube={descontosClube} />
                 </div>
 
                 <HomeBeneficiosSection pontosAtivo={false} />
@@ -1424,7 +1608,14 @@ export default function HomePage({
             </div>
 
             <div className="home-desk-hero__metrics">
-              {pontosAtivo ? (
+              {carregandoPainel ? (
+                <div className="home-desk-hero__saldo">
+                  <HomeAguardando
+                    compact
+                    titulo={pontosAtivo ? "Seus pontos estão a caminho" : "Suas compras estão a caminho"}
+                  />
+                </div>
+              ) : pontosAtivo ? (
                 <div className="home-desk-hero__saldo">
                   <HomePainelPontos
                     saldo={saldoPontos}
@@ -1437,7 +1628,7 @@ export default function HomePage({
               ) : (
                 <div className="home-desk-hero__saldo">
                   <HomePainelCompras
-                    resumo={dados.comprasResumo}
+                    resumo={dados?.comprasResumo}
                     periodoLabel={periodoComprasLabel}
                     onCompras={onCompras}
                     compact
@@ -1448,27 +1639,33 @@ export default function HomePage({
                 <HomeDeskStatCard
                   label="Seu nível"
                   value={
-                    <NivelBadge
-                      clube={clube}
-                      size="sm"
-                      clickable={false}
-                      className="nivel-badge--compact"
-                    />
+                    carregandoConta || !clube ? (
+                      <HomeNivelPlaceholder />
+                    ) : (
+                      <NivelBadge
+                        clube={clube}
+                        size="sm"
+                        clickable={false}
+                        className="nivel-badge--compact"
+                      />
+                    )
                   }
                   hint={
-                    clube.proximoNivel && clube.faltaParaProximo > 0
-                      ? `Faltam ${formatarMoeda(clube.faltaParaProximo)} para ${clube.proximoNivel.nome}`
-                      : "Toque para ver a escada de níveis"
+                    carregandoConta || !clube
+                      ? "Calculando pelo ano"
+                      : clube.proximoNivel && clube.faltaParaProximo > 0
+                        ? `Faltam ${formatarMoeda(clube.faltaParaProximo)} para ${clube.proximoNivel.nome}`
+                        : "Toque para ver a escada de níveis"
                   }
-                  onClick={abrirDetalheNivel}
+                  onClick={carregandoConta || !clube ? undefined : abrirDetalheNivel}
                 />
-                {pontosAtivo && dados.cuponsProcessados != null && (
+                {pontosAtivo && !carregandoPainel && dados?.cuponsProcessados != null && (
                   <HomeDeskStatCard
                     label="Cupons pontuados"
                     value={dados.cuponsProcessados}
                   />
                 )}
-                {!pontosAtivo && dados.comprasResumo && (
+                {!pontosAtivo && !carregandoPainel && dados?.comprasResumo && (
                   <>
                     <HomeDeskStatCard
                       label="Cupons no mês"
@@ -1504,17 +1701,23 @@ export default function HomePage({
             pontosAtivo={pontosAtivo}
           />
 
-          {dados.vendasPorData && (
+          {carregandoPainel ? (
             <div className="home-insights-slot home-insights-slot--desktop">
-              <ClienteInsightsPanel
-                {...propsInsights}
-              />
+              <HomeEsperaBloco linhas={4} />
             </div>
+          ) : (
+            dados?.vendasPorData && (
+              <div className="home-insights-slot home-insights-slot--desktop">
+                <ClienteInsightsPanel {...propsInsights} />
+              </div>
+            )
           )}
 
           <div className="home-desk-grid">
             <div className="home-desk-main">
-              {clienteNovo ? (
+              {carregandoPainel ? (
+                <HomeEsperaBloco />
+              ) : clienteNovo ? (
                 <HomeOnboarding onCompras={onCompras} pontosAtivo={pontosAtivo} />
               ) : pontosAtivo ? (
                 <HomeAtividade
@@ -1535,7 +1738,7 @@ export default function HomePage({
             </div>
 
             <aside className="home-desk-aside">
-              {pontosAtivo && (
+              {pontosAtivo && !carregandoPainel && (
                 <HomeProximoPremio
                   premio={proximoPremio?.premio}
                   saldo={saldoPontos}
@@ -1555,7 +1758,7 @@ export default function HomePage({
               )}
               {!pontosAtivo && (
                 <div className="home-desk-aside-card home-desk-aside-card--pausa">
-                  <HomeDescontosClube itens={descontosClube} />
+                  <HomeDescontosClube loja={ofertasLoja} clube={descontosClube} />
                 </div>
               )}
               {!pontosAtivo && (

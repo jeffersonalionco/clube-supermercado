@@ -15,7 +15,6 @@ import { mensagemParaUsuario } from "../utils/mensagensUsuario.js";
 import { saveSession } from "../utils/session.js";
 import AceiteLegal from "../components/AceiteLegal.jsx";
 import WhatsAppOfertasCta from "../components/WhatsAppOfertasCta.jsx";
-import { useProgramaPublico } from "../hooks/useProgramaPublico.js";
 import "../styles/auth-mobile.css";
 import "../styles/legal.css";
 
@@ -39,7 +38,6 @@ function Btn({ loading, children, variant = "primary", type = "button", ...props
 }
 
 export default function LoginPage({ onLogin }) {
-  const pontosAtivo = useProgramaPublico();
   const [tela, setTela] = useState(() => (hashEhRecuperacaoSenha() ? "recuperar" : "login"));
   const [legalSlug, setLegalSlug] = useState(null);
   const [etapa, setEtapa] = useState("cpf");
@@ -327,7 +325,7 @@ export default function LoginPage({ onLogin }) {
         badge="Área do cliente"
         title={
           etapa === "cpf"
-            ? "Bem-vindo ao Clube Superama+"
+            ? "Faça login ou cadastre-se"
             : criandoSenha
               ? aposCadastro
                 ? "Crie sua senha"
@@ -336,9 +334,7 @@ export default function LoginPage({ onLogin }) {
         }
         description={
           etapa === "cpf"
-            ? pontosAtivo
-              ? "Acumule pontos a cada compra e troque por prêmios exclusivos na loja."
-              : "Aproveite descontos em produtos selecionados e benefícios exclusivos do Clube Superama+."
+            ? "Informe o CPF para entrar ou criar sua conta no Clube Superama+."
             : criandoSenha
               ? aposCadastro
                 ? "Seu cadastro já foi criado. Falta somente definir sua senha de acesso."
@@ -361,7 +357,7 @@ export default function LoginPage({ onLogin }) {
             )}
             {etapa === "cpf" ? (
               <Btn loading={loading} type="submit" form="form-cpf">
-                {loading ? "Verificando" : "Continuar"}
+                {loading ? "Verificando" : "Entrar ou cadastrar"}
               </Btn>
             ) : (
               <>
@@ -388,16 +384,10 @@ export default function LoginPage({ onLogin }) {
       >
         {etapa === "cpf" ? (
           <form id="form-cpf" onSubmit={handleVerificarCpf} noValidate>
-            <h2 className="auth-form-title">Identificação</h2>
-            <p className="auth-form-sub">Informe seu CPF para continuar.</p>
-
-            <div className="auth-callout" role="note">
-              <strong>Primeiro acesso?</strong>
-              <p>
-                Se você acabou de se cadastrar ou ainda não tem senha, continue com o
-                CPF: o sistema vai pedir para <strong>criar uma senha</strong>.
-              </p>
-            </div>
+            <h2 className="auth-form-title">Informe o CPF</h2>
+            <p className="auth-form-sub">
+              Quem já tem senha entra. Quem ainda não tem conta segue para o cadastro.
+            </p>
 
             <Field label="CPF" id="cpf" error={cpfError}>
               <input

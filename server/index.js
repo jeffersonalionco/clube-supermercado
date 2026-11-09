@@ -205,6 +205,14 @@ async function start() {
         console.warn("[whatsapp/catalogo] job limpeza:", err.message);
       });
 
+    import("./services/marketing/whatsappOuvidoriaService.js")
+      .then(({ iniciarJobLimpezaOuvidoria }) => {
+        iniciarJobLimpezaOuvidoria();
+      })
+      .catch((err) => {
+        console.warn("[ouvidoria] job limpeza:", err.message);
+      });
+
     import("./services/backupClubeService.js")
       .then(({ iniciarJobBackupClube }) => {
         iniciarJobBackupClube();

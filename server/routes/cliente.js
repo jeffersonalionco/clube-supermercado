@@ -20,7 +20,11 @@ import {
   resumirWhatsappInfo,
   telefoneUsuarioDosDados,
 } from "../services/usuarioService.js";
-import { listarProdutosClubeDescontos } from "../services/produtosClubeDescontosService.js";
+import {
+  listarProdutosClubeDescontos,
+  ordenarClubePorDesconto,
+  selecionarOfertasLoja,
+} from "../services/produtosClubeDescontosService.js";
 import {
   nivelFidelidadeFallback,
   obterNivelFidelidadeCliente,
@@ -114,15 +118,25 @@ router.get("/clube-descontos/produtos", async (req, res) => {
       unidade: req.query.unidade,
       busca: req.query.busca,
       pagina: 1,
-      limite: Math.min(24, Math.max(1, Number(req.query.limite) || 6)),
+      limite: 200,
       atualizar: false,
     });
+
+    const clubeTodos = ordenarClubePorDesconto(dados.itens ?? []);
+    const codigosClube = new Set(clubeTodos.map((p) => String(p.codigo)));
+    const loja = selecionarOfertasLoja(dados.ofertasLoja, 4).filter(
+      (p) => !codigosClube.has(String(p.codigo))
+    );
+    const clube = clubeTodos.slice(0, 4);
 
     return res.json({
       unidade: dados.unidade,
       sincronizadoEm: dados.sincronizadoEm,
       sincronizando: Boolean(dados.sincronizando),
-      itens: dados.itens ?? [],
+      lojaColetando: Boolean(dados.lojaColetando),
+      loja,
+      clube,
+      itens: clube,
     });
   } catch (error) {
     console.error("[cliente/clube-descontos/produtos]", error.message);

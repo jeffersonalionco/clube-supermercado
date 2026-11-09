@@ -135,16 +135,24 @@ export function montarEmailPromocional({
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${tituloDoc}</title>
+  <style>
+    @media only screen and (max-width: 620px) {
+      .email-outer { padding: 0 !important; }
+      .email-card { border-radius: 0 !important; width: 100% !important; }
+      .email-logo { padding: 16px 16px 12px !important; }
+      .email-corpo { padding: 16px 16px 20px !important; }
+    }
+  </style>
 </head>
 <body style="margin:0;padding:0;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;color:#12263a;">
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${pre.replace(/</g, "")}</div>
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f7fb;padding:24px 12px;">
+  <table role="presentation" class="email-outer" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f7fb;padding:16px 8px;">
     <tr>
       <td align="center">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #d7e0ea;">
+        <table role="presentation" class="email-card" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #d7e0ea;">
           ${faixaTeste}
           <tr>
-            <td align="center" style="background:#ffffff;padding:20px 24px 16px;border-bottom:3px solid #1b4fa0;">
+            <td class="email-logo" align="center" style="background:#ffffff;padding:20px 20px 16px;border-bottom:3px solid #1b4fa0;">
               <a href="${siteUrl}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;display:inline-block;">
                 <img src="${logoUrl}" alt="Clube Superama+" width="168" style="display:block;max-width:168px;width:168px;height:auto;border:0;margin:0 auto;" />
               </a>
@@ -152,7 +160,7 @@ export function montarEmailPromocional({
             </td>
           </tr>
           <tr>
-            <td style="padding:24px;font-size:15px;line-height:1.55;color:#12263a;">
+            <td class="email-corpo" style="padding:20px 16px;font-size:15px;line-height:1.55;color:#12263a;">
               ${corpo}
               ${montarRodapeHtml({ regulamentoUrl, privacidadeUrl, optOutUrl, siteUrl })}
             </td>

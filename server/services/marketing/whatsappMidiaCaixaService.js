@@ -209,6 +209,54 @@ async function baixarBinario(url, limite, token) {
   return buf;
 }
 
+/** Baixa foto, áudio ou vídeo recebidos no webhook, sem gravar na conversa. */
+export async function baixarMidiaWebhook(msg) {
+  const info = blocoMidia(msg);
+  if (!info) return { ok: false, error: "sem mídia" };
+  const cfg = obterConfigWhatsappCloud();
+  if (!cfg.ok) return { ok: false, error: "WhatsApp sem configuração" };
+  const limite = LIMITES[info.tipo] || LIMITES.image;
+
+  const meta = await fetch(
+    `https://graph.facebook.com/${cfg.apiVersion}/${info.id}`,
+    {
+      headers: { Authorization: `Bearer ${cfg.token}` },
+      signal: AbortSignal.timeout(12000),
+    }
+  );
+  const corpo = await meta.json().catch(() => ({}));
+  if (!meta.ok || !corpo.url) return { ok: false, error: "mídia indisponível" };
+  if (corpo.file_size && Number(corpo.file_size) > limite) {
+    return { ok: false, error: "arquivo grande demais" };
+  }
+
+  const buf = await baixarBinario(corpo.url, limite, cfg.token);
+  let reconhecido = reconhecerArquivo(buf);
+  if (!reconhecido && info.tipo === "document") {
+    reconhecido = documentoPeloNome(buf, nomeDocumento(info.bloco));
+  }
+  if (!reconhecido) return { ok: false, error: "formato não aceito" };
+  if ((info.tipo === "image" || info.tipo === "sticker") && !reconhecido.mime.startsWith("image/")) {
+    return { ok: false, error: "formato não aceito" };
+  }
+  if (info.tipo === "audio" && !reconhecido.mime.startsWith("audio/")) {
+    return { ok: false, error: "formato não aceito" };
+  }
+  if (info.tipo === "video" && !reconhecido.mime.startsWith("video/")) {
+    return { ok: false, error: "formato não aceito" };
+  }
+
+  const tipo = info.tipo === "sticker" ? "image" : info.tipo;
+  return {
+    ok: true,
+    tipo,
+    mime: reconhecido.mime,
+    ext: reconhecido.ext,
+    buf,
+    voice: Boolean(info.bloco.voice),
+  };
+}
+
 export async function anexarMidiaEntrada({ msg, mensagemId }) {
   const info = blocoMidia(msg);
   if (!info) return;

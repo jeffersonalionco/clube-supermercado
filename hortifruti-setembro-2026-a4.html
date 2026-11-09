@@ -1,0 +1,271 @@
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>Hortifruti setembro 2026</title><style>
+@page { size: A4 portrait; margin: 10mm; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: "Liberation Sans", Arial, sans-serif; color: #1a1a1a; }
+h1 { font-size: 15pt; margin: 0 0 4px; }
+h2 { font-size: 12pt; margin: 12px 0 4px; }
+p { font-size: 9.5pt; margin: 0 0 6px; }
+.sub { color: #333; }
+.totais { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; margin: 8px 0; }
+.totais div { border: 1px solid #ccc; padding: 6px 8px; }
+.totais span { display: block; font-size: 8pt; color: #444; }
+.totais b { font-size: 12pt; }
+table { width: 100%; border-collapse: collapse; margin: 0 0 8px; }
+th, td { border-bottom: 1px solid #ddd; padding: 2px 4px; font-size: 8pt; text-align: left; vertical-align: top; }
+th { border-bottom: 1.5px solid #222; }
+tr.total td { font-weight: 700; border-top: 1.5px solid #222; border-bottom: none; }
+td.num, th:nth-child(n+3) { text-align: right; white-space: nowrap; }
+td.cod { white-space: nowrap; }
+.folha { break-after: page; page-break-after: always; }
+.nota { font-size: 8.5pt; color: #333; }
+.barra { display: flex; height: 22px; width: 100%; margin: 4px 0; }
+.barra span { display: block; height: 22px; }
+.leg { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 8pt; margin: 0 0 8px; }
+.leg i { display: inline-block; width: 9px; height: 9px; margin-right: 4px; vertical-align: -1px; }
+.acougue { background: #7a2e2e; }
+.feira { background: #2f6b4f; }
+.laticinio { background: #3d5a80; }
+.frios { background: #6b5a3e; }
+.congelados { background: #8aa0b4; }
+.peixe { background: #3d6b8a; }
+.outros { background: #b5b5b5; }
+.custo { background: #6b5a3e; }
+.perda { background: #a33b3b; }
+.lucro { background: #2f6b4f; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 8px 0 4px; }
+.col { text-align: center; }
+.pilha { height: 168px; display: flex; flex-direction: column; width: 78px; margin: 0 auto 6px; }
+.pilha span { display: block; width: 100%; }
+.col p { margin: 2px 0; font-size: 8.5pt; }
+@media screen { body { background: #eee; } .folha { width: 190mm; margin: 8px auto; background: #fff; padding: 10mm; } }
+@media print { .folha { width: auto; margin: 0; padding: 0; } .barra span, .leg i, .pilha span { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+</style></head><body>
+<section class="folha">
+<h1>Hortifruti dentro do perecível (004)</h1>
+<p class="sub">Setembro de 2026, unidade 001. O hortifruti é a classe HORTIFRUTI do cadastro. Compra que entrou no estoque: documentos 7100 e 7381, status normal. Venda de caixa: 7300. NF-e: notas autorizadas, CFOP 5102. Perda: 7618.</p>
+<div class="totais">
+  <div><span>Compra que entrou</span><b>R$ 62.311,69</b><span>19,1% da compra do 004</span></div>
+  <div><span>Venda no caixa</span><b>R$ 77.959,47</b><span>20,9% da venda do 004</span></div>
+  <div><span>Venda por NF-e</span><b>R$ 2.541,46</b><span>24,8% da NF-e do 004</span></div>
+  <div><span>Perdas</span><b>R$ 63,00</b><span>0,2% da perda do 004</span></div>
+</div>
+<h2>Fatia da venda no caixa do departamento</h2>
+<p class="sub">A barra inteira é a venda do perecível, R$ 372.489,35, documento 7300.</p>
+<div class="barra"><span class="acougue" style="width:56.27%"></span><span class="feira" style="width:20.93%"></span><span class="laticinio" style="width:8.48%"></span><span class="frios" style="width:5.63%"></span><span class="outros" style="width:4.07%"></span><span class="congelados" style="width:4.05%"></span><span class="peixe" style="width:0.56%"></span></div>
+<p class="leg"><span><i class="acougue"></i>Açougue R$ 209.611,69 · 56,3%</span><span><i class="feira"></i>Hortifruti R$ 77.959,47 · 20,9%</span><span><i class="laticinio"></i>Laticínio R$ 31.579,08 · 8,5%</span><span><i class="frios"></i>Frios R$ 20.978,58 · 5,6%</span><span><i class="outros"></i>Outros R$ 15.178,89 · 4,1%</span><span><i class="congelados"></i>Congelados R$ 15.097,74 · 4,1%</span><span><i class="peixe"></i>Peixaria R$ 2.083,90 · 0,6%</span></p>
+<h2>Fatia da compra que entrou no departamento</h2>
+<p class="sub">A barra inteira é a entrada de compra do perecível, R$ 325.813,42.</p>
+<div class="barra"><span class="acougue" style="width:63.48%"></span><span class="feira" style="width:19.12%"></span><span class="laticinio" style="width:6.49%"></span><span class="congelados" style="width:3.95%"></span><span class="frios" style="width:3.83%"></span><span class="outros" style="width:2.82%"></span><span class="peixe" style="width:0.31%"></span></div>
+<p class="leg"><span><i class="acougue"></i>Açougue R$ 206.820,82 · 63,5%</span><span><i class="feira"></i>Hortifruti R$ 62.311,69 · 19,1%</span><span><i class="laticinio"></i>Laticínio R$ 21.140,83 · 6,5%</span><span><i class="congelados"></i>Congelados R$ 12.874,27 · 4,0%</span><span><i class="frios"></i>Frios R$ 12.484,31 · 3,8%</span><span><i class="outros"></i>Outros R$ 9.175,80 · 2,8%</span><span><i class="peixe"></i>Peixaria R$ 1.005,70 · 0,3%</span></p>
+<p>Entrou no estoque R$ 36.531,33 de compra de mercadoria (7100, 73 itens) e R$ 25.780,36 de entrada de produtor (7381, 42 itens). A devolução de compra (7410) tirou R$ 125,35. O líquido é R$ 62.186,34. O custo de compra dessas entradas, menos a devolução, é R$ 61.287,27.</p>
+<p class="nota">O vale (7101) soma R$ 14.304,72 e a DANFE de produtor sem entrada (7126) soma R$ 12.431,36. Os dois não deram entrada no estoque. Bonificação (7130) entrou R$ 147,00 e fica fora da compra. Saiu para a produção da padaria (7709) R$ 1.314,44. Isso não é venda nem perda.</p>
+</section>
+<section class="folha">
+<h1>Venda do hortifruti por grupo</h1>
+<p class="sub">Documento 7300, status normal.</p>
+<table><thead><tr><th>Grupo</th><th>Produtos</th><th>Qtde</th><th>Venda (R$)</th><th>% do hortifruti</th></tr></thead><tbody>
+<tr><td>Frutas</td><td class="num">51</td><td class="num">4.691,927</td><td class="num">31.545,68</td><td class="num">40,5%</td></tr>
+<tr><td>Verduras</td><td class="num">22</td><td class="num">2.883,319</td><td class="num">21.112,81</td><td class="num">27,1%</td></tr>
+<tr><td>Legumes</td><td class="num">28</td><td class="num">2.099,154</td><td class="num">17.125,73</td><td class="num">22,0%</td></tr>
+<tr><td>Duzia</td><td class="num">1</td><td class="num">277</td><td class="num">3.834,37</td><td class="num">4,9%</td></tr>
+<tr><td>Alho</td><td class="num">10</td><td class="num">156,84</td><td class="num">3.311,36</td><td class="num">4,2%</td></tr>
+<tr><td>Aipim Congelado</td><td class="num">1</td><td class="num">70,175</td><td class="num">694,67</td><td class="num">0,9%</td></tr>
+<tr><td>Bandeija</td><td class="num">1</td><td class="num">21</td><td class="num">334,85</td><td class="num">0,4%</td></tr>
+<tr class="total"><td>Total do hortifruti</td><td class="num">114</td><td class="num">10.199,415</td><td class="num">77.959,47</td><td class="num">100,0%</td></tr>
+</tbody></table>
+</section>
+<section class="folha">
+<h1>Compra de mercadorias que entrou</h1>
+<p class="sub">Documento 7100, status normal, estoque 1. Os 20 maiores. O total de baixo é dos 73 itens.</p>
+<table><thead><tr><th>Código</th><th>Item</th><th>Qtde</th><th>Valor doc. (R$)</th><th>Custo compra</th></tr></thead><tbody>
+<tr><td class="cod">199346</td><td>Tomate Kg</td><td class="num">562</td><td class="num">5.098,10</td><td class="num">4.830,54</td></tr>
+<tr><td class="cod">200611</td><td>Batatinha Inglesa/monalisa Kg</td><td class="num">897,8</td><td class="num">4.467,75</td><td class="num">4.467,75</td></tr>
+<tr><td class="cod">186562</td><td>Cebola Nacional Kg</td><td class="num">740,43</td><td class="num">3.360,00</td><td class="num">3.360,00</td></tr>
+<tr><td class="cod">202630</td><td>Laranja Pera Kg</td><td class="num">1.473</td><td class="num">3.191,00</td><td class="num">3.038,65</td></tr>
+<tr><td class="cod">199249</td><td>Batata Doce Kg</td><td class="num">582</td><td class="num">1.605,00</td><td class="num">1.596,42</td></tr>
+<tr><td class="cod">143979</td><td>Alho Argentino/ Nacional Kg</td><td class="num">70</td><td class="num">1.091,30</td><td class="num">1.091,30</td></tr>
+<tr><td class="cod">661414</td><td>Tangerina Nacional</td><td class="num">157</td><td class="num">1.045,30</td><td class="num">988,33</td></tr>
+<tr><td class="cod">254428</td><td>Maça Fuji/Gala Kg</td><td class="num">234</td><td class="num">1.011,24</td><td class="num">1.011,24</td></tr>
+<tr><td class="cod">145149</td><td>Cenoura Kg</td><td class="num">225,35</td><td class="num">972,04</td><td class="num">934,62</td></tr>
+<tr><td class="cod">144665</td><td>Manga Hadem/Tommy Kg</td><td class="num">147</td><td class="num">900,50</td><td class="num">894,30</td></tr>
+<tr><td class="cod">200603</td><td>Limao Tahiti Kg</td><td class="num">100,2</td><td class="num">733,14</td><td class="num">691,40</td></tr>
+<tr><td class="cod">144673</td><td>Vagem Kg</td><td class="num">46</td><td class="num">666,00</td><td class="num">626,03</td></tr>
+<tr><td class="cod">350176</td><td>Quiabo Kg</td><td class="num">42</td><td class="num">663,00</td><td class="num">623,22</td></tr>
+<tr><td class="cod">194670</td><td>Mamao Formosa/Bahia Kg</td><td class="num">85</td><td class="num">626,65</td><td class="num">626,65</td></tr>
+<tr><td class="cod">199311</td><td>Melancia Kg</td><td class="num">235</td><td class="num">579,20</td><td class="num">579,20</td></tr>
+<tr><td class="cod">139670</td><td>Banana Nanica / Caturra</td><td class="num">220</td><td class="num">554,60</td><td class="num">554,60</td></tr>
+<tr><td class="cod">199265</td><td>Abacaxi Un</td><td class="num">52</td><td class="num">444,87</td><td class="num">444,87</td></tr>
+<tr><td class="cod">199214</td><td>Beterraba Kg</td><td class="num">109,25</td><td class="num">409,82</td><td class="num">390,16</td></tr>
+<tr><td class="cod">995762</td><td>Uva Thompson/Verde 500g S/ Semente Ksbig</td><td class="num">48</td><td class="num">401,00</td><td class="num">396,03</td></tr>
+<tr><td class="cod">201227</td><td>Morgote Kg</td><td class="num">80</td><td class="num">398,00</td><td class="num">374,12</td></tr>
+<tr class="total"><td></td><td>Total destes 20</td><td class="num">6.106,03</td><td class="num">28.218,51</td><td class="num">27.519,43</td></tr>
+<tr class="total"><td></td><td>Total · 73 itens</td><td class="num">7.273,63</td><td class="num">36.531,33</td><td class="num">35.625,00</td></tr>
+</tbody></table>
+</section>
+<section class="folha">
+<h1>Entrada de produtor</h1>
+<p class="sub">Documento 7381, status normal. Entrou no estoque 1. É a entrada do produtor, separada da nota 7100. A DANFE 7126 não entrou no estoque e não está nesta lista.</p>
+<table><thead><tr><th>Código</th><th>Item</th><th>Qtde</th><th>Valor doc. (R$)</th><th>Custo compra</th></tr></thead><tbody>
+<tr><td class="cod">274062</td><td>Mexirica Kg</td><td class="num">965</td><td class="num">5.232,00</td><td class="num">5.232,00</td></tr>
+<tr><td class="cod">1059610</td><td>Ovos Ceu Azul Verm Gde Duzia</td><td class="num">420</td><td class="num">2.800,00</td><td class="num">2.800,00</td></tr>
+<tr><td class="cod">139670</td><td>Banana Nanica / Caturra</td><td class="num">976,8</td><td class="num">2.616,52</td><td class="num">2.616,52</td></tr>
+<tr><td class="cod">194689</td><td>Alface Un</td><td class="num">695</td><td class="num">2.432,50</td><td class="num">2.432,50</td></tr>
+<tr><td class="cod">200590</td><td>Banana Prata Kg</td><td class="num">225</td><td class="num">1.012,50</td><td class="num">1.012,50</td></tr>
+<tr><td class="cod">199362</td><td>Moranguinho Bandeja</td><td class="num">120</td><td class="num">994,00</td><td class="num">994,00</td></tr>
+<tr><td class="cod">194700</td><td>Brocolis Un</td><td class="num">132</td><td class="num">924,00</td><td class="num">924,00</td></tr>
+<tr><td class="cod">199230</td><td>Repolho Verde Kg</td><td class="num">301,8</td><td class="num">893,15</td><td class="num">893,15</td></tr>
+<tr><td class="cod">924679</td><td>Tomate Cereja 350g Bdj São Mateus [celia]</td><td class="num">90</td><td class="num">630,00</td><td class="num">630,00</td></tr>
+<tr><td class="cod">141739</td><td>Maça Eva Kg</td><td class="num">160,2</td><td class="num">602,00</td><td class="num">602,00</td></tr>
+<tr><td class="cod">144681</td><td>Couve-Flor Un</td><td class="num">72</td><td class="num">542,00</td><td class="num">542,00</td></tr>
+<tr><td class="cod">199605</td><td>Tempero Verde Un</td><td class="num">143</td><td class="num">500,50</td><td class="num">500,50</td></tr>
+<tr><td class="cod">258989</td><td>Almeirao Un</td><td class="num">143</td><td class="num">500,50</td><td class="num">500,50</td></tr>
+<tr><td class="cod">668168</td><td>Laranja Bahia/Valencia Kg</td><td class="num">159,8</td><td class="num">494,00</td><td class="num">494,00</td></tr>
+<tr><td class="cod">143979</td><td>Alho Argentino/ Nacional Kg</td><td class="num">30</td><td class="num">480,00</td><td class="num">480,00</td></tr>
+<tr><td class="cod">221651</td><td>Mandioca S/ Casca Kg [ Sergio Madeira ]</td><td class="num">59,4</td><td class="num">415,80</td><td class="num">415,80</td></tr>
+<tr><td class="cod">145025</td><td>Castanha C/ Casca Kg</td><td class="num">12,2</td><td class="num">329,40</td><td class="num">329,40</td></tr>
+<tr><td class="cod">199273</td><td>Laranja Lima/Ceu Kg</td><td class="num">100,9</td><td class="num">325,00</td><td class="num">325,00</td></tr>
+<tr><td class="cod">199559</td><td>Rucula Un</td><td class="num">87</td><td class="num">304,50</td><td class="num">304,50</td></tr>
+<tr><td class="cod">681687</td><td>Limao Rosa Kg</td><td class="num">151,1</td><td class="num">302,20</td><td class="num">302,20</td></tr>
+<tr><td class="cod">199630</td><td>Chicoria Un</td><td class="num">81</td><td class="num">283,50</td><td class="num">283,50</td></tr>
+<tr><td class="cod">1024701</td><td>Cabotia São Mateus 400g Bdj [celia]</td><td class="num">47</td><td class="num">282,00</td><td class="num">282,00</td></tr>
+<tr><td class="cod">202649</td><td>Couve Folhas Un</td><td class="num">78</td><td class="num">273,00</td><td class="num">273,00</td></tr>
+<tr><td class="cod">199354</td><td>Abobrinha Italia / Menina Kg</td><td class="num">68</td><td class="num">255,50</td><td class="num">255,50</td></tr>
+<tr><td class="cod">194670</td><td>Mamao Formosa/Bahia Kg</td><td class="num">32,3</td><td class="num">254,29</td><td class="num">254,29</td></tr>
+<tr><td class="cod">276260</td><td>Broto Bambu Kg</td><td class="num">30,5</td><td class="num">244,00</td><td class="num">244,00</td></tr>
+<tr><td class="cod">199532</td><td>Cabotia Kg</td><td class="num">96,9</td><td class="num">232,56</td><td class="num">232,56</td></tr>
+<tr><td class="cod">1020552</td><td>Couve Picada São Mateus Bdj 200g [celia]</td><td class="num">41</td><td class="num">212,00</td><td class="num">212,00</td></tr>
+<tr><td class="cod">199613</td><td>Acelga Un</td><td class="num">31</td><td class="num">201,50</td><td class="num">201,50</td></tr>
+<tr><td class="cod">199346</td><td>Tomate Kg</td><td class="num">21,7</td><td class="num">190,96</td><td class="num">190,96</td></tr>
+<tr><td class="cod">668028</td><td>Pera Nacional Kg</td><td class="num">40,2</td><td class="num">180,00</td><td class="num">180,00</td></tr>
+<tr><td class="cod">194697</td><td>Agriao Un</td><td class="num">42</td><td class="num">147,00</td><td class="num">147,00</td></tr>
+<tr><td class="cod">1018019</td><td>Tomate Kg Rasteiro</td><td class="num">21</td><td class="num">115,00</td><td class="num">115,00</td></tr>
+<tr><td class="cod">201227</td><td>Morgote Kg</td><td class="num">20,3</td><td class="num">115,00</td><td class="num">115,00</td></tr>
+<tr><td class="cod">880035</td><td>Tempero Verde Picado São Mateus 70g [celia]</td><td class="num">30</td><td class="num">105,00</td><td class="num">105,00</td></tr>
+<tr><td class="cod">201154</td><td>Rabanete Kg</td><td class="num">14,2</td><td class="num">99,40</td><td class="num">99,40</td></tr>
+<tr><td class="cod">254428</td><td>Maça Fuji/Gala Kg</td><td class="num">18</td><td class="num">72,00</td><td class="num">72,00</td></tr>
+<tr><td class="cod">555266</td><td>Pimentao Amar/Verm Kg</td><td class="num">8,2</td><td class="num">65,60</td><td class="num">65,60</td></tr>
+<tr><td class="cod">1035932</td><td>Milho Verde São Mateus Bdj [celia]</td><td class="num">6</td><td class="num">36,00</td><td class="num">36,00</td></tr>
+<tr><td class="cod">199249</td><td>Batata Doce Kg</td><td class="num">12,6</td><td class="num">35,28</td><td class="num">35,28</td></tr>
+<tr><td class="cod">297445</td><td>Repolho Roxo Kg</td><td class="num">3,6</td><td class="num">25,20</td><td class="num">25,20</td></tr>
+<tr><td class="cod">199257</td><td>Chuchu Kg</td><td class="num">10</td><td class="num">25,00</td><td class="num">25,00</td></tr>
+<tr class="total"><td></td><td>Total · 42 itens</td><td class="num">5.797,7</td><td class="num">25.780,36</td><td class="num">25.780,36</td></tr>
+</tbody></table>
+<h2>Devolução de compra (7410)</h2>
+<p class="sub">Saiu do estoque. Já foi tirada do líquido da primeira página.</p>
+<table><thead><tr><th>Código</th><th>Item</th><th>Qtde</th><th>Valor doc. (R$)</th><th>Custo</th></tr></thead><tbody>
+<tr><td class="cod">144665</td><td>Manga Hadem/Tommy Kg</td><td class="num">12,1</td><td class="num">102,85</td><td class="num">95,04</td></tr>
+<tr><td class="cod">199265</td><td>Abacaxi Un</td><td class="num">3</td><td class="num">22,50</td><td class="num">23,05</td></tr>
+<tr class="total"><td></td><td>Total</td><td class="num">15,1</td><td class="num">125,35</td><td class="num">118,09</td></tr>
+</tbody></table>
+</section>
+<section class="folha">
+<h1>Venda no caixa</h1>
+<p class="sub">Documento 7300, status normal. Os 20 maiores. O total é dos 114 produtos e fecha o caixa do hortifruti.</p>
+<table><thead><tr><th>Código</th><th>Produto</th><th>Qtde</th><th>Venda (R$)</th><th>Custo da venda</th></tr></thead><tbody>
+<tr><td class="cod">199346</td><td>Tomate Kg</td><td class="num">521,785</td><td class="num">7.125,44</td><td class="num">4.195,12</td></tr>
+<tr><td class="cod">200611</td><td>Batatinha Inglesa/monalisa Kg</td><td class="num">594,355</td><td class="num">4.632,70</td><td class="num">2.648,15</td></tr>
+<tr><td class="cod">139670</td><td>Banana Nanica / Caturra</td><td class="num">1.095,849</td><td class="num">4.215,23</td><td class="num">3.001,28</td></tr>
+<tr><td class="cod">1059610</td><td>Ovos Ceu Azul Verm Gde Duzia</td><td class="num">277</td><td class="num">3.834,37</td><td class="num">1.856,86</td></tr>
+<tr><td class="cod">274062</td><td>Mexirica Kg</td><td class="num">427,246</td><td class="num">3.667,13</td><td class="num">2.296,95</td></tr>
+<tr><td class="cod">186562</td><td>Cebola Nacional Kg</td><td class="num">442,78</td><td class="num">2.954,04</td><td class="num">1.970,70</td></tr>
+<tr><td class="cod">194689</td><td>Alface Un</td><td class="num">685</td><td class="num">2.895,83</td><td class="num">2.397,50</td></tr>
+<tr><td class="cod">202630</td><td>Laranja Pera Kg</td><td class="num">816,71</td><td class="num">2.526,36</td><td class="num">1.733,59</td></tr>
+<tr><td class="cod">200590</td><td>Banana Prata Kg</td><td class="num">281,47</td><td class="num">1.956,66</td><td class="num">1.269,24</td></tr>
+<tr><td class="cod">143979</td><td>Alho Argentino/ Nacional Kg</td><td class="num">58,84</td><td class="num">1.896,95</td><td class="num">887,43</td></tr>
+<tr><td class="cod">254428</td><td>Maça Fuji/Gala Kg</td><td class="num">188,565</td><td class="num">1.682,39</td><td class="num">789,21</td></tr>
+<tr><td class="cod">201227</td><td>Morgote Kg</td><td class="num">163,444</td><td class="num">1.668,67</td><td class="num">723,06</td></tr>
+<tr><td class="cod">1135589</td><td>Batatinha Kg Superama</td><td class="num">62,722</td><td class="num">1.597,12</td><td class="num">386,87</td></tr>
+<tr><td class="cod">194670</td><td>Mamao Formosa/Bahia Kg</td><td class="num">112,864</td><td class="num">1.591,66</td><td class="num">856,86</td></tr>
+<tr><td class="cod">1135511</td><td>Batata Doce Kg Superama</td><td class="num">162,541</td><td class="num">1.433,11</td><td class="num">448,39</td></tr>
+<tr><td class="cod">199362</td><td>Moranguinho Bandeja</td><td class="num">82</td><td class="num">1.340,61</td><td class="num">653,42</td></tr>
+<tr><td class="cod">199230</td><td>Repolho Verde Kg</td><td class="num">287,98</td><td class="num">1.239,71</td><td class="num">831,44</td></tr>
+<tr><td class="cod">144665</td><td>Manga Hadem/Tommy Kg</td><td class="num">133,6</td><td class="num">1.239,13</td><td class="num">913,21</td></tr>
+<tr><td class="cod">194700</td><td>Brocolis Un</td><td class="num">112</td><td class="num">1.214,56</td><td class="num">767,30</td></tr>
+<tr><td class="cod">145149</td><td>Cenoura Kg</td><td class="num">187,45</td><td class="num">1.187,35</td><td class="num">802,60</td></tr>
+<tr class="total"><td></td><td>Total destes 20</td><td class="num">6.694,201</td><td class="num">49.899,02</td><td class="num">29.429,18</td></tr>
+<tr class="total"><td></td><td>Total · 114 produtos</td><td class="num">10.199,415</td><td class="num">77.959,47</td><td class="num">47.699,04</td></tr>
+</tbody></table>
+<h2>Devolução de venda sem cupom (7261)</h2>
+<p class="sub">Voltou ao estoque. Não foi descontada do total do caixa acima.</p>
+<table><thead><tr><th>Código</th><th>Produto</th><th>Qtde</th><th>Valor (R$)</th><th>Custo</th></tr></thead><tbody>
+<tr><td class="cod">143979</td><td>Alho Argentino/ Nacional Kg</td><td class="num">11</td><td class="num">357,39</td><td class="num">166,09</td></tr>
+<tr><td class="cod">199346</td><td>Tomate Kg</td><td class="num">10</td><td class="num">146,90</td><td class="num">84,92</td></tr>
+<tr><td class="cod">186562</td><td>Cebola Nacional Kg</td><td class="num">15</td><td class="num">107,25</td><td class="num">68,94</td></tr>
+<tr><td class="cod">200611</td><td>Batatinha Inglesa/monalisa Kg</td><td class="num">10</td><td class="num">89,90</td><td class="num">51,71</td></tr>
+<tr><td class="cod">145149</td><td>Cenoura Kg</td><td class="num">10</td><td class="num">68,90</td><td class="num">40,73</td></tr>
+<tr><td class="cod">199249</td><td>Batata Doce Kg</td><td class="num">13</td><td class="num">57,07</td><td class="num">35,96</td></tr>
+<tr><td class="cod">194670</td><td>Mamao Formosa/Bahia Kg</td><td class="num">2,095</td><td class="num">31,40</td><td class="num">16,20</td></tr>
+<tr><td class="cod">139670</td><td>Banana Nanica / Caturra</td><td class="num">2,025</td><td class="num">6,46</td><td class="num">5,19</td></tr>
+<tr class="total"><td></td><td>Total · 8 itens</td><td class="num">73,12</td><td class="num">865,27</td><td class="num">469,74</td></tr>
+</tbody></table>
+</section>
+<section class="folha">
+<h1>NF-e e perdas</h1>
+<p class="sub">Notas autorizadas, modelo 55, CFOP 5102. O valor fecha com o documento 7322, status normal, que é a baixa de estoque dessa venda.</p>
+<table><thead><tr><th>Nota</th><th>Data</th><th></th><th>Itens</th><th>Valor (R$)</th></tr></thead><tbody>
+<tr><td class="cod">24358</td><td>02/09</td><td></td><td class="num">11</td><td class="num">937,97</td></tr>
+<tr><td class="cod">24385</td><td>11/09</td><td></td><td class="num">6</td><td class="num">866,10</td></tr>
+<tr><td class="cod">24403</td><td>17/09</td><td></td><td class="num">6</td><td class="num">737,39</td></tr>
+<tr class="total"><td></td><td>Total · 3 notas</td><td></td><td class="num">23</td><td class="num">2.541,46</td></tr>
+</tbody></table>
+<table><thead><tr><th>Código</th><th>Produto</th><th>Qtde</th><th>Valor (R$)</th><th></th></tr></thead><tbody>
+<tr><td class="cod">200611</td><td>Batatinha Inglesa/monalisa Kg</td><td class="num">67,435</td><td class="num">473,48</td><td></td></tr>
+<tr><td class="cod">199346</td><td>Tomate Kg</td><td class="num">42,615</td><td class="num">448,58</td><td></td></tr>
+<tr><td class="cod">143979</td><td>Alho Argentino/ Nacional Kg</td><td class="num">11</td><td class="num">357,39</td><td></td></tr>
+<tr><td class="cod">145149</td><td>Cenoura Kg</td><td class="num">42,355</td><td class="num">298,83</td><td></td></tr>
+<tr><td class="cod">186562</td><td>Cebola Nacional Kg</td><td class="num">42,007</td><td class="num">261,03</td><td></td></tr>
+<tr><td class="cod">199354</td><td>Abobrinha Italia / Menina Kg</td><td class="num">27,802</td><td class="num">185,67</td><td></td></tr>
+<tr><td class="cod">199230</td><td>Repolho Verde Kg</td><td class="num">27,835</td><td class="num">131,20</td><td></td></tr>
+<tr><td class="cod">199257</td><td>Chuchu Kg</td><td class="num">16,735</td><td class="num">113,79</td><td></td></tr>
+<tr><td class="cod">199249</td><td>Batata Doce Kg</td><td class="num">21,311</td><td class="num">111,08</td><td></td></tr>
+<tr><td class="cod">199214</td><td>Beterraba Kg</td><td class="num">12,519</td><td class="num">81,37</td><td></td></tr>
+<tr><td class="cod">199532</td><td>Cabotia Kg</td><td class="num">11,727</td><td class="num">48,13</td><td></td></tr>
+<tr><td class="cod">144975</td><td>Pimentao Verde Kg</td><td class="num">2,384</td><td class="num">30,91</td><td></td></tr>
+<tr class="total"><td></td><td>Total · 12 produtos</td><td class="num">325,725</td><td class="num">2.541,46</td><td></td></tr>
+</tbody></table>
+<h2>Perdas (7618)</h2>
+<table><thead><tr><th>Código</th><th>Produto</th><th>Qtde</th><th>Custo (R$)</th><th>A preço de venda</th></tr></thead><tbody>
+<tr><td class="cod">1020552</td><td>Couve Picada São Mateus Bdj 200g [celia]</td><td class="num">6</td><td class="num">32,63</td><td class="num">43,50</td></tr>
+<tr><td class="cod">199265</td><td>Abacaxi Un</td><td class="num">4</td><td class="num">30,37</td><td class="num">47,96</td></tr>
+<tr class="total"><td></td><td>Total · 2 produtos</td><td class="num">10</td><td class="num">63,00</td><td class="num">91,46</td></tr>
+</tbody></table>
+<p class="nota">A nota fiscal 7470 repete estes dois itens, a mesma quantidade e o mesmo valor. Não é uma segunda perda.</p>
+</section>
+<section class="folha">
+<h1>Estimativa de lucro do hortifruti</h1>
+<p class="sub">Venda é o caixa (R$ 77.959,47) mais a NF-e (R$ 2.541,46), no total R$ 80.500,93. Perda é o custo do 7618, R$ 63,00.</p>
+<div class="cols">
+  <div class="col">
+    <div class="pilha" role="img" aria-label="Pelo custo de compra: sobra 19.150,66, perdas 63,00, custo 61.287,27">
+      <span class="lucro" style="flex:19150.66"></span>
+      <span class="perda" style="flex:63"></span>
+      <span class="custo" style="flex:61287.27"></span>
+    </div>
+    <p>Pelo custo de compra do mês</p>
+    <p><b>Sobra R$ 19.150,66</b></p>
+  </div>
+  <div class="col">
+    <div class="pilha" role="img" aria-label="Pelo custo do que foi vendido: sobra 31.221,09, perdas 63,00, custo 49.216,84">
+      <span class="lucro" style="flex:31221.09"></span>
+      <span class="perda" style="flex:63"></span>
+      <span class="custo" style="flex:49216.84"></span>
+    </div>
+    <p>Pelo custo do que foi vendido</p>
+    <p><b>Sobra R$ 31.221,09</b></p>
+  </div>
+</div>
+<p class="leg"><span><i class="custo"></i>Custo</span><span><i class="perda"></i>Perdas</span><span><i class="lucro"></i>Sobra</span></p>
+<p>Na coluna da esquerda, o custo é a compra que entrou (R$ 61.405,36) menos a devolução de compra (R$ 118,09). A sobra é R$ 19.150,66. Nessa conta, a mercadoria comprada que ainda pode estar na banca entra como despesa.</p>
+<p>Na coluna da direita, o custo é o gravado no caixa (R$ 47.699,04) mais o da NF-e (R$ 1.517,80). A sobra é R$ 31.221,09, 38,8% da venda.</p>
+<table>
+<thead><tr><th>Conta</th><th>Pela compra do mês</th><th>Pelo que foi vendido</th></tr></thead>
+<tbody>
+<tr><td>Vendas (caixa + NF-e)</td><td class="num">80.500,93</td><td class="num">80.500,93</td></tr>
+<tr><td>Custo</td><td class="num">61.287,27</td><td class="num">49.216,84</td></tr>
+<tr><td>Perdas</td><td class="num">63,00</td><td class="num">63,00</td></tr>
+<tr class="total"><td>Estimativa</td><td class="num">19.150,66</td><td class="num">31.221,09</td></tr>
+</tbody>
+</table>
+<p class="nota">A devolução de venda sem cupom (7261) soma R$ 865,27 e não foi tirada desta venda, para o caixa continuar igual ao documento 7300. Folha, aluguel e imposto ficam de fora.</p>
+</section>
+</body></html>

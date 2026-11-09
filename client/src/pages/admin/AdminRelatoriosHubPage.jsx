@@ -1,5 +1,6 @@
 import AdminLayout from "../../components/admin/AdminLayout.jsx";
 import { clearAdminSession } from "../../utils/adminSession.js";
+import { acessoDaSessao, subLiberado } from "../../admin/acessoAdmin.js";
 
 const PAINEIS = [
   {
@@ -73,6 +74,9 @@ export default function AdminRelatoriosHubPage({
     onLogout();
   }
 
+  const acesso = acessoDaSessao(admin);
+  const paineis = PAINEIS.filter((painel) => subLiberado(acesso, "relatorio", painel.id));
+
   return (
     <AdminLayout tab={tab} onTabChange={onTabChange} onLogout={handleSair} admin={admin}>
       <div className="admin-marketing-stack">
@@ -87,7 +91,7 @@ export default function AdminRelatoriosHubPage({
         </header>
 
         <div className="admin-marketing-canais">
-          {PAINEIS.map((painel) => (
+          {paineis.map((painel) => (
             <button
               key={painel.id}
               type="button"

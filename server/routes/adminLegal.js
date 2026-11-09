@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { requireAdmin } from "../middleware/requireAdmin.js";
+import { guardarEscopo } from "../middleware/guardarEscopo.js";
 import {
   atualizarConteudoLegal,
   listarConteudoLegal,
@@ -10,6 +11,7 @@ import { mensagemParaCliente } from "../utils/mensagemCliente.js";
 const router = Router();
 
 router.use(requireAdmin);
+router.use(guardarEscopo("legal"));
 
 router.get("/", async (_req, res) => {
   try {
