@@ -3032,6 +3032,22 @@
   border-radius: var(--pk-radius);
   border: 1px solid var(--pk-cart-line);
 }
+.pk-cart-item > div:first-child {
+  min-width: 0;
+}
+@media (max-width: 480px) {
+  .pk-cart-item {
+    grid-template-columns: 1fr auto;
+    gap: var(--pk-space-2);
+  }
+  .pk-cart-item strong {
+    font-size: var(--pk-fs-small);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
 
 .pk-cart-item strong {
   font-size: var(--pk-fs-small);
@@ -3087,8 +3103,10 @@
 }
 
 .pk-qty button {
-  width: 2rem;
-  height: 2rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
   border: none;
   border-radius: 999px;
   background: var(--pk-primary-soft);
@@ -3096,6 +3114,12 @@
   font: inherit;
   font-weight: 800;
   cursor: pointer;
+}
+@media (min-width: 980px) {
+  .pk-qty button {
+    width: 2rem;
+    height: 2rem;
+  }
 }
 
 .pk-qty span {
@@ -3135,10 +3159,10 @@
   box-sizing: border-box;
   border: 1px solid var(--pk-border);
   border-radius: 10px;
-  padding: 0.7rem 0.8rem;
-  min-height: 44px;
+  padding: 0.75rem 0.85rem;
+  min-height: 48px;
   font: inherit;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 600;
   line-height: 1.25;
   color: var(--pk-text);
@@ -3240,8 +3264,10 @@
   position: absolute;
   right: var(--pk-space-2);
   bottom: var(--pk-space-2);
-  width: 2.35rem;
-  height: 2.35rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
   border: none;
   border-radius: 999px;
   background: var(--pk-primary);
@@ -3250,6 +3276,12 @@
   place-items: center;
   cursor: pointer;
   box-shadow: var(--pk-shadow);
+}
+@media (min-width: 980px) {
+  .pk-kiosk-tile__add {
+    width: 2.35rem;
+    height: 2.35rem;
+  }
 }
 
 .pk-lista {
@@ -3952,6 +3984,329 @@
 
 .pk-login__link a:hover {
   text-decoration: underline;
+}
+
+/* —— Login : correções responsivas —— */
+.padaria-btn--block {
+  display: flex;
+  width: 100%;
+}
+
+/* —— Atendente mobile: evitar corte/elementos espremidos —— */
+@media (max-width: 640px) {
+  .pk-kiosk {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .pk-kiosk__top {
+    padding: 0.5rem 0.7rem;
+    gap: 0.45rem;
+    align-items: stretch;
+    background: #fff;
+  }
+
+  .pk-kiosk__brand {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .pk-kiosk__brand h1,
+  .pk-kiosk__brand h2,
+  .pk-kiosk__brand p,
+  .pk-kiosk__top h1,
+  .pk-kiosk__top h2,
+  .pk-kiosk__top p {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .pk-kiosk__nav {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: flex-start;
+  }
+
+  .pk-kiosk__tools {
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+  }
+
+  .pk-kiosk__nav .padaria-btn,
+  .pk-kiosk__tools .padaria-btn {
+    min-height: 38px;
+    padding: 0 0.85rem;
+    font-size: 0.84rem;
+  }
+
+  .pk-kiosk__tabs {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 0.15rem;
+  }
+
+  .pk-kiosk__tabs::-webkit-scrollbar,
+  .pk-kiosk__cats::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pk-kiosk__tabs > * {
+    flex: 0 0 auto;
+  }
+
+  .pk-kiosk__tabs .padaria-btn {
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .pk-kiosk__busca {
+    margin: 0.55rem 0.75rem 0.4rem;
+    min-width: 0;
+    border-radius: 14px;
+  }
+
+  .pk-kiosk__busca input,
+  .pk-kiosk__busca select,
+  .pk-kiosk__busca textarea {
+    min-width: 0;
+    width: 100%;
+    font-size: 16px;
+  }
+
+  .pk-kiosk__cats {
+    padding: 0.3rem 0.75rem 0.65rem;
+    gap: 0.45rem;
+  }
+
+  .pk-kiosk__menu {
+    padding: 0.75rem 0.75rem 7rem;
+
+  .pk-cart {
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+  }
+
+  .pk-cart__head {
+    padding: 0.8rem 0.9rem 0.65rem;
+  }
+
+  .pk-cart__head h2 {
+    font-size: 1rem;
+  }
+
+  .pk-cart__items {
+    padding: 0.7rem 0.85rem;
+  }
+
+  .pk-cart__foot {
+    padding: 0.8rem 0.9rem calc(0.8rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .pk-cart:not(:has(.pk-cart__items > *)) {
+    min-height: 124px;
+    max-height: 124px;
+  }
+
+  .pk-cart:not(:has(.pk-cart__items > *)) .pk-cart__items {
+    display: none;
+  }
+
+  .pk-cart:not(:has(.pk-cart__items > *)) .pk-cart__foot {
+    padding-top: 0.55rem;
+  }
+    overflow-x: hidden;
+  }
+
+  .padaria-grid,
+  .pk-grid,
+  .pk-kiosk__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem;
+  }
+
+  .padaria-tile,
+  .pk-kiosk-tile {
+    min-width: 0;
+  }
+
+  .padaria-tile__img,
+  .pk-kiosk-tile__img,
+  .padaria-tile img,
+  .pk-kiosk-tile img {
+    width: 100%;
+    max-width: 100%;
+    object-fit: cover;
+  }
+
+  .padaria-tile__body,
+  .pk-kiosk-tile__body,
+  .padaria-tile__meta,
+  .pk-kiosk-tile__meta {
+    min-width: 0;
+  }
+
+  .padaria-tile h3,
+  .pk-kiosk-tile h3,
+  .padaria-tile strong,
+  .pk-kiosk-tile strong {
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 420px) {
+  .padaria-grid,
+  .pk-grid,
+  .pk-kiosk__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+  }
+
+  .pk-kiosk__top {
+    padding: 0.45rem 0.6rem;
+  }
+
+  .pk-kiosk__brand h1,
+  .pk-kiosk__top h1 {
+    font-size: 1.1rem;
+    line-height: 1.1;
+  }
+
+  .pk-kiosk__brand p,
+  .pk-kiosk__top p {
+    font-size: 0.78rem;
+  }
+
+  .pk-kiosk__busca {
+    margin-left: 0.65rem;
+    margin-right: 0.65rem;
+  }
+
+  .pk-kiosk__cats,
+  .pk-kiosk__menu {
+    padding-left: 0.65rem;
+    padding-right: 0.65rem;
+  }
+
+  .pk-kiosk__nav .padaria-btn,
+  .pk-kiosk__tools .padaria-btn {
+    min-height: 36px;
+    padding: 0 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .pk-cart:not(:has(.pk-cart__items > *)) {
+    min-height: 116px;
+    max-height: 116px;
+  }
+
+  .padaria-tile,
+  .pk-kiosk-tile {
+    border-radius: 12px;
+  }
+
+  .padaria-tile__img,
+  .pk-kiosk-tile__img,
+  .padaria-tile img,
+  .pk-kiosk-tile img {
+    aspect-ratio: 1 / 1;
+    max-height: 150px;
+  }
+
+  .padaria-tile__body,
+  .pk-kiosk-tile__body,
+  .padaria-tile__meta,
+  .pk-kiosk-tile__meta {
+    padding: 0.55rem 0.65rem;
+    gap: 0.22rem;
+  }
+
+  .padaria-tile h3,
+  .pk-kiosk-tile h3,
+  .padaria-tile strong,
+  .pk-kiosk-tile strong {
+    font-size: 0.94rem;
+    line-height: 1.2;
+  }
+
+  .padaria-tile small,
+  .pk-kiosk-tile small,
+  .padaria-tile__desc,
+  .pk-kiosk-tile__desc {
+    font-size: 0.76rem;
+    line-height: 1.15;
+  }
+
+  .padaria-tile__price,
+  .pk-kiosk-tile__price {
+    font-size: 0.8rem;
+  }
+
+  .pk-kiosk-tile__add {
+    width: 2.45rem;
+    height: 2.45rem;
+    min-width: 2.45rem;
+    min-height: 2.45rem;
+    right: 0.45rem;
+    bottom: 0.45rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .padaria-grid,
+  .pk-grid,
+  .pk-kiosk__grid {
+    gap: 0.5rem;
+  }
+
+  .padaria-tile__img,
+  .pk-kiosk-tile__img,
+  .padaria-tile img,
+  .pk-kiosk-tile img {
+    max-height: 132px;
+  }
+
+  .padaria-tile__body,
+  .pk-kiosk-tile__body,
+  .padaria-tile__meta,
+  .pk-kiosk-tile__meta {
+    padding: 0.5rem 0.55rem;
+  }
+
+  .padaria-tile h3,
+  .pk-kiosk-tile h3,
+  .padaria-tile strong,
+  .pk-kiosk-tile strong {
+    font-size: 0.88rem;
+  }
+
+  .pk-kiosk-tile__add {
+    width: 2.3rem;
+    height: 2.3rem;
+    min-width: 2.3rem;
+    min-height: 2.3rem;
+  }
+}
+
+.pk-login__card input {
+  width: 100%;
+}
+
+@media (max-width: 360px) {
+  .pk-login {
+    padding: var(--pk-space-3);
+  }
+
+  .pk-login__card {
+    padding: var(--pk-space-5) var(--pk-space-4);
+  }
 }
 
 /* —— Utilitários legados —— */

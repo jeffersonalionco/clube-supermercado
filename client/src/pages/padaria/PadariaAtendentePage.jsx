@@ -45,9 +45,7 @@ import {
 import { resolveImagemUrl } from "../../utils/adminSession.js";
 import {
   imprimirPedidoPadaria,
-  imprimirTestePadaria,
   obterLarguraCupomMm,
-  definirLarguraCupomMm,
 } from "../../utils/padariaImpressao.js";
 import { lockBodyScroll } from "../../utils/bodyScrollLock.js";
 import {
@@ -261,9 +259,7 @@ export default function PadariaAtendentePage() {
   });
   const [alertas, setAlertas] = useState([]);
   const [pedidoDetalhe, setPedidoDetalhe] = useState(null);
-  const [cupomMm, setCupomMm] = useState(() => obterLarguraCupomMm());
-  const [impressoraHost, setImpressoraHost] = useState("10.1.1.13");
-  const [impressoraPorta, setImpressoraPorta] = useState(9100);
+  const [cupomMm] = useState(() => obterLarguraCupomMm());
   const alertasSeeded = useRef(false);
   const alertasBusy = useRef(false);
   const statusMapRef = useRef(null);
@@ -439,11 +435,6 @@ export default function PadariaAtendentePage() {
       .then((data) => {
         if (data?.config) {
           setConfigRetirada(data.config);
-          if (data.config.impressoraHost) setImpressoraHost(data.config.impressoraHost);
-          if (data.config.impressoraPorta) setImpressoraPorta(Number(data.config.impressoraPorta) || 9100);
-          if (data.config.impressoraLarguraMm) {
-            setCupomMm(definirLarguraCupomMm(data.config.impressoraLarguraMm));
-          }
         }
       })
       .catch(() => {});
@@ -714,16 +705,6 @@ export default function PadariaAtendentePage() {
       setErro(err.message || "Não foi possível remover a foto.");
     } finally {
       setEnviandoFotos(false);
-    }
-  }
-
-  async function handleTestarImpressora() {
-    setErro("");
-    try {
-      await imprimirTestePadaria({ larguraMm: cupomMm });
-      setOkMsg(`Teste enviado para ${impressoraHost}:${impressoraPorta} (texto ESC/POS).`);
-    } catch (err) {
-      setErro(err.message || "Não chegou no print-server do PDV13.");
     }
   }
 
@@ -1120,29 +1101,6 @@ export default function PadariaAtendentePage() {
             </button>
           </div>
           <div className="pk-kiosk__tools">
-            <button
-              type="button"
-              className="padaria-btn padaria-btn--ghost padaria-btn--sm"
-              onClick={handleTestarImpressora}
-              title={`Envia texto ESC/POS para o print-server em ${impressoraHost}:${impressoraPorta}. Não usa o diálogo do Windows.`}
-            >
-              <Printer size={14} strokeWidth={2} />
-              Teste PDV13
-            </button>
-            <label className="pk-cupom-largura" title="Largura do papel do cupom">
-              <span>Cupom</span>
-              <select
-                value={cupomMm}
-                onChange={(e) => {
-                  const v = definirLarguraCupomMm(e.target.value);
-                  setCupomMm(v);
-                }}
-                aria-label="Largura do cupom"
-              >
-                <option value={80}>80 mm</option>
-                <option value={58}>58 mm</option>
-              </select>
-            </label>
             <button
               type="button"
               className="padaria-btn padaria-btn--ghost padaria-btn--sm"
