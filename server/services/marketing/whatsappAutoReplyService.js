@@ -4,6 +4,7 @@ import {
   enviarIndicadorDigitandoWhatsapp,
   enviarMensagemBotoesWhatsapp,
   enviarMensagemCtaUrlWhatsapp,
+  urlPublicaMidia,
   enviarMensagemTextoWhatsapp,
   normalizarTelefoneWa,
   whatsappCloudConfigurado,
@@ -382,7 +383,7 @@ async function enviarMenuPadrao(telefone, { wamid } = {}) {
 
   const r = await enviarMensagemBotoesWhatsapp({
     telefone,
-    cabecalho: "SUPERMERCADO SUPERAMA",
+    imagemCabecalho: urlPublicaMidia("/whatsapp-menu-black-friday.png"),
     corpo,
     rodape: membro
       ? `Clube Superama+ · CPF ${membro.cpfMascarado}`

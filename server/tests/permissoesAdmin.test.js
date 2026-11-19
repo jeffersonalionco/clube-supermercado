@@ -98,3 +98,26 @@ test("último gestor é quem tem acesso completo ou a ferramenta Administradores
     false
   );
 });
+
+test("encartes têm permissão própria no painel e em todas as rotas", () => {
+  const encartes = acessoDeArmazenamento(["marketing.encartes"]);
+  const email = acessoDeArmazenamento(["marketing.email"]);
+  assert.equal(subLiberado(encartes, "marketing", "encartes"), true);
+  assert.equal(subLiberado(email, "marketing", "encartes"), false);
+  for (const [metodo, rota] of [
+    ["GET", "/encartes"],
+    ["GET", "/encartes/produtos"],
+    ["POST", "/encartes/produtos/1/adicionar"],
+    ["GET", "/encartes/imagens"],
+    ["POST", "/encartes/imagens/1"],
+    ["POST", "/encartes/1/publicacoes/1"],
+    ["POST", "/encartes/1/video"],
+    ["GET", "/encartes/1"],
+    ["POST", "/encartes"],
+  ]) {
+    const ferramentas = ferramentasExigidas("marketing", metodo, rota);
+    assert.deepEqual(ferramentas, ["marketing.encartes"]);
+    assert.equal(temFerramenta(email, ferramentas), false);
+  }
+  assert.equal(temFerramenta(encartes, ferramentasExigidas("marketing", "GET", "/campanhas")), false);
+});

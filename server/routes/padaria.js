@@ -431,6 +431,24 @@ router.get("/producao", requirePadaria, async (req, res) => {
   }
 });
 
+router.get("/producao/historico", requirePadaria, async (req, res) => {
+  try {
+    const resultado = await listarPedidos({
+      status: req.query.status,
+      dataInicio: req.query.dataInicio,
+      dataFim: req.query.dataFim,
+      busca: req.query.busca,
+      limite: req.query.limite,
+      offset: req.query.offset,
+    });
+    return res.json(resultado);
+  } catch (error) {
+    console.error("[padaria/producao/historico]", error.message);
+    return res.status(500).json({ error: mensagemParaCliente(error.message) });
+  }
+});
+
+
 router.patch("/pedidos/:id/status", requirePadaria, async (req, res) => {
   try {
     const status = String(req.body?.status || "").trim();

@@ -26,7 +26,7 @@ export function clearAdminSession() {
   localStorage.removeItem(STORAGE_KEY);
 }
 
-export async function fetchAdmin(path, options = {}) {
+export async function fetchAdmin(path, { resposta, ...options } = {}) {
   const session = loadAdminSession();
   if (!session?.token) {
     throw new Error("Sessão de administrador não encontrada");
@@ -36,12 +36,13 @@ export async function fetchAdmin(path, options = {}) {
     ...options,
     cache: options.cache ?? "no-store",
     headers: {
-      "Content-Type": "application/json",
+      ...(options.body instanceof FormData ? {} : { "Content-Type": "application/json" }),
       Authorization: `Bearer ${session.token}`,
       ...options.headers,
     },
   });
 
+  if (response.ok && resposta === "blob") return response.blob();
   const { data } = await parseApiResponse(response);
   garantirRespostaAdmin(response, data);
   return data;

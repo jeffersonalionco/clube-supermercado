@@ -1,7 +1,7 @@
 {
   "name": "superama-client",
   "private": true,
-  "version": "0.10.0",
+  "version": "0.11.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "fflate": "0.8.3",
     "html2pdf.js": "^0.14.0",
     "lucide-react": "^1.33.0",
     "qrcode": "^1.5.4",

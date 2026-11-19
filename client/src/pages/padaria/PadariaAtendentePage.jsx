@@ -44,8 +44,7 @@ import {
 } from "../../utils/padariaFormat.js";
 import { resolveImagemUrl } from "../../utils/adminSession.js";
 import {
-  imprimirPedidoPadaria,
-  obterLarguraCupomMm,
+  imprimirPedidoPdfPadaria,
 } from "../../utils/padariaImpressao.js";
 import { lockBodyScroll } from "../../utils/bodyScrollLock.js";
 import {
@@ -259,7 +258,6 @@ export default function PadariaAtendentePage() {
   });
   const [alertas, setAlertas] = useState([]);
   const [pedidoDetalhe, setPedidoDetalhe] = useState(null);
-  const [cupomMm] = useState(() => obterLarguraCupomMm());
   const alertasSeeded = useRef(false);
   const alertasBusy = useRef(false);
   const statusMapRef = useRef(null);
@@ -647,14 +645,12 @@ export default function PadariaAtendentePage() {
     setOkMsg("Pedido em andamento limpo.");
   }
 
-  async function handleImprimirCupom(pedido) {
-    if (!pedido) return;
+  function handleImprimirPedidoPdf(pedido) {
     setErro("");
     try {
-      await imprimirPedidoPadaria(pedido, { larguraMm: cupomMm });
-      setOkMsg("Cupom enviado à Bematech no PDV13 (texto ESC/POS).");
+      imprimirPedidoPdfPadaria(pedido);
     } catch (err) {
-      setErro(err.message || "Falha ao imprimir cupom.");
+      setErro(err.message || "Nao foi possivel abrir a impressao do pedido.");
     }
   }
 
@@ -1032,10 +1028,11 @@ export default function PadariaAtendentePage() {
           <div className="pk-checkout" style={{ marginTop: 8 }}>
             <button
               type="button"
-              className="padaria-btn padaria-btn--primary padaria-btn--lg padaria-btn--block"
-              onClick={() => handleImprimirCupom(pedidoCriado)}
+              className="padaria-btn padaria-btn--ghost padaria-btn--lg padaria-btn--block"
+              onClick={() => handleImprimirPedidoPdf(pedidoCriado)}
+              title="Escolher impressora ou salvar como PDF"
             >
-              <Printer size={16} strokeWidth={2} /> Imprimir cupom
+              <Printer size={16} strokeWidth={2} /> Imprimir / PDF
             </button>
             <button
               type="button"
@@ -1322,9 +1319,10 @@ export default function PadariaAtendentePage() {
               <button
                 type="button"
                 className="padaria-btn padaria-btn--ghost"
-                onClick={() => handleImprimirCupom(pedidoDetalhe)}
+                onClick={() => handleImprimirPedidoPdf(pedidoDetalhe)}
+                title="Escolher impressora ou salvar como PDF"
               >
-                <Printer size={14} strokeWidth={2} /> Imprimir cupom
+                <Printer size={14} strokeWidth={2} /> PDF / imprimir
               </button>
               {pedidoDetalhe.status === "pronto" ? (
                 <button
@@ -1482,7 +1480,7 @@ export default function PadariaAtendentePage() {
               )}
             </main>
 
-            <aside className="pk-cart">
+            <aside className={"pk-cart" + (itens.length === 0 ? " pk-cart--empty" : "")}>
               <div className="pk-cart__head">
                 <h2>
                   {passo === "itens"
@@ -1907,9 +1905,10 @@ export default function PadariaAtendentePage() {
                   <button
                     type="button"
                     className="padaria-btn padaria-btn--ghost padaria-btn--sm"
-                    onClick={() => handleImprimirCupom(p)}
+                    onClick={() => handleImprimirPedidoPdf(p)}
+                    title="Escolher impressora ou salvar como PDF"
                   >
-                    <Printer size={14} strokeWidth={2} /> Cupom
+                    <Printer size={14} strokeWidth={2} /> PDF
                   </button>
                   {p.status === "pronto" && (
                     <button

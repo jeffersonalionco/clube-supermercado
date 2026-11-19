@@ -1,3 +1,4 @@
+import encartesRouter from "./adminEncartes.js";
 import { Router } from "express";
 import multer from "multer";
 import path from "path";
@@ -98,6 +99,8 @@ const upload = multer({
 
 router.use(requireAdmin);
 router.use(guardarEscopo("marketing"));
+
+router.use("/encartes", encartesRouter);
 
 router.post("/upload", (req, res) => {
   upload.fields([

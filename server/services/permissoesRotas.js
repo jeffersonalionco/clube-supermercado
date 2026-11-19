@@ -50,6 +50,7 @@ const REGRAS_ADMIN = [
 ];
 
 const REGRAS_MARKETING = [
+  { prefix: "/encartes", ferramentas: ["marketing.encartes"] },
   { prefix: "/resumo", ferramentas: MARKETING },
   { prefix: "/ouvidoria", ferramentas: ["marketing.ouvidoria", "marketing.whatsapp-caixa"] },
   { prefix: "/whatsapp/caixa", ferramentas: ["marketing.whatsapp-caixa"] },

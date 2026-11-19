@@ -103,6 +103,7 @@ export const MODULOS = [
     id: "marketing",
     label: "Marketing",
     ferramentas: [
+      { id: "marketing.encartes", label: "Encartes", menu: "marketing", sub: "encartes" },
       { id: "marketing.email", label: "E-mail promocional", menu: "marketing", sub: "email" },
       {
         id: "marketing.whatsapp-caixa",

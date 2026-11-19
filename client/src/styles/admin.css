@@ -9330,7 +9330,6 @@
     margin-left: 0;
   }
 
-  .admin-padaria__grid-2,
   .admin-padaria-modal__grid-2 {
     grid-template-columns: 1fr;
   }
@@ -11840,3 +11839,622 @@
 }
 
 
+/* Refinamento visual restrito ao admin da padaria */
+.admin-padaria {
+  --padaria-admin-ink: #16332f;
+  --padaria-admin-green: #0f766e;
+  --padaria-admin-green-dark: #115e59;
+  --padaria-admin-green-soft: #e8f5f1;
+  --padaria-admin-gold: #c68a28;
+  --padaria-admin-line: #dce7e3;
+  gap: 1.15rem;
+}
+
+.admin-padaria .admin-card,
+.admin-padaria__operacao .admin-padaria__card {
+  border: 1px solid var(--padaria-admin-line);
+  border-radius: 18px;
+  background: linear-gradient(160deg, #fff 0%, #fbfdfc 100%);
+  box-shadow: 0 8px 26px rgba(18, 59, 52, 0.07);
+}
+
+.admin-padaria .admin-card {
+  padding: clamp(1rem, 2vw, 1.35rem);
+}
+
+.admin-padaria .admin-card__head {
+  align-items: flex-start;
+  gap: 0.75rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.admin-padaria .admin-card__title,
+.admin-padaria .admin-card h2 {
+  color: var(--padaria-admin-ink);
+  letter-spacing: -0.02em;
+}
+
+.admin-padaria .admin-muted,
+.admin-padaria .auth-field__hint {
+  color: #647873;
+  line-height: 1.5;
+}
+
+.admin-padaria__nav {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding: 0.35rem;
+  border: 1px solid var(--padaria-admin-line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 4px 15px rgba(18, 59, 52, 0.05);
+  scrollbar-width: thin;
+  scrollbar-color: #b5ccc4 transparent;
+}
+
+.admin-padaria__nav-btn {
+  flex: 0 0 auto;
+  min-height: 42px;
+  padding: 0.55rem 0.9rem;
+  border-color: transparent;
+  color: #516661;
+  transition: color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+}
+
+.admin-padaria__nav-btn:hover {
+  color: var(--padaria-admin-green-dark);
+  background: #f1f8f5;
+  border-color: transparent;
+}
+
+.admin-padaria__nav-btn.is-active {
+  color: #fff;
+  background: linear-gradient(135deg, var(--padaria-admin-green), var(--padaria-admin-green-dark));
+  border-color: transparent;
+  box-shadow: 0 5px 13px rgba(15, 118, 110, 0.22);
+}
+
+.admin-padaria__catalogo-link {
+  flex: 0 0 auto;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.admin-padaria .admin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 40px;
+  border-radius: 11px;
+  font-size: 0.86rem;
+  line-height: 1.15;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease, border-color 0.16s ease;
+}
+
+.admin-padaria .admin-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 13px rgba(18, 59, 52, 0.12);
+}
+
+.admin-padaria .admin-btn--primary {
+  background: linear-gradient(135deg, var(--padaria-admin-green), var(--padaria-admin-green-dark));
+}
+
+.admin-padaria .admin-btn--ghost {
+  color: var(--padaria-admin-green-dark);
+  border-color: #c9ddd6;
+  background: #fff;
+}
+
+.admin-padaria :is(input:not([type="checkbox"]):not([type="file"]), select, textarea) {
+  min-height: 42px;
+  border: 1px solid #cbdad5;
+  border-radius: 11px;
+  background-color: #fff;
+  color: #19332f;
+  font: inherit;
+  font-size: 0.9rem;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+}
+
+.admin-padaria :is(input:not([type="checkbox"]):not([type="file"]), select, textarea):focus {
+  outline: none;
+  border-color: #44a094;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.13);
+}
+
+.admin-padaria .auth-field {
+  display: grid;
+  gap: 0.38rem;
+  min-width: 0;
+}
+
+.admin-padaria .auth-field__label {
+  color: #405a54;
+  font-size: 0.78rem;
+  font-weight: 750;
+  letter-spacing: 0.015em;
+}
+
+.admin-padaria .auth-field__control {
+  min-width: 0;
+}
+
+.admin-padaria .auth-field__control > :is(input, select, textarea) {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.admin-padaria__stats {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.admin-padaria__operacao .admin-padaria__stats {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.admin-padaria__stat {
+  position: relative;
+  overflow: hidden;
+  min-height: 88px;
+  align-content: center;
+  padding: 0.85rem 1rem;
+  border-color: #dce9e4;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #fff 0%, #f5fbf8 100%);
+  box-shadow: 0 5px 16px rgba(18, 59, 52, 0.055);
+}
+
+.admin-padaria__stat::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: linear-gradient(180deg, #27a497, #d4a34d);
+  content: "";
+}
+
+.admin-padaria__stat strong {
+  color: var(--padaria-admin-green-dark);
+  font-size: clamp(1.35rem, 2.2vw, 1.75rem);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-padaria__stat span {
+  color: #5d746e;
+  font-size: 0.78rem;
+}
+
+.admin-padaria__operacao .admin-padaria__card {
+  margin-top: 1rem;
+  padding: 1.1rem 1.2rem;
+}
+
+.admin-padaria__card-head {
+  flex-wrap: wrap;
+}
+
+.admin-padaria__card-head h3 {
+  color: var(--padaria-admin-ink);
+  font-size: 1.05rem;
+  letter-spacing: -0.015em;
+}
+
+.admin-padaria__retiradas li {
+  min-width: 0;
+  padding: 0.72rem 0.15rem;
+  border-color: #e8efec;
+}
+
+.admin-padaria__retiradas li > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.admin-padaria__atalhos {
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.admin-padaria__hist-filtros {
+  padding: 1rem;
+  border: 1px solid var(--padaria-admin-line);
+  border-radius: 16px;
+  background: linear-gradient(145deg, #f5faf8, #fff);
+}
+
+.admin-padaria__hist-lista {
+  gap: 0.85rem;
+}
+
+.admin-padaria__hist-card {
+  border-color: #dce7e3;
+  border-radius: 15px;
+  padding: 1rem 1.1rem;
+  box-shadow: 0 4px 16px rgba(18, 59, 52, 0.05);
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+}
+
+.admin-padaria__hist-card:hover {
+  transform: translateY(-1px);
+  border-color: #b8d4ca;
+  box-shadow: 0 8px 22px rgba(18, 59, 52, 0.09);
+}
+
+.admin-padaria__hist-card header {
+  align-items: center;
+  margin-bottom: 0.55rem;
+}
+
+.admin-padaria__hist-card header > strong {
+  color: var(--padaria-admin-green-dark);
+  font-size: 1rem;
+}
+
+.admin-padaria__hist-card p {
+  margin: 0.25rem 0;
+  color: #536a64;
+  font-size: 0.86rem;
+}
+
+.admin-padaria__hist-card ul {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.65rem 0 0.65rem 1.15rem;
+  border-top: 1px solid #edf2ef;
+  border-bottom: 1px solid #edf2ef;
+  color: #334b45;
+  line-height: 1.45;
+}
+
+.admin-padaria__hist-card footer {
+  align-items: center;
+  margin-top: 0.65rem;
+}
+
+.admin-padaria__hist-card footer > strong {
+  color: var(--padaria-admin-green-dark);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-padaria__lista .admin-card__head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+}
+
+.admin-padaria__tools {
+  gap: 0.8rem;
+}
+
+.admin-padaria__search input {
+  min-height: 42px;
+  border-color: #cbdad5;
+  border-radius: 12px;
+}
+
+.admin-padaria__filters {
+  gap: 0.45rem;
+}
+
+.admin-padaria__filter {
+  min-height: 36px;
+  padding: 0.42rem 0.72rem;
+  border-color: #d8e5df;
+  border-radius: 999px;
+  background: #f8fbf9;
+  color: #526b64;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.admin-padaria__filter:hover {
+  border-color: #9bc9bb;
+  color: var(--padaria-admin-green-dark);
+}
+
+.admin-padaria__filter.is-active {
+  color: #fff;
+  background: var(--padaria-admin-green);
+  border-color: var(--padaria-admin-green);
+}
+
+.admin-padaria__table-wrap {
+  border-color: #dce7e3;
+  border-radius: 14px;
+  background: #fff;
+  scrollbar-width: thin;
+}
+
+.admin-padaria__table-wrap .admin-table {
+  min-width: 820px;
+}
+
+.admin-padaria__table-wrap .admin-table thead {
+  background: #f2f8f5;
+}
+
+.admin-padaria__table-wrap .admin-table th {
+  padding-top: 0.8rem;
+  padding-bottom: 0.8rem;
+  color: #57716a;
+  border-bottom-color: #dce7e3;
+  white-space: nowrap;
+}
+
+.admin-padaria__table-wrap .admin-table td {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  color: #314943;
+}
+
+.admin-padaria__table-wrap .admin-table tbody tr:hover {
+  background: #f6fbf8;
+}
+
+.admin-padaria__produto-cell {
+  min-width: 220px;
+  gap: 0.75rem;
+}
+
+.admin-padaria__thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  box-shadow: 0 2px 7px rgba(18, 59, 52, 0.1);
+}
+
+.admin-padaria__acoes {
+  gap: 0.35rem;
+}
+
+.admin-padaria-badge {
+  min-height: 24px;
+  padding: 0.22rem 0.58rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.01em;
+}
+
+.admin-padaria-deco-card,
+.admin-padaria-deco-nova {
+  border-color: #dce7e3;
+  border-radius: 16px;
+  background: #fbfdfc;
+}
+
+.admin-padaria-deco-card {
+  grid-template-columns: 118px minmax(0, 1fr);
+  gap: 0.9rem;
+  padding: 0.9rem;
+}
+
+.admin-padaria-deco-card__media img,
+.admin-padaria-deco-card__ph {
+  border-radius: 13px;
+}
+
+.admin-padaria-deco-card__fields {
+  min-width: 0;
+}
+
+.admin-padaria-deco-lista {
+  gap: 0.85rem;
+}
+
+.admin-padaria__input,
+.admin-padaria-deco-card__fields input,
+.admin-padaria-deco-card__fields textarea {
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.admin-padaria-deco-nova {
+  padding: 1rem;
+}
+
+.admin-padaria__config-form,
+.admin-padaria__user-form {
+  max-width: none;
+  gap: 0.9rem;
+}
+
+.admin-padaria__usuarios > .admin-card {
+  min-width: 0;
+}
+
+.admin-padaria-modal__panel {
+  border-color: #dce7e3;
+  border-radius: 22px;
+  box-shadow: 0 24px 70px rgba(15, 48, 42, 0.28);
+}
+
+.admin-padaria-modal__head {
+  padding: 1.2rem 1.35rem;
+  background: linear-gradient(135deg, #eaf5f0 0%, #f8fbf9 55%, #fff 100%);
+}
+
+.admin-padaria-modal__head h3 {
+  color: var(--padaria-admin-green-dark);
+}
+
+.admin-padaria-modal__scroll {
+  padding: 1.15rem 1.35rem;
+  background: #fbfdfc;
+}
+
+.admin-padaria-modal__section {
+  border-color: #e0eae5;
+  border-radius: 17px;
+  box-shadow: 0 3px 12px rgba(18, 59, 52, 0.045);
+}
+
+.admin-padaria-modal__section h4 {
+  color: var(--padaria-admin-green-dark);
+}
+
+.admin-padaria-modal__photo {
+  border-color: #d7e5df;
+  border-radius: 18px;
+}
+
+.admin-padaria-modal__price-card {
+  background: linear-gradient(145deg, #0f766e, #0d514d);
+  box-shadow: 0 10px 22px rgba(15, 118, 110, 0.2);
+}
+
+.admin-padaria-modal__toggle {
+  border-color: #dce7e3;
+  border-radius: 14px;
+  background: #f8fbf9;
+}
+
+.admin-padaria-modal__toggle.is-on {
+  border-color: #a8d1c4;
+  background: #e8f5f1;
+}
+
+.admin-padaria-modal__foot {
+  gap: 0.7rem;
+  background: #f4f8f6;
+  border-color: #dce7e3;
+}
+
+.admin-padaria-modal__close {
+  border-radius: 13px;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.admin-padaria-modal__close:hover {
+  background: #eaf5f0;
+  color: var(--padaria-admin-green-dark);
+}
+
+.admin-padaria :is(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid rgba(15, 118, 110, 0.28);
+  outline-offset: 2px;
+}
+
+.admin-padaria .admin-alert {
+  border-radius: 12px;
+}
+
+@media (max-width: 980px) {
+  .admin-padaria__operacao .admin-padaria__stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .admin-padaria__lista .admin-card__head {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .admin-padaria__lista .admin-card__head > div {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-padaria__nav {
+    margin-inline: -0.1rem;
+  }
+
+  .admin-padaria__catalogo-link {
+    margin-left: 0;
+  }
+
+  .admin-padaria__operacao .admin-padaria__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-padaria .admin-card {
+    padding: 0.9rem;
+    border-radius: 15px;
+  }
+
+  .admin-padaria__lista .admin-card__head {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-padaria__lista .admin-card__head > div {
+    grid-column: auto;
+  }
+
+  .admin-padaria__lista .admin-card__head .admin-btn {
+    width: 100%;
+  }
+
+  .admin-padaria__search input {
+    flex-basis: 100%;
+  }
+
+  .admin-padaria__search .admin-btn {
+    flex: 1 1 auto;
+  }
+
+  .admin-padaria__hist-filtros {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 0.75rem;
+  }
+
+  .admin-padaria__hist-filtros .auth-field:nth-child(4),
+  .admin-padaria__hist-filtros > .admin-btn {
+    grid-column: 1 / -1;
+  }
+
+  .admin-padaria__hist-card {
+    padding: 0.85rem;
+  }
+
+  .admin-padaria__hist-card footer {
+    align-items: stretch;
+  }
+
+  .admin-padaria__hist-card footer .admin-btn {
+    flex: 0 0 auto;
+  }
+
+  .admin-padaria__retiradas li {
+    grid-template-columns: 3.5rem minmax(0, 1fr);
+  }
+
+  .admin-padaria__retiradas li span:nth-child(3),
+  .admin-padaria__retiradas li em {
+    grid-column: 2;
+  }
+
+  .admin-padaria .admin-padaria__grid-2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-padaria-modal__layout {
+    gap: 0.9rem;
+  }
+
+  .admin-padaria-modal__media {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-padaria-modal__upload,
+  .admin-padaria-modal__price-card {
+    grid-column: auto;
+    width: 100%;
+  }
+
+  .admin-padaria-modal__head,
+  .admin-padaria-modal__scroll {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .admin-padaria-modal__foot {
+    gap: 0.55rem;
+    padding: 0.8rem 1rem calc(0.8rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .admin-padaria-modal__foot-actions {
+    margin-left: 0;
+  }
+
+  .admin-padaria-modal__foot-actions .admin-btn {
+    min-height: 44px;
+  }
+}

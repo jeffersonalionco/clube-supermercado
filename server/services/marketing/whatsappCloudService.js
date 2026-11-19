@@ -776,6 +776,7 @@ export async function enviarMensagemBotoesWhatsapp({
   botoes,
   cabecalho,
   rodape,
+  imagemCabecalho,
 }) {
   const to = normalizarTelefoneWa(telefone);
   if (!to) return { ok: false, error: "Telefone inválido" };
@@ -800,7 +801,13 @@ export async function enviarMensagemBotoesWhatsapp({
     body: { text: bodyText.slice(0, 1024) },
     action: { buttons: lista },
   };
-  if (cabecalho) {
+  if (imagemCabecalho) {
+    const linkImagem = String(imagemCabecalho).trim();
+    if (!/^https:\/\//i.test(linkImagem)) {
+      return { ok: false, error: "Image header requires a public HTTPS URL" };
+    }
+    interactive.header = { type: "image", image: { link: linkImagem } };
+  } else if (cabecalho) {
     interactive.header = { type: "text", text: String(cabecalho).slice(0, 60) };
   }
   if (rodape) {

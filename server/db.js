@@ -868,6 +868,56 @@ async function migrarMarketing(db) {
   `);
 
   await db.query(`
+    CREATE TABLE IF NOT EXISTS marketing_encarte_imagem (
+      id UUID PRIMARY KEY,
+      revisao BIGSERIAL NOT NULL,
+      codigo TEXT NOT NULL,
+      descricao TEXT NOT NULL,
+      tipo TEXT NOT NULL,
+      conteudo BYTEA NOT NULL,
+      criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_marketing_encarte_imagem_codigo
+    ON marketing_encarte_imagem (codigo, revisao DESC)
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS marketing_encarte (
+      id SERIAL PRIMARY KEY,
+      dados JSONB NOT NULL,
+      versao INTEGER NOT NULL DEFAULT 1,
+      atualizado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      finalizado_em TIMESTAMPTZ
+    )
+  `);
+
+  await db.query(`
+    ALTER TABLE marketing_encarte
+    ADD COLUMN IF NOT EXISTS versao INTEGER NOT NULL DEFAULT 1
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS marketing_encarte_publicacao (
+      id UUID PRIMARY KEY,
+      encarte_id INTEGER NOT NULL REFERENCES marketing_encarte(id) ON DELETE CASCADE,
+      pagina INTEGER NOT NULL CHECK (pagina > 0),
+      conteudo BYTEA NOT NULL,
+      criado_em TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      formato TEXT NOT NULL DEFAULT ''
+    )
+  `);
+
+  await db.query(`
+    ALTER TABLE marketing_encarte_publicacao ADD COLUMN IF NOT EXISTS formato TEXT NOT NULL DEFAULT '';
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_encarte_publicacao_formato
+      ON marketing_encarte_publicacao (encarte_id, formato, pagina);
+    ALTER TABLE marketing_encarte_publicacao
+      DROP CONSTRAINT IF EXISTS marketing_encarte_publicacao_encarte_id_pagina_key;
+  `);
+
+  await db.query(`
     CREATE TABLE IF NOT EXISTS marketing_campanha (
       id SERIAL PRIMARY KEY,
       canal VARCHAR(32) NOT NULL DEFAULT 'email',

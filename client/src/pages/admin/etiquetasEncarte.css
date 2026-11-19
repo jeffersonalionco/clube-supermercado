@@ -1,0 +1,407 @@
+.encarte-etiquetas-a4 {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: repeat(var(--colunas), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--linhas), minmax(0, 1fr));
+  gap: 12px;
+  padding: 24px;
+  color: #171d23;
+  background: #fff;
+  font-family: Arial, sans-serif;
+  line-height: 1.15;
+}
+.encarte-etiquetas-a4 * { box-sizing: border-box; }
+
+.encarte-etiqueta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px dashed #6d747d;
+  background: #fff;
+}
+.encarte-etiqueta > strong {
+  font-size: 19px;
+  line-height: 1.08;
+  overflow-wrap: anywhere;
+}
+.encarte-etiqueta > .encarte-etiqueta-nome-longo { font-size: 15px; }
+.encarte-etiqueta-cabecalho,
+.encarte-etiqueta-rodape {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 11px;
+}
+.encarte-etiqueta-cabecalho { padding-bottom: 6px; border-bottom: 1px solid #b5bdc5; }
+.encarte-etiqueta-cabecalho > span {
+  color: #173a6a;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.encarte-etiqueta--loja .encarte-etiqueta-cabecalho > span { color: #9c2424; }
+.encarte-etiqueta-cabecalho small { font-size: 10px; color: #424750; }
+.encarte-etiqueta .encarte-etiqueta-preco {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: auto 0 0;
+}
+.encarte-etiqueta-preco b { font-size: 41px; letter-spacing: -.04em; line-height: 1; }
+.encarte-etiqueta-preco small { font-size: 14px; }
+.encarte-etiqueta-rodape { justify-content: flex-start; min-height: 13px; color: #424750; }
+
+@media print {
+  .encarte-etiquetas-pagina {
+    width: 210mm;
+    height: 297mm;
+    overflow: hidden;
+    break-after: page;
+  }
+  .encarte-etiquetas-pagina:last-child { break-after: auto; }
+  .encarte-etiquetas-pagina > .encarte-etiquetas-a4 {
+    /* A arte usa três pixels por milímetro. A impressão CSS usa 96 pixels por polegada. */
+    transform: scale(1.2598425197);
+    transform-origin: top left;
+    print-color-adjust: exact;
+  }
+}
+
+.encarte-etiquetas-a4--black-friday {
+  padding: 21px;
+  gap: 10px;
+  color: #090909;
+}
+.encarte-black-friday {
+  position: relative;
+  display: grid;
+  grid-template-rows: 124px minmax(0, 1fr) 148px;
+  gap: 7px;
+  overflow: hidden;
+  padding: 12px 18px 20px;
+  border: 4px solid #090909;
+  border-radius: 21px;
+  background: #fff;
+  font-family: Arial, sans-serif;
+  isolation: isolate;
+}
+.encarte-black-friday::before,
+.encarte-black-friday::after {
+  position: absolute;
+  z-index: -1;
+  left: -8%;
+  width: 116%;
+  height: 156px;
+  border-top: 22px solid #090909;
+  border-radius: 50%;
+  content: "";
+  transform: rotate(-12deg);
+}
+.encarte-black-friday::before { top: 27px; }
+.encarte-black-friday::after { top: 50px; border-top-width: 9px; }
+
+.encarte-black-friday-marca {
+  justify-self: start;
+  align-self: start;
+  display: grid;
+  gap: 1px;
+  margin: 6px 0 0 31px;
+  padding: 7px 13px;
+  border: 3px solid #fff;
+  border-radius: 16px 25px 16px 16px;
+  outline: 4px solid #090909;
+  background: #090909;
+  color: #fff;
+  font-size: 41px;
+  font-weight: 900;
+  font-style: italic;
+  line-height: .91;
+  letter-spacing: -.04em;
+  text-align: center;
+  text-transform: uppercase;
+  transform: rotate(-11deg);
+}
+.encarte-black-friday-marca b {
+  padding: 2px 8px 4px;
+  border-radius: 7px;
+  background: #fff;
+  color: #090909;
+}
+.encarte-black-friday-produto {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 4px;
+  min-width: 0;
+  text-align: center;
+}
+.encarte-black-friday-produto strong {
+  font-size: 41px;
+  font-style: italic;
+  font-weight: 950;
+  line-height: .98;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+.encarte-black-friday-produto .encarte-black-friday-nome-longo { font-size: 28px; }
+.encarte-black-friday-produto p {
+  margin: 0;
+  font-size: 21px;
+  font-style: italic;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.encarte-black-friday-preco {
+  position: relative;
+  align-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 2px;
+  height: 127px;
+  margin: 0 7px;
+  border-radius: 12% 8% 13% 9% / 17% 13% 18% 14%;
+  background: #090909;
+  color: #fff;
+  font-style: italic;
+  font-weight: 900;
+  white-space: nowrap;
+  transform: rotate(-2deg);
+}
+.encarte-black-friday-valor {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.encarte-black-friday-preco-anterior { font-size: 20px; line-height: 1; }
+.encarte-black-friday-preco-anterior s { text-decoration-thickness: 2px; }
+.encarte-black-friday-preco span { font-size: 48px; }
+.encarte-black-friday-preco b { font-size: 116px; line-height: 1; letter-spacing: -.055em; }
+.encarte-black-friday-preco .encarte-black-friday-valor-longo { font-size: 76px; }
+.encarte-black-friday-preco--comparacao b { font-size: 91px; }
+.encarte-black-friday-preco--comparacao .encarte-black-friday-valor-longo { font-size: 72px; }
+.encarte-black-friday-preco--comparacao .encarte-black-friday-valor span { font-size: 39px; }
+.encarte-black-friday-clube {
+  position: absolute;
+  right: 25px;
+  bottom: 4px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.encarte-etiquetas-a4--clube-oferta {
+  padding: 34px 10px 24px;
+  gap: 32px;
+  color: #111;
+}
+.encarte-etiqueta-promocional {
+  position: relative;
+  display: grid;
+  grid-template-rows: 74px minmax(0, 1fr) 56px 126px;
+  gap: 8px;
+  min-width: 0;
+  padding: 0 13px 15px;
+  border: 2px solid #282828;
+  border-radius: 21px;
+  background: #fff;
+  color: #111;
+  font-family: Arial, sans-serif;
+}
+.encarte-promocao-ondas {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 88px;
+  overflow: hidden;
+  border-radius: 19px 19px 0 0;
+}
+.encarte-promocao-ondas::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(170deg, #b5b5b5, #dadada 48%, #fff 49%);
+}
+.encarte-promocao-ondas::after {
+  content: "";
+  position: absolute;
+  top: 27px;
+  left: -5%;
+  width: 110%;
+  height: 76px;
+  border-top: 9px solid #fff;
+  border-radius: 50%;
+}
+.encarte-promocao-cabecalho {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: start center;
+  min-width: 0;
+}
+.encarte-promocao-cabecalho img {
+  position: absolute;
+  top: -45px;
+  left: 50%;
+  display: block;
+  width: 420px;
+  height: 140px;
+  transform: translateX(-50%);
+}
+.encarte-etiqueta-promocional--clube .encarte-promocao-cabecalho::before {
+  content: "";
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  width: 420px;
+  height: 76px;
+  background: #fff;
+  transform: translateX(-50%);
+}
+.encarte-etiqueta-promocional--clube .encarte-promocao-cabecalho img,
+.encarte-etiqueta-promocional--clube .encarte-promocao-cabecalho::before { left: calc(50% - 36px); }
+.encarte-promocao-cadastro {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  z-index: 2;
+  display: grid;
+  justify-items: center;
+  width: 72px;
+  background: #fff;
+  color: #111;
+  text-align: center;
+}
+.encarte-promocao-cadastro img { display: block; width: 64px; height: 64px; }
+.encarte-promocao-cadastro span { font-size: 8px; font-weight: 700; line-height: 1.08; }
+.encarte-promocao-cabecalho > span {
+  display: block;
+  margin-top: -16px;
+  padding: 5px 16px 8px;
+  border-radius: 15px;
+  background: #252525;
+  color: #fff;
+  font-size: 43px;
+  line-height: 1.05;
+  font-weight: 900;
+  font-style: italic;
+  text-align: center;
+  text-transform: uppercase;
+  transform: skewX(-12deg) rotate(-1deg);
+}
+.encarte-promocao-produto {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  text-align: center;
+}
+.encarte-promocao-produto strong {
+  max-width: 100%;
+  font-size: 43px;
+  line-height: 1.05;
+  font-weight: 900;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+.encarte-promocao-produto .encarte-promocao-nome-longo { font-size: 30px; }
+.encarte-promocao-produto .encarte-promocao-nome-extenso { font-size: 22px; }
+.encarte-promocao-anterior-area { display: grid; place-items: center; min-width: 0; }
+.encarte-promocao-anterior {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 17px;
+  max-width: 100%;
+  padding: 2px 17px;
+  border: 1px solid #262626;
+  border-radius: 13px;
+  background: linear-gradient(135deg, #fff, #f8f8f8);
+  font-size: 34px;
+  line-height: 1.2;
+  font-weight: 800;
+  font-style: italic;
+  white-space: nowrap;
+  transform: skewX(-10deg);
+}
+.encarte-promocao-anterior s {
+  position: relative;
+  font-size: 43px;
+  line-height: 1.1;
+  text-decoration: none;
+}
+.encarte-promocao-anterior s::after {
+  content: "";
+  position: absolute;
+  top: 53%;
+  left: -4px;
+  right: -4px;
+  height: 2px;
+  background: #151515;
+  transform: rotate(-13deg);
+}
+.encarte-promocao-anterior small { font-size: .65em; }
+.encarte-promocao-anterior .encarte-promocao-anterior-longo { font-size: 30px; }
+.encarte-promocao-preco {
+  display: grid;
+  grid-template-columns: 35% minmax(0, 1fr);
+  align-items: center;
+  min-width: 0;
+  border: 1px solid #333;
+  border-radius: 21px;
+  background: linear-gradient(135deg, #fafafa, #ededed);
+}
+.encarte-promocao-chamada {
+  position: relative;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  align-self: stretch;
+  gap: 2px;
+  padding: 9px 8px 9px 4px;
+  font-size: 35px;
+  line-height: .97;
+  font-weight: 900;
+  font-style: italic;
+  text-align: center;
+  text-transform: uppercase;
+}
+.encarte-promocao-chamada::after {
+  content: "";
+  position: absolute;
+  top: 13px;
+  right: 3px;
+  bottom: 13px;
+  width: 2px;
+  background: #151515;
+  transform: rotate(10deg);
+}
+.encarte-etiqueta-promocional--clube .encarte-promocao-chamada { font-size: 24px; }
+.encarte-promocao-chamada b { font-size: 31px; }
+.encarte-promocao-chamada img { display: block; width: 174px; height: 58px; margin: -9px 0 -12px; }
+.encarte-promocao-valor {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 7px 6px;
+  font-size: var(--tamanho-preco);
+  line-height: 1;
+  font-weight: 900;
+  font-style: italic;
+}
+.encarte-promocao-moeda { flex: none; font-size: .48em; }
+.encarte-promocao-valor > b {
+  display: flex;
+  align-items: flex-start;
+  min-width: 0;
+  font-size: 1em;
+  line-height: .9;
+  letter-spacing: -.055em;
+}
+.encarte-promocao-centavos { padding-top: .07em; font-size: .55em; letter-spacing: -.04em; }

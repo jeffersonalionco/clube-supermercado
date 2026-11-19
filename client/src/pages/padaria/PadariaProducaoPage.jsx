@@ -4,6 +4,7 @@ import {
   Bell,
   BookOpen,
   ChevronRight,
+  History,
   LogOut,
   Printer,
   RefreshCw,
@@ -36,7 +37,10 @@ import {
   notificarSistema,
   pedirPermissaoNotificacao,
 } from "../../utils/padariaAlertas.js";
-import { imprimirPedidoPadaria } from "../../utils/padariaImpressao.js";
+import {
+  imprimirPedidoPadaria,
+  imprimirPedidoPdfPadaria,
+} from "../../utils/padariaImpressao.js";
 import { lockBodyScroll } from "../../utils/bodyScrollLock.js";
 import "../../styles/padaria.css";
 
@@ -46,6 +50,13 @@ const CANCEL_SOUND_MS = 6500;
 const SEEN_NOVOS_KEY = "padaria.producao.vistos.novo.v1";
 const SEEN_CANCEL_KEY = "padaria.producao.vistos.cancelado.v1";
 const ORDEN_KEY = "padaria.producao.ordenacao.v1";
+const HISTORICO_LIMITE = 50;
+
+function inicioHistoricoISO() {
+  const d = new Date();
+  d.setDate(d.getDate() - 29);
+  return dataLocalISO(d);
+}
 
 const OPCOES_ORDEN = [
   { id: "hora", label: "Horário de entrega" },
@@ -258,6 +269,16 @@ export default function PadariaProducaoPage() {
   const [confirmStatus, setConfirmStatus] = useState(null);
   const [pedidoAbertoId, setPedidoAbertoId] = useState(null);
   const [fotoLightbox, setFotoLightbox] = useState(false);
+  const [historicoAberto, setHistoricoAberto] = useState(false);
+  const [historicoInicio, setHistoricoInicio] = useState(inicioHistoricoISO);
+  const [historicoFim, setHistoricoFim] = useState(hojeISO);
+  const [historicoBusca, setHistoricoBusca] = useState("");
+  const [historicoStatus, setHistoricoStatus] = useState("");
+  const [historicoPedidos, setHistoricoPedidos] = useState([]);
+  const [historicoTotal, setHistoricoTotal] = useState(0);
+  const [historicoOffset, setHistoricoOffset] = useState(0);
+  const [historicoLoading, setHistoricoLoading] = useState(false);
+  const [historicoErro, setHistoricoErro] = useState("");
 
   const seeded = useRef(false);
   const seededCancel = useRef(false);
@@ -275,6 +296,35 @@ export default function PadariaProducaoPage() {
     pedidoAbertoId != null
       ? pedidos.find((p) => p.id === pedidoAbertoId) || null
       : null;
+
+  const carregarHistorico = useCallback(async ({ offset = 0 } = {}) => {
+    setHistoricoLoading(true);
+    setHistoricoErro("");
+    try {
+      const params = new URLSearchParams({
+        limite: String(HISTORICO_LIMITE),
+        offset: String(offset),
+      });
+      if (historicoInicio) params.set("dataInicio", historicoInicio);
+      if (historicoFim) params.set("dataFim", historicoFim);
+      if (historicoBusca.trim()) params.set("busca", historicoBusca.trim());
+      if (historicoStatus) params.set("status", historicoStatus);
+      const res = await fetchPadaria(
+        "/producao/historico?" + params.toString()
+      );
+      setHistoricoPedidos(res.pedidos || []);
+      setHistoricoTotal(Number(res.total) || 0);
+      setHistoricoOffset(Number(res.offset) || 0);
+    } catch (err) {
+      if (err.code === "UNAUTHORIZED") {
+        clearPadariaSession();
+        setSession(null);
+      }
+      setHistoricoErro(err.message || "Nao foi possivel carregar o historico.");
+    } finally {
+      setHistoricoLoading(false);
+    }
+  }, [historicoInicio, historicoFim, historicoBusca, historicoStatus]);
 
   const fecharPopupAtual = useCallback(() => {
     if (popupTimer.current) {
@@ -662,6 +712,16 @@ export default function PadariaProducaoPage() {
           >
             <BookOpen size={14} strokeWidth={2} /> Catálogo
           </a>
+          <button
+            type="button"
+            className="padaria-btn padaria-btn--secondary padaria-btn--sm"
+            onClick={() => {
+              setHistoricoAberto(true);
+              carregarHistorico({ offset: 0 });
+            }}
+          >
+            <History size={14} strokeWidth={2} /> Histórico
+          </button>
           <label className="pk-prod__orden">
             <span>Ordenar</span>
             <select
@@ -803,6 +863,96 @@ export default function PadariaProducaoPage() {
           </section>
         ))}
       </div>
+
+      {historicoAberto && (
+        <div
+          className="padaria-modal pk-prod-historico"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="prod-historico-titulo"
+        >
+          <div className="padaria-modal__backdrop" onClick={() => setHistoricoAberto(false)} />
+          <div className="padaria-modal__panel pk-prod-historico__panel">
+            <div className="padaria-modal__head pk-prod-historico__head">
+              <div>
+                <p className="pk-prod-detalhe__eyebrow">Produção da padaria</p>
+                <h2 id="prod-historico-titulo">Histórico de pedidos</h2>
+              </div>
+              <button type="button" className="padaria-btn padaria-btn--ghost padaria-btn--sm" onClick={() => setHistoricoAberto(false)} aria-label="Fechar histórico">
+                <X size={16} strokeWidth={2} />
+              </button>
+            </div>
+            <div className="padaria-modal__body pk-prod-historico__body">
+              <div className="pk-prod-historico__filtros">
+                <label>De<input type="date" value={historicoInicio} onChange={(e) => setHistoricoInicio(e.target.value)} /></label>
+                <label>Até<input type="date" value={historicoFim} onChange={(e) => setHistoricoFim(e.target.value)} /></label>
+                <label className="pk-prod-historico__busca">
+                  Buscar
+                  <input type="search" value={historicoBusca} onChange={(e) => setHistoricoBusca(e.target.value)} placeholder="Código, cliente ou telefone" onKeyDown={(e) => { if (e.key === "Enter") carregarHistorico({ offset: 0 }); }} />
+                </label>
+                <label>Status
+                  <select value={historicoStatus} onChange={(e) => setHistoricoStatus(e.target.value)}>
+                    <option value="">Todos</option>
+                    {Object.entries(STATUS_PEDIDO).map(([status, label]) => <option key={status} value={status}>{label}</option>)}
+                  </select>
+                </label>
+                <button type="button" className="padaria-btn padaria-btn--primary" onClick={() => carregarHistorico({ offset: 0 })} disabled={historicoLoading}>
+                  {historicoLoading ? "Buscando..." : "Buscar pedidos"}
+                </button>
+              </div>
+              {historicoErro && <p className="padaria-alert">{historicoErro}</p>}
+              <p className="pk-prod-historico__total">{historicoTotal} pedido{historicoTotal === 1 ? "" : "s"} encontrado{historicoTotal === 1 ? "" : "s"}</p>
+              {historicoLoading ? (
+                <p className="pk-prod-historico__vazio">Carregando pedidos...</p>
+              ) : historicoPedidos.length === 0 ? (
+                <p className="pk-prod-historico__vazio">Nenhum pedido encontrado para os filtros selecionados.</p>
+              ) : (
+                <div className="pk-prod-historico__lista">
+                  {historicoPedidos.map((p) => (
+                    <article className="pk-prod-historico__pedido" key={p.id}>
+                      <div className="pk-prod-historico__pedido-topo">
+                        <div><strong>{p.codigoPublico}</strong><span>{p.clienteNome}</span></div>
+                        <span className="pk-prod-historico__status">{STATUS_PEDIDO[p.status] || p.status}</span>
+                      </div>
+                      <p className="pk-prod-historico__meta">
+                        {"Retirada " + formatDateTime(p.dataRetirada, p.horaRetirada)}
+                        {p.clienteTelefone ? " · " + formatPhone(p.clienteTelefone) : ""}
+                      </p>
+                      <ul>
+                        {(p.itens || []).map((item) => (
+                          <li key={item.id || String(item.produtoCodigo) + "-" + item.nome}>
+                            {qtdItem(item)} {item.nome}
+                            {item.decoracaoNome ? " · Deco: " + item.decoracaoNome : ""}
+                            {item.obsItem ? " · " + item.obsItem : ""}
+                          </li>
+                        ))}
+                      </ul>
+                      {p.observacao ? <p className="pk-prod-historico__obs">Obs.: {p.observacao}</p> : null}
+                      <div className="pk-prod-historico__acoes">
+                        <strong>{formatarPrecoPadaria(p.total)}</strong>
+                        <button type="button" className="padaria-btn padaria-btn--secondary padaria-btn--sm" onClick={() => {
+                          try {
+                            imprimirPedidoPdfPadaria(p);
+                          } catch (err) {
+                            setHistoricoErro(err.message || "Nao foi possivel abrir a impressao.");
+                          }
+                        }} title="Escolher impressora ou salvar como PDF">
+                          <Printer size={14} strokeWidth={2} /> Imprimir / PDF
+                        </button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+              <div className="pk-prod-historico__paginacao">
+                <button type="button" className="padaria-btn padaria-btn--ghost" disabled={historicoLoading || historicoOffset <= 0} onClick={() => carregarHistorico({ offset: Math.max(0, historicoOffset - HISTORICO_LIMITE) })}>Anterior</button>
+                <span>{historicoTotal === 0 ? "0" : String(historicoOffset + 1) + "-" + String(Math.min(historicoOffset + historicoPedidos.length, historicoTotal))}{" de "}{historicoTotal}</span>
+                <button type="button" className="padaria-btn padaria-btn--ghost" disabled={historicoLoading || historicoOffset + historicoPedidos.length >= historicoTotal} onClick={() => carregarHistorico({ offset: historicoOffset + HISTORICO_LIMITE })}>Próxima</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {pedidoAberto && (
         <div

@@ -65,7 +65,7 @@ function arredondarMoeda(valor) {
   return Math.round(Number(valor) * 100) / 100;
 }
 
-function unidadePadrao() {
+export function unidadePadrao() {
   return String(
     process.env.CLUBE_DESCONTOS_UNIDADE ||
       process.env.CADASTRO_UNIDADE ||
@@ -188,7 +188,7 @@ export function aplicarDescontoClube(item) {
   };
 }
 
-function normalizarProduto(produto, unidade) {
+export function normalizarProduto(produto, unidade) {
   const preco1 = arredondarMoeda(produto.Preco ?? produto.PrecoPDV ?? 0);
   const preco2 = arredondarMoeda(obterPreco2Bruto(produto));
   const oferta = String(produto.Oferta ?? "").toUpperCase() === "S";
@@ -288,6 +288,7 @@ export function normalizarOfertaLoja(produto, unidade) {
     codigo,
     descricao: String(produto.Descricao ?? produto.descricao ?? "").trim(),
     marca: String(produto.Marca ?? "").trim() || null,
+    codigoBarras: String(produto.CodigoBarras ?? "").trim() || null,
     oferta: true,
     unidade,
     preco1,
@@ -812,4 +813,38 @@ export function aquecerCacheClubeDescontos(unidade) {
   iniciarSincronizacaoBackground(codUnidade, { forcar });
   if (!forcar) iniciarColetaOfertasLoja(codUnidade);
   return { ok: true, unidade: codUnidade, doDisco: Boolean(disco?.produtos?.length && !forcar) };
+}
+
+/** Leitura compartilhada com o editor, inclusive em lojas sem itens Clube. */
+export function consultarCacheOfertasClube(unidade) {
+  const chave = chaveCache(unidade);
+  const cache = invalidarCacheSeOutroDia(chave, cachePorUnidade.get(chave)) ?? carregarCacheDisco(chave);
+  if (cache && !cachePorUnidade.has(chave)) cachePorUnidade.set(chave, cache);
+  const status = obterProgresso(chave);
+  if ((!cacheValido(cache) || cache.parcial) && !status?.erro) {
+    iniciarSincronizacaoBackground(unidade, { forcar: true });
+  } else if (cacheValido(cache) && !Array.isArray(cache.ofertasLoja) && !status?.erro) {
+    iniciarColetaOfertasLoja(unidade);
+  }
+  return {
+    clube: cache?.produtos ?? [],
+    loja: cache?.ofertasLoja ?? [],
+    ...estadoSincronizacaoOfertasClube(unidade),
+    sincronizando: syncEmAndamento.has(chave) || coletaOfertasLoja.has(chave),
+  };
+}
+
+export function estadoSincronizacaoOfertasClube(unidade) {
+  const chave = chaveCache(unidade);
+  const progresso = obterProgresso(chave);
+  return {
+    sincronizando: syncEmAndamento.has(chave),
+    erroSync: !syncEmAndamento.has(chave) && Boolean(progresso?.erro),
+    totalCatalogo: progresso?.totalCatalogo ?? 0,
+  };
+}
+
+export function sincronizarOfertasClube(unidade) {
+  iniciarSincronizacaoBackground(unidade, { forcar: true });
+  return estadoSincronizacaoOfertasClube(unidade);
 }

@@ -72,8 +72,7 @@ export default function AdminMarketingHubPage({
           <div>
             <h1>Marketing</h1>
             <p>
-              Canais de comunicação com os clientes do Clube Superama+. Comece
-              pelo e-mail promocional.
+              Campanhas, encartes e canais de comunicação do Clube Superama+.
             </p>
           </div>
         </header>
@@ -118,6 +117,17 @@ export default function AdminMarketingHubPage({
         </div>
 
         <div className="admin-marketing-canais">
+          {pode("encartes") && (
+            <a className="admin-marketing-canal" href="#/admin/marketing/encartes">
+              <span className="admin-marketing-canal__icone" aria-hidden>▤</span>
+              <span className="admin-marketing-canal__corpo">
+                <strong>Encartes</strong>
+                <span>Monte peças de ofertas com os preços do sistema.</span>
+              </span>
+              <span className="admin-marketing-canal__cta">Abrir</span>
+            </a>
+          )}
+
           {pode("email") && (
           <button
             type="button"

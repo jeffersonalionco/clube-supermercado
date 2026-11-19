@@ -44,7 +44,7 @@ function temFaixaAudio(caminho) {
   });
 }
 
-function runCmd(cmd, args, timeoutMs = 180_000) {
+export function runCmd(cmd, args, timeoutMs = 180_000) {
   return new Promise((resolve, reject) => {
     const child = spawn(cmd, args, { stdio: ["ignore", "pipe", "pipe"] });
     let stderr = "";

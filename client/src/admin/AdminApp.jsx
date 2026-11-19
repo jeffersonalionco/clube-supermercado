@@ -18,6 +18,7 @@ import AdminSegmentacaoRfmPage from "../pages/admin/AdminSegmentacaoRfmPage.jsx"
 import AdminNiveisFidelidadePage from "../pages/admin/AdminNiveisFidelidadePage.jsx";
 import AdminFunilNovosMembrosPage from "../pages/admin/AdminFunilNovosMembrosPage.jsx";
 import AdminRelatorioClubePage from "../pages/admin/AdminRelatorioClubePage.jsx";
+import AdminEncartesPage from "../pages/admin/AdminEncartesPage.jsx";
 import AdminMarketingHubPage from "../pages/admin/AdminMarketingHubPage.jsx";
 import AdminMarketingEmailPage from "../pages/admin/AdminMarketingEmailPage.jsx";
 import AdminMarketingWhatsAppPage from "../pages/admin/AdminMarketingWhatsAppPage.jsx";
@@ -91,6 +92,7 @@ function adminTabFromHash() {
 
 function marketingSubFromHash() {
   const path = adminPathFromHash();
+  if (path === "admin/marketing/encartes") return "encartes";
   if (path.startsWith("admin/marketing/email")) return "email";
   if (path.startsWith("admin/marketing/whatsapp-caixa")) return "whatsapp-caixa";
   if (path.startsWith("admin/marketing/whatsapp-auto")) return "whatsapp-auto";
@@ -144,6 +146,7 @@ function hashForAdminTab(tab, sub) {
     return "#/admin/relatorio";
   }
   if (tab === "marketing") {
+    if (sub === "encartes") return "#/admin/marketing/encartes";
     if (sub === "email") return "#/admin/marketing/email";
     if (sub === "whatsapp-caixa") return "#/admin/marketing/whatsapp-caixa";
     if (sub === "whatsapp-auto") return "#/admin/marketing/whatsapp-auto";
@@ -441,6 +444,9 @@ export default function AdminApp() {
   }
 
   if (tab === "marketing") {
+    if (marketingSub === "encartes") {
+      return <AdminEncartesPage {...layoutProps} onVoltar={voltarMarketingHub} />;
+    }
     if (marketingSub === "email") {
       return (
         <AdminMarketingEmailPage

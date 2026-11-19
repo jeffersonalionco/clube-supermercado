@@ -1,4 +1,6 @@
 import { Router } from "express";
+import { servirEncartePublicado } from "../services/marketing/publicacaoEncarteService.js";
+import { servirImagemEncarte } from "../services/marketing/imagensEncarteService.js";
 import { mensagemParaCliente } from "../utils/mensagemCliente.js";
 import {
   registrarOptOutPorToken,
@@ -15,6 +17,9 @@ import { obterIpCliente } from "../utils/requestMeta.js";
 const router = Router();
 
 const EVENTOS_OK = new Set(["ViewContent", "AddToCart", "Purchase"]);
+
+router.get("/encartes/imagens/:id", servirImagemEncarte);
+router.get("/encartes/publicados/:id.png", servirEncartePublicado);
 
 router.get("/opt-out/:token", async (req, res) => {
   try {
